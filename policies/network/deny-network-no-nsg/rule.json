@@ -1,0 +1,115 @@
+{
+   "name": "deny-network-no-nsg",
+   "properties": {
+      "displayName": "Deny Network Resources Without NSG",
+      "description": "This policy denies the creation of network resources (subnets and network interfaces) that do not have Network Security Groups (NSGs) associated. NSGs are required for network security and access control.",
+      "policyType": "Custom",
+      "mode": "All",
+      "metadata": {
+         "category": "Network",
+         "version": "1.0.0",
+         "source": "Azure Policy Testing Project"
+      },
+      "parameters": {
+         "effect": {
+            "type": "String",
+            "metadata": {
+               "displayName": "Effect",
+               "description": "The effect determines what happens when the policy rule is evaluated to match"
+            },
+            "allowedValues": [
+               "Audit",
+               "Deny",
+               "Disabled"
+            ],
+            "defaultValue": "Deny"
+         },
+         "exemptedSubnets": {
+            "type": "Array",
+            "metadata": {
+               "displayName": "Exempted Subnets",
+               "description": "List of subnet names that are exempt from this policy (e.g., GatewaySubnet, AzureFirewallSubnet)"
+            },
+            "defaultValue": [
+               "GatewaySubnet",
+               "AzureFirewallSubnet",
+               "AzureBastionSubnet",
+               "RouteServerSubnet"
+            ]
+         }
+      },
+      "policyRule": {
+         "if": {
+            "anyOf": [
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Network/virtualNetworks/subnets"
+                     },
+                     {
+                        "not": {
+                           "field": "name",
+                           "in": "[parameters('exemptedSubnets')]"
+                        }
+                     },
+                     {
+                        "anyOf": [
+                           {
+                              "field": "Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup.id",
+                              "exists": "false"
+                           },
+                           {
+                              "field": "Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup.id",
+                              "equals": ""
+                           }
+                        ]
+                     }
+                  ]
+               },
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Network/networkInterfaces"
+                     },
+                     {
+                        "anyOf": [
+                           {
+                              "field": "Microsoft.Network/networkInterfaces/networkSecurityGroup.id",
+                              "exists": "false"
+                           },
+                           {
+                              "field": "Microsoft.Network/networkInterfaces/networkSecurityGroup.id",
+                              "equals": ""
+                           }
+                        ]
+                     },
+                     {
+                        "count": {
+                           "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*]",
+                           "where": {
+                              "anyOf": [
+                                 {
+                                    "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*].subnet.networkSecurityGroup.id",
+                                    "exists": "false"
+                                 },
+                                 {
+                                    "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*].subnet.networkSecurityGroup.id",
+                                    "equals": ""
+                                 }
+                              ]
+                           }
+                        },
+                        "greater": 0
+                     }
+                  ]
+               }
+            ]
+         },
+         "then": {
+            "effect": "[parameters('effect')]"
+         }
+      }
+   }
+}

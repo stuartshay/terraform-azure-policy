@@ -12,6 +12,7 @@ This directory contains an Azure Policy definition and Terraform configuration t
 ### What This Policy Does
 
 This policy prevents the creation of Azure Storage accounts that have:
+
 - Public blob access enabled (`allowBlobPublicAccess: true`)
 - Public network access enabled (`publicNetworkAccess: Enabled`)
 - Default network action set to "Allow" without proper restrictions
@@ -19,6 +20,7 @@ This policy prevents the creation of Azure Storage accounts that have:
 ### Policy Rule Logic
 
 The policy evaluates storage accounts and denies creation if:
+
 1. Resource type is `Microsoft.Storage/storageAccounts`
 2. The resource group is NOT in the exempted list
 3. ANY of the following conditions are true:
@@ -28,7 +30,7 @@ The policy evaluates storage accounts and denies creation if:
 
 ## Files Structure
 
-```
+```text
 policies/storage/
 ├── deny-storage-account-public-access.json    # Policy definition
 └── README.md                                  # This documentation
@@ -59,11 +61,13 @@ terraform/policy-definitions/
 ### Step 1: Configure Variables
 
 Copy the example variables file and update with your values:
+
 ```bash
 cp terraform.tfvars.example terraform.tfvars
 ```
 
 Edit `terraform.tfvars`:
+
 ```hcl
 subcription_id     = "12345678-1234-1234-1234-123456789012"
 mangement_group_id = "mg-root-tenant"
@@ -92,6 +96,7 @@ terraform apply
 ### Step 3: Verify Deployment
 
 Use the PowerShell validation script:
+
 ```powershell
 pwsh ./scripts/Validate-PolicyDefinitions.ps1 -PolicyPath "./policies/storage"
 ```
@@ -99,6 +104,7 @@ pwsh ./scripts/Validate-PolicyDefinitions.ps1 -PolicyPath "./policies/storage"
 ## Testing the Policy
 
 ### Test Policy Compliance
+
 ```powershell
 # Load the PowerShell profile
 . ./PowerShell/Microsoft.PowerShell_profile.ps1
@@ -113,6 +119,7 @@ gcr -OutputFormat "Table"
 ### Manual Testing
 
 Try creating a storage account with public access:
+
 ```bash
 # This should be denied by the policy
 az storage account create \
@@ -126,16 +133,19 @@ az storage account create \
 ## Policy Effects
 
 ### Deny Mode (Recommended for Production)
+
 - **Effect:** Prevents creation/modification of non-compliant resources
 - **Use Case:** Enforce security compliance
 - **Result:** Resource creation fails with policy violation error
 
 ### Audit Mode (Recommended for Testing)
+
 - **Effect:** Allows resource creation but logs non-compliance
 - **Use Case:** Monitor compliance without blocking operations
 - **Result:** Resource created, compliance event logged
 
 ### Disabled Mode
+
 - **Effect:** Policy rule is not evaluated
 - **Use Case:** Temporarily disable policy without removing assignment
 - **Result:** No policy evaluation occurs
@@ -155,12 +165,14 @@ exempted_resource_groups = [
 ## Monitoring and Compliance
 
 ### View Compliance Status
+
 ```powershell
 # Generate detailed compliance report
 pwsh ./scripts/Test-PolicyCompliance.ps1 -PolicyName "deny-storage-account-public-access" -OutputFormat "JSON" -ExportPath "./reports/storage-compliance.json"
 ```
 
 ### Azure Portal
+
 1. Navigate to Azure Policy in the Azure Portal
 2. Go to Compliance
 3. Filter by the policy assignment name
@@ -206,6 +218,7 @@ pwsh ./scripts/Deploy-PolicyDefinitions.ps1 -PolicyPath "./policies/storage" -Wh
 ## Related Policies
 
 Consider implementing these complementary storage security policies:
+
 - Require HTTPS traffic only
 - Require encryption at rest
 - Restrict storage account network access
@@ -214,6 +227,7 @@ Consider implementing these complementary storage security policies:
 ## Support
 
 For issues or questions about this policy:
+
 1. Check the validation scripts output
 2. Review Azure Policy compliance reports
 3. Consult Azure Policy documentation

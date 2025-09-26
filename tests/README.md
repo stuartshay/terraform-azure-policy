@@ -4,7 +4,7 @@ This directory contains comprehensive Pester tests for validating Azure Policy d
 
 ## 📋 Test Structure
 
-```
+```text
 tests/
 ├── storage/
 │   └── Deny-StorageAccountPublicAccess.Tests.ps1    # Storage policy tests
@@ -25,6 +25,7 @@ tests/
    - Az.PolicyInsights
 
 2. **Azure Authentication**:
+
    ```powershell
    Connect-AzAccount
    ```
@@ -34,6 +35,7 @@ tests/
 ### Running Tests
 
 #### Option 1: VS Code Tasks (Recommended)
+
 1. Open Command Palette (`Ctrl+Shift+P`)
 2. Select "Tasks: Run Task"
 3. Choose one of:
@@ -41,6 +43,7 @@ tests/
    - **"Run Storage Policy Tests"** - Only storage tests with XML output
 
 #### Option 2: PowerShell Script
+
 ```powershell
 # Run all tests
 ./scripts/Invoke-PolicyTests.ps1
@@ -53,6 +56,7 @@ tests/
 ```
 
 #### Option 3: Direct Pester
+
 ```powershell
 # Run specific test file
 Invoke-Pester -Path "tests/storage/Deny-StorageAccountPublicAccess.Tests.ps1"
@@ -64,7 +68,8 @@ Invoke-Pester -Path "tests/storage/Deny-StorageAccountPublicAccess.Tests.ps1"
 
 The storage policy tests validate the "Deny Storage Account Public Access" policy:
 
-#### Test Scenarios:
+#### Test Scenarios
+
 1. **Policy Definition Validation**
    - JSON structure validation
    - Property checks (displayName, description, policyRule)
@@ -85,41 +90,49 @@ The storage policy tests validate the "Deny Storage Account Public Access" polic
    - Displays detailed compliance information
    - Shows policy state for all resources
 
-#### What the Tests Do:
+#### What the Tests Do
 
 **✅ Compliant Test Scenario:**
+
 - Creates storage account with:
   - `AllowBlobPublicAccess = $false`
   - `PublicNetworkAccess = "Disabled"`
 - Validates it shows as "Compliant" in policy evaluation
 
 **❌ Non-Compliant Test Scenario:**
+
 - Creates storage account with:
   - `AllowBlobPublicAccess = $true`
   - `PublicNetworkAccess = "Enabled"`
 - Validates it shows as "NonCompliant" in policy evaluation
 
 **🔧 Remediation Test:**
+
 - Updates non-compliant storage account to be compliant
 - Verifies policy re-evaluation shows improved compliance
 
 ## 📊 Test Output
 
 ### Console Output
+
 Tests provide detailed console output including:
+
 - Test progress and results
 - Azure resource creation/deletion status
 - Policy compliance states
 - Cleanup operations
 
 ### XML Reports
+
 When using `-OutputFormat "NUnitXml"`, tests generate XML reports compatible with:
+
 - Azure DevOps Test Results
 - Jenkins Test Results
 - GitHub Actions Test Reports
 
-### Example Output:
-```
+### Example Output
+
+```text
 Running Azure Policy tests...
 Target: tests/storage
 Resource Group: rg-azure-policy-testing
@@ -153,6 +166,7 @@ Test Summary:
 ## ⚙️ Configuration
 
 ### Test Configuration (`PolicyTestConfig.ps1`)
+
 Modify test behavior by updating configuration values:
 
 ```powershell
@@ -167,17 +181,21 @@ $TestConfig = @{
 ```
 
 ### Environment Variables
+
 Tests respect these environment variables if set:
+
 - `AZURE_POLICY_TEST_RESOURCE_GROUP` - Override target resource group
 - `AZURE_POLICY_TEST_SUBSCRIPTION_ID` - Override subscription ID
 
 ## 🧹 Test Cleanup
 
 Tests automatically clean up resources they create:
+
 - **Test Storage Accounts** - Removed in `AfterAll` block
 - **Temporary Resources** - Cleaned up after each test context
 
 To disable cleanup (for debugging):
+
 ```powershell
 # Edit PolicyTestConfig.ps1
 $TestConfig.CleanupTestResources = $false
@@ -187,24 +205,28 @@ $TestConfig.CleanupTestResources = $false
 
 ### Common Issues
 
-**❌ "No Azure context found"**
+#### ❌ "No Azure context found"
+
 ```powershell
 # Solution: Authenticate to Azure
 Connect-AzAccount
 Set-AzContext -SubscriptionId "your-subscription-id"
 ```
 
-**❌ "Resource group not found"**
+#### ❌ "Resource group not found"
+
 ```powershell
 # Solution: Create the resource group or update configuration
 New-AzResourceGroup -Name "rg-azure-policy-testing" -Location "East US"
 ```
 
-**❌ "Policy assignment not found"**
+#### ❌ "Policy assignment not found"
+
 - Ensure the policy is deployed via Terraform
 - Check policy assignment scope matches test configuration
 
-**❌ "Compliance state not available"**
+#### ❌ "Compliance state not available"
+
 - Azure Policy evaluation can take time (up to 30 minutes)
 - Tests include wait periods, but may need longer for initial runs
 - Use `Start-AzPolicyComplianceScan` to trigger immediate evaluation
@@ -212,17 +234,20 @@ New-AzResourceGroup -Name "rg-azure-policy-testing" -Location "East US"
 ### Debugging Tests
 
 1. **Run tests individually:**
+
    ```powershell
    Invoke-Pester -Path "tests/storage/Deny-StorageAccountPublicAccess.Tests.ps1" -Tag "PolicyDefinition"
    ```
 
 2. **Enable verbose output:**
+
    ```powershell
    $VerbosePreference = "Continue"
    ./scripts/Invoke-PolicyTests.ps1 -TestPath "tests/storage"
    ```
 
 3. **Disable cleanup for inspection:**
+
    ```powershell
    # Edit PolicyTestConfig.ps1
    $TestConfig.CleanupTestResources = $false
@@ -235,25 +260,26 @@ New-AzResourceGroup -Name "rg-azure-policy-testing" -Location "East US"
 1. **Create test file**: `tests/[category]/[PolicyName].Tests.ps1`
 2. **Follow naming convention**: `[Action]-[Resource][Condition].Tests.ps1`
 3. **Use template structure**:
+
    ```powershell
    #Requires -Modules Pester, Az.Accounts, Az.Resources
-   
+
    BeforeAll {
        # Test setup
    }
-   
+
    Describe "Policy Definition Validation" {
        # Validate JSON structure
    }
-   
+
    Describe "Policy Assignment Validation" {
        # Validate assignment exists and is configured correctly
    }
-   
+
    Describe "Policy Compliance Testing" {
        # Test actual compliance scenarios
    }
-   
+
    AfterAll {
        # Cleanup
    }

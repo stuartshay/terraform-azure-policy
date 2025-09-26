@@ -1,0 +1,112 @@
+{
+   "name": "deny-storage-softdelete",
+   "properties": {
+      "displayName": "Deny Storage Account Soft Delete Disabled",
+      "description": "This policy denies the creation of Azure Storage accounts that have soft delete disabled for blobs or containers. Soft delete should be enabled for data protection and recovery purposes.",
+      "policyType": "Custom",
+      "mode": "All",
+      "metadata": {
+         "category": "Storage",
+         "version": "1.0.0",
+         "source": "Azure Policy Testing Project"
+      },
+      "parameters": {
+         "effect": {
+            "type": "String",
+            "metadata": {
+               "displayName": "Effect",
+               "description": "The effect determines what happens when the policy rule is evaluated to match"
+            },
+            "allowedValues": [
+               "Audit",
+               "Deny",
+               "Disabled"
+            ],
+            "defaultValue": "Deny"
+         },
+         "minimumRetentionDays": {
+            "type": "Integer",
+            "metadata": {
+               "displayName": "Minimum Retention Days",
+               "description": "Minimum number of days for soft delete retention"
+            },
+            "defaultValue": 7,
+            "minValue": 1,
+            "maxValue": 365
+         }
+      },
+      "policyRule": {
+         "if": {
+            "allOf": [
+               {
+                  "field": "type",
+                  "equals": "Microsoft.Storage/storageAccounts"
+               },
+               {
+                  "anyOf": [
+                     {
+                        "allOf": [
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/deleteRetentionPolicy.enabled",
+                              "exists": "true"
+                           },
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/deleteRetentionPolicy.enabled",
+                              "equals": "false"
+                           }
+                        ]
+                     },
+                     {
+                        "allOf": [
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/deleteRetentionPolicy.enabled",
+                              "exists": "true"
+                           },
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/deleteRetentionPolicy.enabled",
+                              "equals": "true"
+                           },
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/deleteRetentionPolicy.days",
+                              "less": "[parameters('minimumRetentionDays')]"
+                           }
+                        ]
+                     },
+                     {
+                        "allOf": [
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/containerDeleteRetentionPolicy.enabled",
+                              "exists": "true"
+                           },
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/containerDeleteRetentionPolicy.enabled",
+                              "equals": "false"
+                           }
+                        ]
+                     },
+                     {
+                        "allOf": [
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/containerDeleteRetentionPolicy.enabled",
+                              "exists": "true"
+                           },
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/containerDeleteRetentionPolicy.enabled",
+                              "equals": "true"
+                           },
+                           {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/containerDeleteRetentionPolicy.days",
+                              "less": "[parameters('minimumRetentionDays')]"
+                           }
+                        ]
+                     }
+                  ]
+               }
+            ]
+         },
+         "then": {
+            "effect": "[parameters('effect')]"
+         }
+      }
+   }
+}

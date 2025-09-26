@@ -1,0 +1,20 @@
+# Example Terraform variables for deny-storage-account-public-access policy
+# Copy this file to terraform.tfvars and update with your values
+
+# Management Group (optional - if not specified, will be created at subscription level)
+# management_group_id = "mg-production"
+
+# Policy Assignment Configuration
+create_assignment = true
+assignment_scope_id = "/subscriptions/09e01a7d-07d4-43ee-80c7-8b2c0d7ec41f/resourceGroups/rg-azure-policy-testing"
+policy_assignment_name = "deny-storage-public-access-assignment"
+policy_assignment_display_name = "Deny Storage Account Public Access Assignment"
+policy_assignment_description = "This assignment enforces the policy to deny storage accounts with public access enabled."
+assignment_location = "East US"
+
+# Policy Effect
+policy_effect = "Audit"  # Change to "Deny" for enforcement
+
+# Environment and Ownership
+environment = "sandbox"
+owner = "Policy-Team"

@@ -5,7 +5,9 @@ This directory contains comprehensive documentation for the Azure Policy Testing
 ## 📚 **Documentation Files**
 
 ### **[TestPanel-Guide.md](TestPanel-Guide.md)**
+
 Complete guide for using VS Code Test Panel with Pester tests:
+
 - Setting up the Pester Test extension
 - Running tests through the Test Panel interface
 - Debugging tests with breakpoints

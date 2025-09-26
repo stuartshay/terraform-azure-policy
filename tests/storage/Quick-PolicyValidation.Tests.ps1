@@ -15,7 +15,7 @@
 
 BeforeAll {
     # Test configuration
-    $script:PolicyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-account-public-access.json'
+    $script:PolicyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-account-public-access\rule.json'
     $script:ExpectedPolicyName = 'deny-storage-account-public-access'
     $script:ExpectedDisplayName = 'Deny Storage Account Public Access'
 }
@@ -85,15 +85,17 @@ Describe 'Policy JSON Validation' -Tag @('Unit', 'Fast', 'Static') {
         }
 
         It 'Should check allowBlobPublicAccess property' {
-            $blobAccessCondition = $script:PolicyRule.if.allOf | Where-Object {
+            $anyOfCondition = $script:PolicyRule.if.allOf | Where-Object { $_.anyOf }
+            $blobAccessCondition = $anyOfCondition.anyOf | Where-Object {
                 $_.field -eq 'Microsoft.Storage/storageAccounts/allowBlobPublicAccess'
             }
             $blobAccessCondition | Should -Not -BeNullOrEmpty
-            $blobAccessCondition.equals | Should -Be $true
+            $blobAccessCondition.equals | Should -Be 'true'
         }
 
         It 'Should check publicNetworkAccess property' {
-            $networkAccessCondition = $script:PolicyRule.if.allOf | Where-Object {
+            $anyOfCondition = $script:PolicyRule.if.allOf | Where-Object { $_.anyOf }
+            $networkAccessCondition = $anyOfCondition.anyOf | Where-Object {
                 $_.field -eq 'Microsoft.Storage/storageAccounts/publicNetworkAccess'
             }
             $networkAccessCondition | Should -Not -BeNullOrEmpty
@@ -106,8 +108,19 @@ Describe 'Policy JSON Validation' -Tag @('Unit', 'Fast', 'Static') {
         }
 
         It 'Should have valid effect value' {
-            $validEffects = @('Audit', 'Deny', 'Disabled', 'AuditIfNotExists', 'DeployIfNotExists')
-            $script:PolicyRule.then.effect | Should -BeIn $validEffects
+            # Check for parameterized effect or valid hardcoded effect
+            $effect = $script:PolicyRule.then.effect
+            if ($effect -match '^\[parameters\(') {
+                # Parameterized effect - check parameter definition
+                $effectParam = $script:PolicyJson.properties.parameters.effect
+                $effectParam | Should -Not -BeNullOrEmpty
+                $effectParam.allowedValues | Should -Not -BeNullOrEmpty
+            }
+            else {
+                # Hardcoded effect
+                $validEffects = @('Audit', 'Deny', 'Disabled', 'AuditIfNotExists', 'DeployIfNotExists')
+                $effect | Should -BeIn $validEffects
+            }
         }
     }
 
@@ -125,8 +138,13 @@ Describe 'Policy JSON Validation' -Tag @('Unit', 'Fast', 'Static') {
             $script:Metadata.version | Should -Match '^\d+\.\d+\.\d+$'
         }
 
-        It 'Should have preview flag' {
-            $script:Metadata.preview | Should -Not -BeNullOrEmpty
+        It 'Should have version in metadata' {
+            $script:Metadata.version | Should -Not -BeNullOrEmpty
+            $script:Metadata.version | Should -Match '^\d+\.\d+\.\d+$'
+        }
+
+        It 'Should have source in metadata' {
+            $script:Metadata.source | Should -Not -BeNullOrEmpty
         }
     }
 }

@@ -58,10 +58,10 @@ Tests are properly tagged for easy filtering:
 
 ### **1. Development Cycle**
 ```
-1. Modify policy JSON → 
-2. Run Quick-PolicyValidation.Tests.ps1 (fast) → 
-3. Fix any issues → 
-4. Run full integration tests → 
+1. Modify policy JSON →
+2. Run Quick-PolicyValidation.Tests.ps1 (fast) →
+3. Fix any issues →
+4. Run full integration tests →
 5. Deploy to Azure
 ```
 
@@ -125,6 +125,6 @@ Your project now has:
 - ✅ **Proper test categorization** with tags
 - ✅ **CI/CD ready** test reporting
 
-**The Test Panel will automatically discover your tests and provide a rich, visual testing experience!** 
+**The Test Panel will automatically discover your tests and provide a rich, visual testing experience!**
 
 Open the Test Panel now and start running your Azure Policy tests! 🚀

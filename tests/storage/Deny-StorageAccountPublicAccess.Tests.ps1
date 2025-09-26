@@ -43,7 +43,7 @@ BeforeAll {
     }
 
     # Load policy definition from file
-    $policyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-account-public-access.json'
+    $policyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-account-public-access\rule.json'
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
     }

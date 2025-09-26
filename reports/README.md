@@ -5,11 +5,13 @@ This directory contains generated reports for Azure Policy assignments and compl
 ## Report Types
 
 ### Policy Assignment Reports
+
 - Lists all policy assignments in the resource group
 - Shows policy definition details and assignment status
 - Generated using PowerShell scripts
 
 ### Compliance Reports
+
 - Shows compliance status for each policy assignment
 - Includes compliant and non-compliant resources
 - Available in multiple formats (JSON, CSV, HTML)
@@ -27,11 +29,13 @@ The following files are automatically generated and should not be edited manuall
 ## Usage
 
 ### Generate All Reports
+
 ```powershell
 ./scripts/Generate-PolicyReports.ps1 -ResourceGroup "rg-azure-policy-testing"
 ```
 
 ### Generate Specific Report Type
+
 ```powershell
 # Policy assignments only
 ./scripts/Generate-PolicyReports.ps1 -ResourceGroup "rg-azure-policy-testing" -ReportType "Assignments"
@@ -41,6 +45,7 @@ The following files are automatically generated and should not be edited manuall
 ```
 
 ### Export Formats
+
 ```powershell
 # Export to CSV
 ./scripts/Generate-PolicyReports.ps1 -ResourceGroup "rg-azure-policy-testing" -Format "CSV"
@@ -55,11 +60,13 @@ The following files are automatically generated and should not be edited manuall
 ## File Naming Convention
 
 Reports use the following naming convention:
+
 - `policy-assignments-{resource-group}-{timestamp}.{format}`
 - `policy-compliance-{resource-group}-{timestamp}.{format}`
 - `policy-report-{resource-group}-{timestamp}.html`
 
 Example:
+
 - `policy-assignments-rg-azure-policy-testing-20250926-174530.json`
 - `policy-compliance-rg-azure-policy-testing-20250926-174530.csv`
 

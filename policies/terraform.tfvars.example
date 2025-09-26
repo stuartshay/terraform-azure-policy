@@ -1,0 +1,23 @@
+# Example Terraform variables for Azure Policies deployment
+# Copy this file to terraform.tfvars and update with your values
+
+# Azure Configuration
+subscription_id = "09e01a7d-07d4-43ee-80c7-8b2c0d7ec41f"
+
+# Management Group (optional - if not specified, policies created at subscription level)
+# management_group_id = "mg-production"
+
+# Policy Assignment Configuration
+create_assignments = true
+assignment_scope_id = "/subscriptions/09e01a7d-07d4-43ee-80c7-8b2c0d7ec41f/resourceGroups/rg-azure-policy-testing"
+assignment_location = "East US"
+
+# Policy Effects
+storage_policy_effect = "Audit"  # Change to "Deny" for enforcement
+storage_softdelete_policy_effect = "Audit"  # Change to "Deny" for enforcement
+storage_softdelete_retention_days = 7  # Minimum days for soft delete retention (1-365)
+network_policy_effect = "Audit"  # Change to "Deny" for enforcement
+
+# Environment and Ownership
+environment = "sandbox"
+owner = "Policy-Team"

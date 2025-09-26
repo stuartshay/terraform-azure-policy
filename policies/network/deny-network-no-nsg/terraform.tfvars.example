@@ -1,0 +1,37 @@
+# Example Terraform variables file for deny-network-no-nsg policy
+# Copy this file to terraform.tfvars and customize the values
+
+# Policy name (required)
+policy_name = "deny-network-no-nsg"
+
+# Policy display name (optional - will default to a descriptive name)
+policy_display_name = "Deny Network Resources Without NSG"
+
+# Policy description (optional - will default to a description)
+policy_description = "This policy denies the creation of network resources (subnets and network interfaces) that do not have an associated Network Security Group (NSG). Exemptions are provided for Azure service subnets like GatewaySubnet."
+
+# Exempted resource names (optional - defaults to Azure service subnets)
+exempted_resource_names = [
+  "GatewaySubnet",
+  "AzureFirewallSubnet",
+  "AzureFirewallManagementSubnet",
+  "RouteServerSubnet",
+  "AzureBastionSubnet"
+]
+
+# Whether to create policy assignment (optional - defaults to false)
+create_assignment = false
+
+# Resource group for assignment (only needed if create_assignment = true)
+# assignment_scope = "/subscriptions/your-subscription-id/resourceGroups/your-resource-group"
+
+# Assignment parameters (only needed if create_assignment = true)
+# assignment_parameters = {
+#   exemptedResourceNames = [
+#     "GatewaySubnet",
+#     "AzureFirewallSubnet"
+#   ]
+# }
+
+# Policy effect (optional - defaults to "Deny")
+# effect = "Deny"

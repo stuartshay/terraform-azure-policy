@@ -31,7 +31,7 @@ repos:
       # JSON formatting (for policy files)
       - id: pretty-format-json
         args: ['--autofix', '--indent=2']
-        files: 'policies/.*\.json$'
+        files: 'policies/.*/rule\.json$'
 
   # PowerShell linting and formatting
   - repo: local
@@ -71,7 +71,7 @@ repos:
             'if (Get-Module -ListAvailable -Name Pester) { Invoke-Pester -Path "tests/storage/Quick-PolicyValidation.Tests.ps1" -CI } else { Write-Host "Pester not installed, skipping tests..." }',
           ]
         language: system
-        files: '(\.ps1|policies/.*\.json)$'
+        files: '(\.ps1|policies/.*/rule\.json)$'
         pass_filenames: false
         description: 'Run quick policy validation tests'
 
@@ -147,10 +147,10 @@ repos:
         args:
           [
             '-Command',
-            'Get-ChildItem -Path "policies" -Filter "*.json" -Recurse | ForEach-Object { try { $policy = Get-Content $_.FullName -Raw | ConvertFrom-Json; if (-not $policy.properties) { throw "Missing properties section" }; if (-not $policy.properties.policyRule) { throw "Missing policyRule" }; Write-Host "✓ $($_.Name) is valid" } catch { Write-Error "✗ $($_.Name): $_"; exit 1 } }',
+            'Get-ChildItem -Path "policies" -Filter "rule.json" -Recurse | ForEach-Object { try { $policy = Get-Content $_.FullName -Raw | ConvertFrom-Json; if (-not $policy.properties) { throw "Missing properties section" }; if (-not $policy.properties.policyRule) { throw "Missing policyRule" }; Write-Host "✓ $($_.Name) is valid" } catch { Write-Error "✗ $($_.Name): $_"; exit 1 } }',
           ]
         language: system
-        files: 'policies/.*\.json$'
+        files: 'policies/.*/rule\.json$'
         pass_filenames: false
         description: 'Validate Azure Policy JSON structure'
 
@@ -179,7 +179,7 @@ repos:
             'Get-ChildItem -Path "policies" -Filter "*.json" -Recurse | Where-Object { $_.Length -gt 50KB } | ForEach-Object { Write-Error "Policy file $($_.Name) is too large ($([math]::Round($_.Length/1KB, 2))KB > 50KB)"; exit 1 }',
           ]
         language: system
-        files: 'policies/.*\.json$'
+        files: 'policies/.*/rule\.json$'
         pass_filenames: false
         description: 'Ensure policy files are not too large'
 
@@ -197,7 +197,7 @@ repos:
         description: 'Ensure test files follow naming convention'
 
 # Global configuration
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: false
 minimum_pre_commit_version: '3.0.0'
 

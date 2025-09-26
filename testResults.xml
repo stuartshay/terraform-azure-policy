@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="26" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2025-09-26" time="20:21:26">
+  <environment cwd="/home/vagrant/git/azure-policy-testing" nunit-version="2.5.8.0" user-domain="" clr-version="9.0.4" machine-name="node-2" user="vagrant" platform="Linux" os-version="5.15.0-152-generic" />
+  <culture-info current-culture="" current-uiculture="" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="0.6571" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/home/vagrant/git/azure-policy-testing/tests/storage/Quick-PolicyValidation.Tests.ps1" executed="True" result="Success" success="True" time="0.6571" asserts="0" description="/home/vagrant/git/azure-policy-testing/tests/storage/Quick-PolicyValidation.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Policy JSON Validation" executed="True" result="Success" success="True" time="0.3044" asserts="0" description="Policy JSON Validation">
+            <results>
+              <test-suite type="TestFixture" name="Policy JSON Validation.File Structure" executed="True" result="Success" success="True" time="0.1574" asserts="0" description="Policy JSON Validation.File Structure">
+                <results>
+                  <test-case description="Should have policy definition file" name="Policy JSON Validation.File Structure.Should have policy definition file" time="0.102" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should be valid JSON" name="Policy JSON Validation.File Structure.Should be valid JSON" time="0.0304" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Policy JSON Validation.Policy Content Validation" executed="True" result="Success" success="True" time="0.2063" asserts="0" description="Policy JSON Validation.Policy Content Validation">
+                <results>
+                  <test-case description="Should have properties section" name="Policy JSON Validation.Policy Content Validation.Should have properties section" time="0.0126" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have display name" name="Policy JSON Validation.Policy Content Validation.Should have display name" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have description" name="Policy JSON Validation.Policy Content Validation.Should have description" time="0.0154" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have mode set to All" name="Policy JSON Validation.Policy Content Validation.Should have mode set to All" time="0.0036" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have policy rule" name="Policy JSON Validation.Policy Content Validation.Should have policy rule" time="0.0032" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have metadata section" name="Policy JSON Validation.Policy Content Validation.Should have metadata section" time="0.0035" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Policy JSON Validation.Policy Rule Validation" executed="True" result="Success" success="True" time="0.2675" asserts="0" description="Policy JSON Validation.Policy Rule Validation">
+                <results>
+                  <test-case description="Should have if condition" name="Policy JSON Validation.Policy Rule Validation.Should have if condition" time="0.0195" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have then effect" name="Policy JSON Validation.Policy Rule Validation.Should have then effect" time="0.006" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should target storage accounts" name="Policy JSON Validation.Policy Rule Validation.Should target storage accounts" time="0.007" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should check allowBlobPublicAccess property" name="Policy JSON Validation.Policy Rule Validation.Should check allowBlobPublicAccess property" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should check publicNetworkAccess property" name="Policy JSON Validation.Policy Rule Validation.Should check publicNetworkAccess property" time="0.0046" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use anyOf for multiple conditions" name="Policy JSON Validation.Policy Rule Validation.Should use anyOf for multiple conditions" time="0.003" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have valid effect value" name="Policy JSON Validation.Policy Rule Validation.Should have valid effect value" time="0.0058" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Policy JSON Validation.Policy Metadata Validation" executed="True" result="Success" success="True" time="0.2943" asserts="0" description="Policy JSON Validation.Policy Metadata Validation">
+                <results>
+                  <test-case description="Should have category" name="Policy JSON Validation.Policy Metadata Validation.Should have category" time="0.0064" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have version" name="Policy JSON Validation.Policy Metadata Validation.Should have version" time="0.0068" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have version in metadata" name="Policy JSON Validation.Policy Metadata Validation.Should have version in metadata" time="0.0039" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have source in metadata" name="Policy JSON Validation.Policy Metadata Validation.Should have source in metadata" time="0.0037" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Policy Logic Validation" executed="True" result="Success" success="True" time="0.3337" asserts="0" description="Policy Logic Validation">
+            <results>
+              <test-suite type="TestFixture" name="Policy Logic Validation.Condition Logic" executed="True" result="Success" success="True" time="0.0201" asserts="0" description="Policy Logic Validation.Condition Logic">
+                <results>
+                  <test-case description="Should use allOf for combining conditions" name="Policy Logic Validation.Condition Logic.Should use allOf for combining conditions" time="0.0036" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have proper boolean logic structure" name="Policy Logic Validation.Condition Logic.Should have proper boolean logic structure" time="0.0055" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should properly structure the anyOf conditions" name="Policy Logic Validation.Condition Logic.Should properly structure the anyOf conditions" time="0.0079" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Policy Compliance Scenarios" executed="True" result="Success" success="True" time="0.3629" asserts="0" description="Policy Compliance Scenarios">
+            <results>
+              <test-suite type="TestFixture" name="Policy Compliance Scenarios.Simulated Resource Evaluation" executed="True" result="Success" success="True" time="0.025" asserts="0" description="Policy Compliance Scenarios.Simulated Resource Evaluation">
+                <results>
+                  <test-case description="Should identify compliant storage account" name="Policy Compliance Scenarios.Simulated Resource Evaluation.Should identify compliant storage account" time="0.0079" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should identify non-compliant storage account (blob access)" name="Policy Compliance Scenarios.Simulated Resource Evaluation.Should identify non-compliant storage account (blob access)" time="0.0037" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should identify non-compliant storage account (network access)" name="Policy Compliance Scenarios.Simulated Resource Evaluation.Should identify non-compliant storage account (network access)" time="0.0034" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should identify non-compliant storage account (both access types)" name="Policy Compliance Scenarios.Simulated Resource Evaluation.Should identify non-compliant storage account (both access types)" time="0.0068" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
