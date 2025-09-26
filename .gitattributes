@@ -1,0 +1,113 @@
+# Azure Policy Testing Project - Git Attributes
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.md text
+*.txt text
+*.json text
+*.tf text
+*.tfvars text
+*.ps1 text
+*.psm1 text
+*.psd1 text
+*.yaml text
+*.yml text
+
+# Policy definition files should always use LF line endings
+policies/**/*.json text eol=lf
+
+# PowerShell files should use CRLF on Windows, LF on Unix
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+
+# Terraform files should always use LF line endings
+*.tf text eol=lf
+*.tfvars text eol=lf
+*.tfplan binary
+
+# Documentation files
+*.md text
+README* text
+
+# Configuration files
+*.json text
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# Windows batch files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Declare files that will always have CRLF line endings on checkout
+*.sln text eol=crlf
+
+# Denote all files that are truly binary and should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.tgz binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# Azure specific binaries
+*.pfx binary
+*.p12 binary
+
+# Terraform state files are binary
+*.tfstate binary
+*.tfstate.backup binary
+
+# Archives
+*.7z binary
+*.gz binary
+*.tar binary
+*.zip binary
+
+# Fonts
+*.ttf binary
+*.eot binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Export diff and merge tools settings for common file types
+*.json diff=json
+*.md diff
+*.ps1 diff
+*.tf diff
+
+# Use custom diff driver for Terraform files
+*.tf diff=terraform
+
+# Set merge strategy for certain files
+*.json merge=union
+terraform.tfvars merge=ours
+*.tfvars.example merge=union
+
+# Linguist language detection
+*.tf linguist-language=HCL
+*.tfvars linguist-language=HCL
+*.ps1 linguist-language=PowerShell
+*.psm1 linguist-language=PowerShell
+*.psd1 linguist-language=PowerShell
+
+# Mark generated files
+**/terraform.tfstate linguist-generated=true
+**/terraform.tfstate.backup linguist-generated=true
+**/.terraform/** linguist-generated=true

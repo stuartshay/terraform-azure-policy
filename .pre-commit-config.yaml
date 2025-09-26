@@ -1,0 +1,215 @@
+# Pre-commit hooks configuration for Azure Policy Testing project
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      # Basic file checks
+      - id: trailing-whitespace
+        args: ['--markdown-linebreak-ext=md']
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+        exclude: '\.vscode/.*\.json$' # Exclude VS Code config files that may have comments
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+      # Line ending consistency
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+      # Terraform specific
+      - id: check-yaml
+        files: '\.ya?ml$'
+
+      # JSON formatting (for policy files)
+      - id: pretty-format-json
+        args: ['--autofix', '--indent=2']
+        files: 'policies/.*\.json$'
+
+  # PowerShell linting and formatting
+  - repo: local
+    hooks:
+      - id: powershell-syntax-check
+        name: PowerShell Syntax Check
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'Get-ChildItem -Path . -Filter "*.ps1" -Recurse | ForEach-Object { $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $_.FullName -Raw), [ref]$null) }',
+          ]
+        language: system
+        files: '\.ps1$'
+        pass_filenames: false
+        description: 'Check PowerShell files for syntax errors'
+
+      - id: powershell-script-analyzer
+        name: PowerShell Script Analyzer
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning } else { Write-Host "PSScriptAnalyzer not installed, skipping..." }',
+          ]
+        language: system
+        files: '\.ps1$'
+        pass_filenames: false
+        description: 'Run PSScriptAnalyzer on PowerShell files'
+
+      - id: pester-tests-quick
+        name: Run Quick Pester Tests
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'if (Get-Module -ListAvailable -Name Pester) { Invoke-Pester -Path "tests/storage/Quick-PolicyValidation.Tests.ps1" -CI } else { Write-Host "Pester not installed, skipping tests..." }',
+          ]
+        language: system
+        files: '(\.ps1|policies/.*\.json)$'
+        pass_filenames: false
+        description: 'Run quick policy validation tests'
+
+  # Terraform formatting and validation
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.4
+    hooks:
+      - id: terraform_fmt
+        args:
+          - --args=-recursive
+          - --args=-diff
+      - id: terraform_validate
+        args:
+          - --args=-json
+      - id: terraform_docs
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+      - id: terraform_tflint
+        args:
+          - --args=--only=terraform_deprecated_interpolation
+          - --args=--only=terraform_deprecated_index
+          - --args=--only=terraform_unused_declarations
+          - --args=--only=terraform_comment_syntax
+          - --args=--only=terraform_documented_outputs
+          - --args=--only=terraform_documented_variables
+          - --args=--only=terraform_typed_variables
+          - --args=--only=terraform_module_pinned_source
+          - --args=--only=terraform_naming_convention
+          - --args=--only=terraform_required_version
+          - --args=--only=terraform_required_providers
+          - --args=--only=terraform_standard_module_structure
+          - --args=--only=terraform_workspace_remote
+
+  # Markdown linting and formatting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        name: Markdown Lint
+        args: ['--fix', '--config', '.markdownlint.json']
+        exclude: 'TESTPANEL-SETUP\.md$|docs/TestPanel-Guide\.md$' # Exclude files with known formatting issues
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['-d', 'relaxed']
+
+  # Security scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # Git commit message formatting
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # Azure Policy specific validations
+  - repo: local
+    hooks:
+      - id: azure-policy-validation
+        name: Azure Policy JSON Validation
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'Get-ChildItem -Path "policies" -Filter "*.json" -Recurse | ForEach-Object { try { $policy = Get-Content $_.FullName -Raw | ConvertFrom-Json; if (-not $policy.properties) { throw "Missing properties section" }; if (-not $policy.properties.policyRule) { throw "Missing policyRule" }; Write-Host "✓ $($_.Name) is valid" } catch { Write-Error "✗ $($_.Name): $_"; exit 1 } }',
+          ]
+        language: system
+        files: 'policies/.*\.json$'
+        pass_filenames: false
+        description: 'Validate Azure Policy JSON structure'
+
+      - id: terraform-policy-syntax
+        name: Terraform Policy Configuration Check
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'Get-ChildItem -Path "terraform" -Filter "*.tf" -Recurse | ForEach-Object { $content = Get-Content $_.FullName -Raw; if ($content -match "azurerm_policy" -and $content -notmatch "policy_definition_id") { Write-Error "Policy resource missing policy_definition_id in $($_.Name)"; exit 1 } }',
+          ]
+        language: system
+        files: 'terraform/.*\.tf$'
+        pass_filenames: false
+        description: 'Check Terraform policy configurations'
+
+  # File size and structure checks
+  - repo: local
+    hooks:
+      - id: check-large-policy-files
+        name: Check Policy File Size
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'Get-ChildItem -Path "policies" -Filter "*.json" -Recurse | Where-Object { $_.Length -gt 50KB } | ForEach-Object { Write-Error "Policy file $($_.Name) is too large ($([math]::Round($_.Length/1KB, 2))KB > 50KB)"; exit 1 }',
+          ]
+        language: system
+        files: 'policies/.*\.json$'
+        pass_filenames: false
+        description: 'Ensure policy files are not too large'
+
+      - id: check-test-file-naming
+        name: Check Test File Naming Convention
+        entry: bash
+        args:
+          [
+            '-c',
+            'for file in tests/**/*.ps1; do if [[ $(basename "$file") != *".Tests.ps1" ]] && [[ $(basename "$file") != "PolicyTestConfig.ps1" ]]; then echo "Test file $file should end with .Tests.ps1"; exit 1; fi; done',
+          ]
+        language: system
+        files: 'tests/.*\.ps1$'
+        pass_filenames: false
+        description: 'Ensure test files follow naming convention'
+
+# Global configuration
+default_stages: [commit]
+fail_fast: false
+minimum_pre_commit_version: '3.0.0'
+
+# Configuration for specific tools
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [powershell-script-analyzer, pester-tests-quick, terraform_tflint] # Skip resource-intensive hooks in CI
+  submodules: false

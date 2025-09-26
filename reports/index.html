@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Azure Policy Reports - rg-azure-policy-testing</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 40px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #0066cc;
+        border-bottom: 3px solid #0066cc;
+        padding-bottom: 10px;
+      }
+
+      .summary {
+        background-color: #e6f3ff;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border-left: 4px solid #0066cc;
+      }
+
+      .report-section {
+        margin: 30px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      .report-section h2 {
+        color: #333;
+        margin-top: 0;
+      }
+
+      .file-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+        margin: 15px 0;
+      }
+
+      .file-item {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .file-item a {
+        text-decoration: none;
+        color: #0066cc;
+        font-weight: bold;
+      }
+
+      .file-item a:hover {
+        text-decoration: underline;
+      }
+
+      .file-info {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .instructions {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+
+      .instructions h3 {
+        margin-top: 0;
+        color: #856404;
+      }
+
+      code {
+        background-color: #f4f4f4;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      .status.compliant {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status.non-compliant {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Azure Policy Reports</h1>
+      <div class="summary">
+        <h3>Resource Group: rg-azure-policy-testing</h3>
+        <p>
+          <strong>Last Updated:</strong>
+          <span id="lastUpdated">Check file timestamps below</span>
+        </p>
+        <p>
+          <strong>Subscription:</strong> BizSpark
+          (09e01a7d-07d4-43ee-80c7-8b2c0d7ec41f)
+        </p>
+      </div>
+
+      <div class="instructions">
+        <h3>How to Generate New Reports</h3>
+        <p>To generate fresh reports, run one of the following commands:</p>
+        <ul>
+          <li>
+            <strong>PowerShell:</strong>
+            <code
+              >./scripts/Generate-PolicyReports.ps1 -ResourceGroup
+              "rg-azure-policy-testing"</code
+            >
+          </li>
+          <li>
+            <strong>VS Code:</strong> Use <code>Ctrl+Shift+P</code> → "Tasks:
+            Run Task" → "Generate Policy Reports"
+          </li>
+        </ul>
+      </div>
+
+      <div class="report-section">
+        <h2>📋 Policy Assignments Report</h2>
+        <p>
+          Shows all policy assignments currently active in the resource group,
+          including assignment details, policy definitions, and configuration.
+        </p>
+
+        <div class="file-list" id="assignmentFiles">
+          <!-- Policy assignment files will be listed here -->
+          <div class="file-item">
+            <div>
+              <a href="#" onclick="loadLatestFile('policy-assignments', 'json')"
+                >📄 Latest JSON Report</a
+              >
+            </div>
+            <div class="file-info">
+              Detailed policy assignment data in JSON format
+            </div>
+          </div>
+          <div class="file-item">
+            <div>
+              <a href="#" onclick="loadLatestFile('policy-assignments', 'csv')"
+                >📊 Latest CSV Report</a
+              >
+            </div>
+            <div class="file-info">
+              Policy assignment data for analysis in Excel/spreadsheet
+            </div>
+          </div>
+          <div class="file-item">
+            <div>
+              <a href="#" onclick="loadLatestFile('policy-assignments', 'html')"
+                >📋 Latest HTML Report</a
+              >
+            </div>
+            <div class="file-info">
+              Formatted policy assignment report for web viewing
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <h2>🎯 Policy Compliance Report</h2>
+        <p>
+          Shows compliance status for all resources in the resource group
+          against assigned policies.
+        </p>
+
+        <div class="summary">
+          <strong>Latest Compliance Summary:</strong><br />
+          <span class="status compliant">✓ Compliant: 5 resources</span>
+          <span class="status non-compliant"
+            >✗ Non-Compliant: 15 resources</span
+          >
+        </div>
+
+        <div class="file-list" id="complianceFiles">
+          <!-- Policy compliance files will be listed here -->
+          <div class="file-item">
+            <div>
+              <a href="#" onclick="loadLatestFile('policy-compliance', 'json')"
+                >📄 Latest JSON Report</a
+              >
+            </div>
+            <div class="file-info">Detailed compliance data in JSON format</div>
+          </div>
+          <div class="file-item">
+            <div>
+              <a href="#" onclick="loadLatestFile('policy-compliance', 'csv')"
+                >📊 Latest CSV Report</a
+              >
+            </div>
+            <div class="file-info">
+              Compliance data for analysis in Excel/spreadsheet
+            </div>
+          </div>
+          <div class="file-item">
+            <div>
+              <a href="#" onclick="loadLatestFile('policy-compliance', 'html')"
+                >📋 Latest HTML Report</a
+              >
+            </div>
+            <div class="file-info">
+              Formatted compliance report for web viewing
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <h2>📁 All Report Files</h2>
+        <p>
+          All generated reports are stored with timestamps. Click refresh to
+          update the file list.
+        </p>
+        <button
+          onclick="refreshFileList()"
+          style="
+            padding: 10px 20px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+          "
+        >
+          🔄 Refresh File List
+        </button>
+        <div id="allFiles" style="margin-top: 15px">
+          <!-- All files will be listed here via JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function loadLatestFile(reportType, format) {
+        // This would typically find the latest file of the specified type
+        // For now, we'll just show an alert since we can't access the file system directly
+        alert(
+          `This would open the latest ${reportType} report in ${format} format. In a real deployment, this would link to the actual file.`
+        );
+      }
+
+      function refreshFileList() {
+        // In a real implementation, this would scan the reports directory
+        // For now, we'll show the files we know exist
+        const allFilesDiv = document.getElementById('allFiles');
+        allFilesDiv.innerHTML = `
+                <div class="file-list">
+                    <div class="file-item">
+                        <div><a href="./policy-assignments-rg-azure-policy-testing-20250926-182521.json" target="_blank">policy-assignments-rg-azure-policy-testing-20250926-182521.json</a></div>
+                        <div class="file-info">Generated: 2025-09-26 18:25:21</div>
+                    </div>
+                    <div class="file-item">
+                        <div><a href="./policy-assignments-rg-azure-policy-testing-20250926-182521.csv" target="_blank">policy-assignments-rg-azure-policy-testing-20250926-182521.csv</a></div>
+                        <div class="file-info">Generated: 2025-09-26 18:25:21</div>
+                    </div>
+                    <div class="file-item">
+                        <div><a href="./policy-assignments-rg-azure-policy-testing-20250926-182521.html" target="_blank">policy-assignments-rg-azure-policy-testing-20250926-182521.html</a></div>
+                        <div class="file-info">Generated: 2025-09-26 18:25:21</div>
+                    </div>
+                    <div class="file-item">
+                        <div><a href="./policy-compliance-rg-azure-policy-testing-20250926-182521.json" target="_blank">policy-compliance-rg-azure-policy-testing-20250926-182521.json</a></div>
+                        <div class="file-info">Generated: 2025-09-26 18:25:21</div>
+                    </div>
+                    <div class="file-item">
+                        <div><a href="./policy-compliance-rg-azure-policy-testing-20250926-182521.csv" target="_blank">policy-compliance-rg-azure-policy-testing-20250926-182521.csv</a></div>
+                        <div class="file-info">Generated: 2025-09-26 18:25:21</div>
+                    </div>
+                    <div class="file-item">
+                        <div><a href="./policy-compliance-rg-azure-policy-testing-20250926-182521.html" target="_blank">policy-compliance-rg-azure-policy-testing-20250926-182521.html</a></div>
+                        <div class="file-info">Generated: 2025-09-26 18:25:21</div>
+                    </div>
+                </div>
+            `;
+      }
+
+      // Load the file list on page load
+      document.addEventListener('DOMContentLoaded', function () {
+        refreshFileList();
+        document.getElementById('lastUpdated').textContent =
+          new Date().toLocaleString();
+      });
+    </script>
+  </body>
+</html>

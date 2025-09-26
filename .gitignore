@@ -1,0 +1,105 @@
+# Azure Policy Testing Project - Git Ignore
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+!terraform.tfvars.example
+
+# Azure CLI cache
+.azure/
+
+# PowerShell modules cache
+PSGetModuleInfo.xml
+
+# VS Code settings (keep project settings but ignore user-specific ones)
+.vscode/settings.json.user
+.vscode/launch.json
+.vscode/tasks.json.user
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Desktop.ini
+
+# PowerShell execution policy cache
+powershell.exe.config
+
+# Azure Resource Manager cache
+.arm/
+
+# Policy compliance reports (if they contain sensitive data)
+reports/*.json
+reports/*.csv
+!reports/*.md
+!reports/README.md
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# IDE files
+.idea/
+*.swp
+*.swo
+*~
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python (if any)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Azure Functions (if any)
+bin
+obj
+appsettings.json
+local.settings.json
+.vscode/extensions.json
+
+# Certificates and keys
+*.pfx
+*.p12
+*.key
+*.pem
+*.crt
+*.cer
+
+# Sensitive configuration files
+appsettings.Production.json
+appsettings.Development.json

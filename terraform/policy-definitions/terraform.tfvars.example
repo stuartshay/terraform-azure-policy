@@ -1,0 +1,20 @@
+# Terraform Variables for Storage Public Access Policy
+# Copy this file to terraform.tfvars and update with your actual values
+
+# Azure Configuration
+subcription_id    = "your-subscription-id"
+mangement_group_id = "your-management-group-id"
+scope_id          = "/providers/Microsoft.Management/managementGroups/your-management-group-id"
+
+# Policy Assignment Configuration
+policy_assignment_name         = "deny-storage-public-access-assignment"
+policy_assignment_display_name = "Deny Storage Account Public Access Assignment"
+policy_assignment_description  = "This assignment enforces the policy to deny storage accounts with public access enabled."
+
+# Policy Parameters
+policy_effect               = "Deny"  # Options: Audit, Deny, Disabled
+exempted_resource_groups   = []       # Example: ["rg-exempt-1", "rg-exempt-2"]
+
+# Environment Configuration
+environment = "sandbox"
+owner      = "Policy-Team"
