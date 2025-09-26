@@ -1,66 +1,66 @@
 {
-   "name": "deny-storage-account-public-access",
-   "properties": {
-      "displayName": "Deny Storage Account Public Access",
-      "description": "This policy denies the creation of Azure Storage accounts that allow public blob access or public container access. Storage accounts should have public access disabled for security purposes.",
-      "policyType": "Custom",
-      "mode": "All",
-      "metadata": {
-         "category": "Storage",
-         "version": "1.0.0",
-         "source": "Azure Policy Testing Project"
-      },
-      "parameters": {
-         "effect": {
-            "type": "String",
-            "metadata": {
-               "displayName": "Effect",
-               "description": "The effect determines what happens when the policy rule is evaluated to match"
-            },
-            "allowedValues": [
-               "Audit",
-               "Deny",
-               "Disabled"
-            ],
-            "defaultValue": "Deny"
-         }
-      },
-      "policyRule": {
-         "if": {
-            "allOf": [
-               {
-                  "field": "type",
-                  "equals": "Microsoft.Storage/storageAccounts"
-               },
-               {
-                  "anyOf": [
-                     {
-                        "field": "Microsoft.Storage/storageAccounts/allowBlobPublicAccess",
-                        "equals": "true"
-                     },
-                     {
-                        "field": "Microsoft.Storage/storageAccounts/publicNetworkAccess",
-                        "equals": "Enabled"
-                     },
-                     {
-                        "allOf": [
-                           {
-                              "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction",
-                              "exists": "true"
-                           },
-                           {
-                              "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction",
-                              "equals": "Allow"
-                           }
-                        ]
-                     }
-                  ]
-               }
-            ]
-         },
-         "then": {
-            "effect": "[parameters('effect')]"
-         }
+  "name": "deny-storage-account-public-access",
+  "properties": {
+    "description": "This policy denies the creation of Azure Storage accounts that allow public blob access or public container access. Storage accounts should have public access disabled for security purposes.",
+    "displayName": "Deny Storage Account Public Access",
+    "metadata": {
+      "category": "Storage",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
       }
-   }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Storage/storageAccounts",
+            "field": "type"
+          },
+          {
+            "anyOf": [
+              {
+                "equals": "true",
+                "field": "Microsoft.Storage/storageAccounts/allowBlobPublicAccess"
+              },
+              {
+                "equals": "Enabled",
+                "field": "Microsoft.Storage/storageAccounts/publicNetworkAccess"
+              },
+              {
+                "allOf": [
+                  {
+                    "exists": "true",
+                    "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction"
+                  },
+                  {
+                    "equals": "Allow",
+                    "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
 }

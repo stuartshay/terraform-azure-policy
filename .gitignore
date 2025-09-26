@@ -16,6 +16,9 @@ terraform.tfvars
 # PowerShell modules cache
 PSGetModuleInfo.xml
 
+# Test results
+testResults.xml
+
 # VS Code settings (keep project settings but ignore user-specific ones)
 .vscode/settings.json.user
 .vscode/launch.json
