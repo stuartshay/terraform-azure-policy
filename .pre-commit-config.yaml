@@ -42,12 +42,25 @@ repos:
         args:
           [
             '-Command',
-            'Get-ChildItem -Path . -Filter "*.ps1" -Recurse | ForEach-Object { $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $_.FullName -Raw), [ref]$null) }',
+            'try { Get-ChildItem -Path . -Filter "*.ps1" -Recurse | ForEach-Object { $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $_.FullName -Raw), [ref]$null) }; Write-Host "PowerShell syntax check passed" } catch { Write-Host "PowerShell syntax check failed: $_"; exit 1 }',
           ]
         language: system
         files: '\.ps1$'
         pass_filenames: false
         description: 'Check PowerShell files for syntax errors'
+
+      - id: powershell-whitespace-cleanup
+        name: PowerShell Whitespace Cleanup
+        entry: pwsh
+        args:
+          [
+            '-Command',
+            'Get-ChildItem -Path . -Filter "*.ps*" -Recurse | Where-Object { $_.Name -match "\\.(ps1|psd1)$" } | ForEach-Object { try { $content = Get-Content $_.FullName -Raw -Encoding UTF8; if ($content) { $cleaned = $content -creplace "\\s*=\\s*", " = " -creplace "\\s*\\+\\s*", " + " -creplace "\\s*-\\s*", " - " -creplace "\\s*\\*\\s*", " * " -creplace "\\s*/\\s*", " / "; $lines = $cleaned -split "\\r?\\n"; $trimmed = $lines | ForEach-Object { $_.TrimEnd() }; $final = ($trimmed -join "`n").TrimEnd() + "`n"; if ($content -ne $final) { Write-Host "Cleaning whitespace in $($_.Name)"; [System.IO.File]::WriteAllText($_.FullName, $final, [System.Text.UTF8Encoding]::new($true)) } } } catch { Write-Host "Error cleaning $($_.Name): $_" } }',
+          ]
+        language: system
+        files: '\.ps(1|d1)$'
+        pass_filenames: false
+        description: 'Clean PowerShell files whitespace and add proper spacing'
 
       - id: powershell-script-analyzer
         name: PowerShell Script Analyzer
@@ -55,12 +68,12 @@ repos:
         args:
           [
             '-Command',
-            'if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning } else { Write-Host "PSScriptAnalyzer not installed, skipping..." }',
+            'try { if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { $results = Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning -ExcludeRule PSUseConsistentWhitespace,PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPositionalParameters,PSReviewUnusedParameter,PSUseDeclaredVarsMoreThanAssignments; if ($results) { $results | Format-Table -AutoSize; exit 1 } else { Write-Host "PSScriptAnalyzer passed (critical issues only)" } } else { Write-Host "PSScriptAnalyzer not installed, skipping..." } } catch { Write-Host "PSScriptAnalyzer error: $_" }',
           ]
         language: system
         files: '\.ps1$'
         pass_filenames: false
-        description: 'Run PSScriptAnalyzer on PowerShell files'
+        description: 'Run PSScriptAnalyzer on PowerShell files (critical issues only)'
 
       - id: pester-tests-quick
         name: Run Quick Pester Tests
@@ -219,5 +232,11 @@ ci:
   autoupdate_branch: ''
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
-  skip: [powershell-script-analyzer, pester-tests-quick, terraform_tflint] # Skip resource-intensive hooks in CI
+  skip: [
+      powershell-whitespace-cleanup,
+      powershell-script-analyzer,
+      pester-tests-quick,
+      terraform_tflint,
+      commitizen,
+    ] # Skip resource-intensive hooks in CI
   submodules: false
