@@ -1,98 +1,98 @@
 {
-   "name": "deny-function-app-anonymous",
-   "properties": {
-      "description": "This policy denies the creation of Azure Function Apps that allow anonymous access. Function Apps should require authentication to ensure security and protect sensitive code and data.",
-      "displayName": "Deny Function App Anonymous Access",
-      "metadata": {
-         "category": "Function App",
-         "source": "Azure Policy Testing Project",
-         "version": "1.0.0"
+  "name": "deny-function-app-anonymous",
+  "properties": {
+    "description": "This policy denies the creation of Azure Function Apps that allow anonymous access. Function Apps should require authentication to ensure security and protect sensitive code and data.",
+    "displayName": "Deny Function App Anonymous Access",
+    "metadata": {
+      "category": "Function App",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
       },
-      "mode": "All",
-      "parameters": {
-         "effect": {
-            "allowedValues": [
-               "Audit",
-               "Deny",
-               "Disabled"
-            ],
-            "defaultValue": "Deny",
-            "metadata": {
-               "description": "The effect determines what happens when the policy rule is evaluated to match",
-               "displayName": "Effect"
-            },
-            "type": "String"
-         },
-         "exemptedFunctionApps": {
-            "defaultValue": [],
-            "metadata": {
-               "description": "List of Function App names that are exempt from this policy",
-               "displayName": "Exempted Function Apps"
-            },
-            "type": "Array"
-         },
-         "exemptedResourceGroups": {
-            "defaultValue": [],
-            "metadata": {
-               "description": "List of resource group names that are exempt from this policy",
-               "displayName": "Exempted Resource Groups"
-            },
-            "type": "Array"
-         }
+      "exemptedFunctionApps": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of Function App names that are exempt from this policy",
+          "displayName": "Exempted Function Apps"
+        },
+        "type": "Array"
       },
-      "policyRule": {
-         "if": {
-            "allOf": [
-               {
-                  "equals": "Microsoft.Web/sites",
-                  "field": "type"
-               },
-               {
-                  "equals": "functionapp",
-                  "field": "kind"
-               },
-               {
-                  "not": {
-                     "field": "name",
-                     "in": "[parameters('exemptedFunctionApps')]"
+      "exemptedResourceGroups": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of resource group names that are exempt from this policy",
+          "displayName": "Exempted Resource Groups"
+        },
+        "type": "Array"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Web/sites",
+            "field": "type"
+          },
+          {
+            "equals": "functionapp",
+            "field": "kind"
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedFunctionApps')]"
+            }
+          },
+          {
+            "not": {
+              "field": "Microsoft.Web/sites/resourceGroup",
+              "in": "[parameters('exemptedResourceGroups')]"
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "exists": "false",
+                "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled"
+              },
+              {
+                "equals": "false",
+                "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled"
+              },
+              {
+                "allOf": [
+                  {
+                    "equals": "true",
+                    "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled"
+                  },
+                  {
+                    "equals": "AllowAnonymous",
+                    "field": "Microsoft.Web/sites/siteConfig.authSettings.unauthenticatedClientAction"
                   }
-               },
-               {
-                  "not": {
-                     "field": "Microsoft.Web/sites/resourceGroup",
-                     "in": "[parameters('exemptedResourceGroups')]"
-                  }
-               },
-               {
-                  "anyOf": [
-                     {
-                        "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
-                        "exists": "false"
-                     },
-                     {
-                        "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
-                        "equals": "false"
-                     },
-                     {
-                        "allOf": [
-                           {
-                              "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
-                              "equals": "true"
-                           },
-                           {
-                              "field": "Microsoft.Web/sites/siteConfig.authSettings.unauthenticatedClientAction",
-                              "equals": "AllowAnonymous"
-                           }
-                        ]
-                     }
-                  ]
-               }
+                ]
+              }
             ]
-         },
-         "then": {
-            "effect": "[parameters('effect')]"
-         }
+          }
+        ]
       },
-      "policyType": "Custom"
-   }
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
 }

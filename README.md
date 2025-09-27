@@ -1,6 +1,6 @@
-# Azure Policy Testing Project
+# Azure Policy Project
 
-A comprehensive Azure Policy testing framework using PowerShell, Terraform, and Pester for validating Azure governance policies.
+A comprehensive Azure Policyframework using PowerShell, Terraform, and Pester for validating Azure governance policies.
 
 ## 🚀 **Quick Start**
 

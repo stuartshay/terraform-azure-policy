@@ -114,7 +114,7 @@ repos:
       - id: markdownlint
         name: Markdown Lint
         args: ['--fix', '--config', '.markdownlint.json']
-        exclude: 'TESTPANEL-SETUP\.md$|docs/TestPanel-Guide\.md$' # Exclude files with known formatting issues
+
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint.git

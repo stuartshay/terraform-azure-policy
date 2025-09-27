@@ -121,15 +121,15 @@ module "deny_network_private_ips" {
 ```hcl
 module "deny_network_private_ips" {
   source = "./policies/network/deny-network-private-ips"
-  
+
   create_assignment              = true
   assignment_scope_id            = "/subscriptions/your-subscription-id/resourceGroups/rg-azure-policy-testing"
   policy_assignment_name         = "deny-public-ips-assignment"
   policy_assignment_display_name = "Enforce Private IP Addresses Only"
   policy_assignment_description  = "Custom policy to enforce private IP usage"
-  
+
   policy_effect = "Deny"  # Enforce the policy
-  
+
   exempted_resource_names = [
     "AzureFirewallManagementPublicIP",
     "GatewayPublicIP",
@@ -144,10 +144,10 @@ module "deny_network_private_ips" {
 ```hcl
 module "deny_network_private_ips" {
   source = "./policies/network/deny-network-private-ips"
-  
+
   exempted_resource_names = [
     "AzureFirewallManagementPublicIP",
-    "GatewayPublicIP", 
+    "GatewayPublicIP",
     "BastionPublicIP",
     "DMZLoadBalancerPublicIP",
     "WebAppGatewayPublicIP"
@@ -171,7 +171,7 @@ module "deny_network_private_ips" {
 | `environment` | `string` | `"sandbox"` | Environment name |
 | `owner` | `string` | `"Policy-Team"` | Owner of the policy |
 
-## Outputs
+### Module Outputs
 
 | Name | Description |
 |------|-------------|
@@ -255,3 +255,56 @@ Check Azure Activity Log for policy evaluation details in the Azure Portal.
 ## Version History
 
 - **v1.0**: Initial policy creation with comprehensive network resource coverage
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.117.1 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azurerm_policy_definition.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/policy_definition) | resource |
+| [azurerm_resource_group_policy_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_policy_assignment) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_assignment_location"></a> [assignment\_location](#input\_assignment\_location) | Location for the policy assignment (required for system-assigned identity) | `string` | `"East US"` | no |
+| <a name="input_assignment_scope_id"></a> [assignment\_scope\_id](#input\_assignment\_scope\_id) | The scope ID for policy assignment (resource group ID) | `string` | `null` | no |
+| <a name="input_create_assignment"></a> [create\_assignment](#input\_create\_assignment) | Whether to create a policy assignment | `bool` | `true` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, test, prod) | `string` | `"sandbox"` | no |
+| <a name="input_exempted_resource_names"></a> [exempted\_resource\_names](#input\_exempted\_resource\_names) | List of resource names that are exempt from this policy | `list(string)` | <pre>[<br/>  "AzureFirewallManagementPublicIP",<br/>  "GatewayPublicIP",<br/>  "BastionPublicIP"<br/>]</pre> | no |
+| <a name="input_management_group_id"></a> [management\_group\_id](#input\_management\_group\_id) | The Azure management group ID where the policy definition will be created | `string` | `null` | no |
+| <a name="input_owner"></a> [owner](#input\_owner) | Owner of the policy | `string` | `"Policy-Team"` | no |
+| <a name="input_policy_assignment_description"></a> [policy\_assignment\_description](#input\_policy\_assignment\_description) | Description for the policy assignment | `string` | `"This assignment enforces the policy to deny network resources that use public IP addresses."` | no |
+| <a name="input_policy_assignment_display_name"></a> [policy\_assignment\_display\_name](#input\_policy\_assignment\_display\_name) | Display name for the policy assignment | `string` | `"Deny Network Resources with Public IP Addresses Assignment"` | no |
+| <a name="input_policy_assignment_name"></a> [policy\_assignment\_name](#input\_policy\_assignment\_name) | Name for the policy assignment | `string` | `"deny-network-private-ips-assignment"` | no |
+| <a name="input_policy_effect"></a> [policy\_effect](#input\_policy\_effect) | The effect of the policy (Audit, Deny, or Disabled) | `string` | `"Audit"` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_policy_assignment_id"></a> [policy\_assignment\_id](#output\_policy\_assignment\_id) | The ID of the created policy assignment |
+| <a name="output_policy_assignment_name"></a> [policy\_assignment\_name](#output\_policy\_assignment\_name) | The name of the created policy assignment |
+| <a name="output_policy_assignment_principal_id"></a> [policy\_assignment\_principal\_id](#output\_policy\_assignment\_principal\_id) | The principal ID of the system assigned identity |
+| <a name="output_policy_definition_display_name"></a> [policy\_definition\_display\_name](#output\_policy\_definition\_display\_name) | The display name of the created policy definition |
+| <a name="output_policy_definition_id"></a> [policy\_definition\_id](#output\_policy\_definition\_id) | The ID of the created policy definition |
+| <a name="output_policy_definition_name"></a> [policy\_definition\_name](#output\_policy\_definition\_name) | The name of the created policy definition |
+<!-- END_TF_DOCS -->
