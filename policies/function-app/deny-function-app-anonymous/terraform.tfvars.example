@@ -1,0 +1,31 @@
+# Example configuration for Function App Anonymous Access Policy
+
+# Environment Configuration
+environment = "sandbox"
+owner       = "Policy-Team"
+
+# Management Group (optional)
+# management_group_id = "/providers/Microsoft.Management/managementGroups/your-mg-id"
+
+# Policy Assignment Configuration
+create_assignment                = true
+assignment_scope_id              = "/subscriptions/your-subscription-id/resourceGroups/rg-azure-policy-testing"
+assignment_location              = "East US"
+policy_assignment_name           = "deny-function-app-anonymous-assignment"
+policy_assignment_display_name   = "Deny Function App Anonymous Access"
+policy_assignment_description    = "Enforce authentication on Function Apps"
+
+# Policy Configuration
+policy_effect = "Audit"  # Change to "Deny" for enforcement
+
+# Exempted Function Apps (optional)
+exempted_function_apps = [
+  # "legacy-function-app",
+  # "temp-function-app"
+]
+
+# Exempted Resource Groups (optional)
+exempted_resource_groups = [
+  # "rg-legacy-apps",
+  # "rg-development"
+]

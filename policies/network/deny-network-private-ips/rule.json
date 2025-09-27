@@ -1,0 +1,144 @@
+{
+   "name": "deny-network-private-ips",
+   "properties": {
+      "displayName": "Deny Network Resources with Public IP Addresses",
+      "description": "This policy denies the creation of network resources that use public IP addresses. It ensures that only private IP addresses are used for network interfaces, virtual machines, load balancers, and other network resources to maintain security and compliance with private network requirements.",
+      "policyType": "Custom",
+      "mode": "All",
+      "metadata": {
+         "category": "Network",
+         "version": "1.0.0",
+         "source": "Azure Policy Testing Project"
+      },
+      "parameters": {
+         "effect": {
+            "type": "String",
+            "metadata": {
+               "displayName": "Effect",
+               "description": "The effect determines what happens when the policy rule is evaluated to match"
+            },
+            "allowedValues": [
+               "Audit",
+               "Deny",
+               "Disabled"
+            ],
+            "defaultValue": "Deny"
+         },
+         "exemptedResourceNames": {
+            "type": "Array",
+            "metadata": {
+               "displayName": "Exempted Resource Names",
+               "description": "List of resource names that are exempt from this policy (e.g., management resources, gateways)"
+            },
+            "defaultValue": [
+               "AzureFirewallManagementPublicIP",
+               "GatewayPublicIP",
+               "BastionPublicIP"
+            ]
+         }
+      },
+      "policyRule": {
+         "if": {
+            "anyOf": [
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Network/publicIPAddresses"
+                     },
+                     {
+                        "not": {
+                           "field": "name",
+                           "in": "[parameters('exemptedResourceNames')]"
+                        }
+                     }
+                  ]
+               },
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Network/networkInterfaces"
+                     },
+                     {
+                        "count": {
+                           "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*]",
+                           "where": {
+                              "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*].publicIPAddress.id",
+                              "exists": "true"
+                           }
+                        },
+                        "greater": 0
+                     }
+                  ]
+               },
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Compute/virtualMachines"
+                     },
+                     {
+                        "count": {
+                           "field": "Microsoft.Compute/virtualMachines/networkProfile.networkInterfaces[*]",
+                           "where": {
+                              "anyOf": [
+                                 {
+                                    "field": "Microsoft.Compute/virtualMachines/networkProfile.networkInterfaces[*].properties.ipConfigurations[*].publicIPAddress",
+                                    "exists": "true"
+                                 },
+                                 {
+                                    "field": "Microsoft.Compute/virtualMachines/networkProfile.networkInterfaces[*].properties.enableIPForwarding",
+                                    "equals": "true"
+                                 }
+                              ]
+                           }
+                        },
+                        "greater": 0
+                     }
+                  ]
+               },
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Network/loadBalancers"
+                     },
+                     {
+                        "count": {
+                           "field": "Microsoft.Network/loadBalancers/frontendIPConfigurations[*]",
+                           "where": {
+                              "field": "Microsoft.Network/loadBalancers/frontendIPConfigurations[*].publicIPAddress.id",
+                              "exists": "true"
+                           }
+                        },
+                        "greater": 0
+                     }
+                  ]
+               },
+               {
+                  "allOf": [
+                     {
+                        "field": "type",
+                        "equals": "Microsoft.Network/applicationGateways"
+                     },
+                     {
+                        "count": {
+                           "field": "Microsoft.Network/applicationGateways/frontendIPConfigurations[*]",
+                           "where": {
+                              "field": "Microsoft.Network/applicationGateways/frontendIPConfigurations[*].publicIPAddress.id",
+                              "exists": "true"
+                           }
+                        },
+                        "greater": 0
+                     }
+                  ]
+               }
+            ]
+         },
+         "then": {
+            "effect": "[parameters('effect')]"
+         }
+      }
+   }
+}

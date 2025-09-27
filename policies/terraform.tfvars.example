@@ -16,7 +16,44 @@ assignment_location = "East US"
 storage_policy_effect = "Audit"  # Change to "Deny" for enforcement
 storage_softdelete_policy_effect = "Audit"  # Change to "Deny" for enforcement
 storage_softdelete_retention_days = 7  # Minimum days for soft delete retention (1-365)
+storage_versioning_policy_effect = "Audit"  # Change to "Deny" for enforcement
+
+# Storage Versioning Configuration
+storage_versioning_account_types = [
+  "Standard_LRS",
+  "Standard_GRS",
+  "Standard_RAGRS",
+  "Standard_ZRS",
+  "Standard_GZRS",
+  "Standard_RAGZRS"
+]
+# storage_versioning_exempted_accounts = ["legacy-storage-account"]  # Optional exemptions
+
 network_policy_effect = "Audit"  # Change to "Deny" for enforcement
+
+# Function App Policy Configuration
+function_app_policy_effect = "Audit"  # Change to "Deny" for enforcement
+function_app_https_policy_effect = "Audit"  # Change to "Deny" for enforcement
+
+# Function App Exemptions (optional)
+function_app_exempted_apps = [
+  # "public-webhook-function",
+  # "health-check-function"
+]
+function_app_exempted_resource_groups = [
+  # "rg-public-apis",
+  # "rg-development"
+]
+
+# Function App HTTPS-Only Exemptions (optional)
+function_app_https_exempted_apps = [
+  # "legacy-http-function",
+  # "development-test-function"
+]
+function_app_https_exempted_resource_groups = [
+  # "rg-legacy-systems",
+  # "rg-development"
+]
 
 # Environment and Ownership
 environment = "sandbox"

@@ -4,7 +4,7 @@ This policy denies the creation of Azure Storage accounts that allow public blob
 
 ## 📁 Structure
 
-```
+```text
 deny-storage-account-public-access/
 ├── rule.json                     # Policy definition (JSON)
 ├── main.tf                       # Terraform main configuration
@@ -189,7 +189,7 @@ This policy integrates with:
 - [Azure Policy Definition Structure](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure)
 - [Storage Account Properties](https://docs.microsoft.com/en-us/azure/templates/microsoft.storage/storageaccounts)
 - [Azure Policy Effects](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/effects)
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -239,4 +239,4 @@ No modules.
 | <a name="output_policy_definition_display_name"></a> [policy\_definition\_display\_name](#output\_policy\_definition\_display\_name) | The display name of the created policy definition |
 | <a name="output_policy_definition_id"></a> [policy\_definition\_id](#output\_policy\_definition\_id) | The ID of the created policy definition |
 | <a name="output_policy_definition_name"></a> [policy\_definition\_name](#output\_policy\_definition\_name) | The name of the created policy definition |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

@@ -149,17 +149,6 @@ module "deny_network_no_nsg" {
 | `assignment_scope` | `string` | `null` | Scope for policy assignment |
 | `assignment_parameters` | `map(any)` | `{}` | Parameters for policy assignment |
 
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| `policy_definition_id` | The ID of the created policy definition |
-| `policy_definition_name` | The name of the created policy definition |
-| `policy_definition_display_name` | The display name of the created policy definition |
-| `policy_assignment_id` | The ID of the policy assignment (if created) |
-| `policy_assignment_name` | The name of the policy assignment (if created) |
-| `policy_assignment_principal_id` | The principal ID of the system assigned identity |
-
 ## Testing
 
 Test files are available in the `tests/` directory:
@@ -211,7 +200,7 @@ Check Azure Activity Log for policy evaluation details in the Azure Portal.
 ## Version History
 
 - **v1.0**: Initial policy creation with subnet and network interface support
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -262,4 +251,4 @@ No modules.
 | <a name="output_policy_definition_display_name"></a> [policy\_definition\_display\_name](#output\_policy\_definition\_display\_name) | The display name of the created policy definition |
 | <a name="output_policy_definition_id"></a> [policy\_definition\_id](#output\_policy\_definition\_id) | The ID of the created policy definition |
 | <a name="output_policy_definition_name"></a> [policy\_definition\_name](#output\_policy\_definition\_name) | The name of the created policy definition |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

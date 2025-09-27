@@ -1,0 +1,34 @@
+# Example Terraform variables file for deny-network-private-ips policy
+# Copy this file to terraform.tfvars and customize the values
+
+# Policy assignment configuration
+create_assignment = false
+
+# Resource group for assignment (only needed if create_assignment = true)
+# assignment_scope_id = "/subscriptions/your-subscription-id/resourceGroups/your-resource-group"
+
+# Policy assignment details (optional - will use defaults if not specified)
+# policy_assignment_name = "deny-network-private-ips-assignment"
+# policy_assignment_display_name = "Deny Network Resources with Public IP Addresses Assignment"
+# policy_assignment_description = "This assignment enforces the policy to deny network resources that use public IP addresses."
+
+# Policy effect (optional - defaults to "Audit")
+# policy_effect = "Deny"
+
+# Exempted resource names (optional - defaults to common Azure service resources)
+# exempted_resource_names = [
+#   "AzureFirewallManagementPublicIP",
+#   "GatewayPublicIP", 
+#   "BastionPublicIP",
+#   "MyCustomExemptedResource"
+# ]
+
+# Management group (optional - if not specified, policy created at subscription level)
+# management_group_id = "mg-production"
+
+# Assignment location (optional - defaults to "East US")
+# assignment_location = "East US"
+
+# Environment and ownership (optional - will use defaults)
+# environment = "prod"
+# owner = "NetworkTeam"

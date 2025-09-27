@@ -66,6 +66,44 @@ variable "storage_softdelete_retention_days" {
   }
 }
 
+variable "storage_versioning_policy_effect" {
+  description = "The effect for storage versioning policy (Audit, Deny, or Disabled)"
+  type        = string
+  default     = "Audit"
+  validation {
+    condition     = contains(["Audit", "Deny", "Disabled"], var.storage_versioning_policy_effect)
+    error_message = "Storage versioning policy effect must be one of: Audit, Deny, Disabled."
+  }
+}
+
+variable "storage_versioning_account_types" {
+  description = "List of storage account types that require blob versioning"
+  type        = list(string)
+  default = [
+    "Standard_LRS",
+    "Standard_GRS",
+    "Standard_RAGRS",
+    "Standard_ZRS",
+    "Standard_GZRS",
+    "Standard_RAGZRS"
+  ]
+  validation {
+    condition = alltrue([
+      for type in var.storage_versioning_account_types : contains([
+        "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS",
+        "Premium_LRS", "Premium_ZRS", "Standard_GZRS", "Standard_RAGZRS"
+      ], type)
+    ])
+    error_message = "All storage account types must be valid Azure storage account SKUs."
+  }
+}
+
+variable "storage_versioning_exempted_accounts" {
+  description = "List of storage account names that are exempt from the versioning policy"
+  type        = list(string)
+  default     = []
+}
+
 variable "network_policy_effect" {
   description = "The effect for network policies (Audit, Deny, or Disabled)"
   type        = string
@@ -74,6 +112,50 @@ variable "network_policy_effect" {
     condition     = contains(["Audit", "Deny", "Disabled"], var.network_policy_effect)
     error_message = "Network policy effect must be one of: Audit, Deny, Disabled."
   }
+}
+
+variable "function_app_policy_effect" {
+  description = "The effect for Function App policies (Audit, Deny, or Disabled)"
+  type        = string
+  default     = "Audit"
+  validation {
+    condition     = contains(["Audit", "Deny", "Disabled"], var.function_app_policy_effect)
+    error_message = "Function App policy effect must be one of: Audit, Deny, Disabled."
+  }
+}
+
+variable "function_app_exempted_apps" {
+  description = "List of Function App names that are exempt from the anonymous policy"
+  type        = list(string)
+  default     = []
+}
+
+variable "function_app_exempted_resource_groups" {
+  description = "List of resource group names that are exempt from the Function App anonymous policy"
+  type        = list(string)
+  default     = []
+}
+
+variable "function_app_https_policy_effect" {
+  description = "The effect for Function App HTTPS-only policy (Audit, Deny, or Disabled)"
+  type        = string
+  default     = "Audit"
+  validation {
+    condition     = contains(["Audit", "Deny", "Disabled"], var.function_app_https_policy_effect)
+    error_message = "Function App HTTPS policy effect must be one of: Audit, Deny, Disabled."
+  }
+}
+
+variable "function_app_https_exempted_apps" {
+  description = "List of Function App names that are exempt from the HTTPS-only policy"
+  type        = list(string)
+  default     = []
+}
+
+variable "function_app_https_exempted_resource_groups" {
+  description = "List of resource group names that are exempt from the Function App HTTPS-only policy"
+  type        = list(string)
+  default     = []
 }
 
 variable "environment" {
