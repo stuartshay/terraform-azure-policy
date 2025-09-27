@@ -1,0 +1,81 @@
+# Dependabot configuration for Azure Policy Testing project
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Terraform dependencies
+  - package-ecosystem: 'terraform'
+    directory: '/policies'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Etc/UTC'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'terraform'
+      prefix-development: 'terraform'
+      include: 'scope'
+    assignees:
+      - 'stuartshay'
+    labels:
+      - 'dependencies'
+      - 'terraform'
+      - 'automated'
+    allow:
+      - dependency-type: 'direct'
+      - dependency-type: 'indirect'
+    ignore:
+      # Ignore patch releases for stable providers
+      - dependency-name: 'hashicorp/azurerm'
+        update-types: ['version-update:semver-patch']
+
+  # GitHub Actions dependencies
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Etc/UTC'
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'github-actions'
+      prefix-development: 'github-actions'
+      include: 'scope'
+    assignees:
+      - 'stuartshay'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+      - 'automated'
+    allow:
+      - dependency-type: 'direct'
+      - dependency-type: 'indirect'
+
+  # Pre-commit hooks dependencies
+  - package-ecosystem: 'pip'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'tuesday'
+      time: '09:00'
+      timezone: 'Etc/UTC'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'pre-commit'
+      prefix-development: 'pre-commit'
+      include: 'scope'
+    assignees:
+      - 'stuartshay'
+    labels:
+      - 'dependencies'
+      - 'pre-commit'
+      - 'automated'
+    allow:
+      - dependency-type: 'direct'
+      - dependency-type: 'indirect'
+    # Only update pre-commit hooks in .pre-commit-config.yaml
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']

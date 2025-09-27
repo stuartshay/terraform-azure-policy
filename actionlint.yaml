@@ -1,0 +1,62 @@
+# Actionlint configuration for GitHub Actions workflow validation
+# See https://github.com/rhysd/actionlint for more information
+
+# Disable specific rules that may not be relevant for this project
+rules:
+  # Enable all rules by default
+  action-usage: true
+
+  # Workflow syntax validation
+  workflow-syntax: true
+
+  # Job and step validation
+  job-needs: true
+
+  # Action version pinning validation
+  action-version: true
+
+  # Shell command validation
+  shellcheck: true
+
+  # Expression validation
+  expression: true
+
+  # Environment variable validation
+  env-var: true
+
+  # Permissions validation
+  permissions: true
+
+  # Deprecated features detection
+  deprecated-commands: true
+
+  # Matrix strategy validation
+  matrix: true
+
+# Configuration for specific checks
+shellcheck:
+  # Enable ShellCheck integration for shell commands in workflows
+  enable: true
+  # Exclude specific ShellCheck warnings if needed
+  exclude: []
+
+# Custom action validation
+actions:
+  # Skip validation for local actions (actions in .github/actions/)
+  skip-local-action-validation: false
+
+  # Allow using latest tag for actions (not recommended for production)
+  allow-latest-tag: false
+
+# Ignore patterns for files that should not be linted
+ignore:
+  # Ignore workflow files in specific directories if needed
+  # - '.github/workflows/example-ignore.yml'
+
+# Severity levels: error, warning, info
+severity:
+  # Treat all actionlint issues as errors
+  default: error
+
+  # Override severity for specific rules if needed
+  # action-version: warning

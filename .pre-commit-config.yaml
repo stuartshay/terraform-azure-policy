@@ -115,13 +115,21 @@ repos:
         name: Markdown Lint
         args: ['--fix', '--config', '.markdownlint.json']
 
-
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.37.1
     hooks:
       - id: yamllint
         args: ['-d', 'relaxed']
+
+  # GitHub Actions linting
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+        args:
+          - '-config-file'
+          - 'actionlint.yaml'
 
   # Security scanning
   - repo: https://github.com/Yelp/detect-secrets
