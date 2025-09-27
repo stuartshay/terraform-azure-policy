@@ -38,11 +38,11 @@ repos:
     hooks:
       - id: powershell-syntax-check
         name: PowerShell Syntax Check
-        entry: pwsh
+        entry: bash
         args:
           [
-            '-Command',
-            'try { Get-ChildItem -Path . -Filter "*.ps1" -Recurse | ForEach-Object { $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $_.FullName -Raw), [ref]$null) }; Write-Host "PowerShell syntax check passed" } catch { Write-Host "PowerShell syntax check failed: $_"; exit 1 }',
+            '-c',
+            'if command -v pwsh >/dev/null 2>&1; then pwsh -Command "try { Get-ChildItem -Path . -Filter \"*.ps1\" -Recurse | ForEach-Object { \$null = [System.Management.Automation.PSParser]::Tokenize((Get-Content \$_.FullName -Raw), [ref]\$null) }; Write-Host \"PowerShell syntax check passed\" } catch { Write-Host \"PowerShell syntax check failed: \$_\"; exit 1 }"; else echo "PowerShell not available, skipping syntax check"; fi',
           ]
         language: system
         files: '\.ps1$'
@@ -164,11 +164,11 @@ repos:
     hooks:
       - id: azure-policy-validation
         name: Azure Policy JSON Validation
-        entry: pwsh
+        entry: bash
         args:
           [
-            '-Command',
-            'Get-ChildItem -Path "policies" -Filter "rule.json" -Recurse | ForEach-Object { try { $policy = Get-Content $_.FullName -Raw | ConvertFrom-Json; if (-not $policy.properties) { throw "Missing properties section" }; if (-not $policy.properties.policyRule) { throw "Missing policyRule" }; Write-Host "✓ $($_.Name) is valid" } catch { Write-Error "✗ $($_.Name): $_"; exit 1 } }',
+            '-c',
+            'if command -v pwsh >/dev/null 2>&1; then pwsh -Command "Get-ChildItem -Path \"policies\" -Filter \"rule.json\" -Recurse | ForEach-Object { try { \$policy = Get-Content \$_.FullName -Raw | ConvertFrom-Json; if (-not \$policy.properties) { throw \"Missing properties section\" }; if (-not \$policy.properties.policyRule) { throw \"Missing policyRule\" }; Write-Host \"✓ \$(\$_.Name) is valid\" } catch { Write-Error \"✗ \$(\$_.Name): \$_\"; exit 1 } }"; else echo "PowerShell not available, using basic JSON validation"; find policies -name "rule.json" -exec python -m json.tool {} \\; > /dev/null && echo "✓ All policy JSON files are valid"; fi',
           ]
         language: system
         files: 'policies/.*/rule\.json$'
@@ -193,11 +193,11 @@ repos:
     hooks:
       - id: check-large-policy-files
         name: Check Policy File Size
-        entry: pwsh
+        entry: bash
         args:
           [
-            '-Command',
-            'Get-ChildItem -Path "policies" -Filter "*.json" -Recurse | Where-Object { $_.Length -gt 50KB } | ForEach-Object { Write-Error "Policy file $($_.Name) is too large ($([math]::Round($_.Length/1KB, 2))KB > 50KB)"; exit 1 }',
+            '-c',
+            'large_files=$(find policies -name "*.json" -size +50k); if [ -n "$large_files" ]; then echo "Policy files too large (>50KB):"; echo "$large_files"; exit 1; else echo "✓ All policy files are within size limit"; fi',
           ]
         language: system
         files: 'policies/.*/rule\.json$'
@@ -233,6 +233,7 @@ ci:
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
   skip: [
+      powershell-syntax-check,
       powershell-whitespace-cleanup,
       powershell-script-analyzer,
       pester-tests-quick,

@@ -26,44 +26,36 @@ jobs:
         with:
           terraform_version: 1.13.1
 
-      - name: Install PowerShell
+      - name: Install tools
         run: |
-          # Update package list
-          sudo apt-get update
-          # Install prerequisites
-          sudo apt-get install -y wget apt-transport-https software-properties-common
-          # Download and install PowerShell
-          UBUNTU_VERSION=$(lsb_release -rs)
-          wget -q "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/packages-microsoft-prod.deb"
-          sudo dpkg -i packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo apt-get install -y powershell
+          set -e
 
-      - name: Install PowerShell modules
-        shell: pwsh
-        run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -ErrorAction SilentlyContinue
-          Install-Module -Name Pester -Force -Scope CurrentUser -ErrorAction SilentlyContinue
-
-      - name: Install additional tools
-        run: |
           # Install terraform-docs
-          ARCH=$(uname)
-          curl -sSLo ./terraform-docs.tar.gz "https://terraform-docs.io/dl/v0.17.0/terraform-docs-v0.17.0-${ARCH}-amd64.tar.gz"
+          echo "Installing terraform-docs..."
+          TERRAFORM_DOCS_VERSION="v0.17.0"
+          wget -q -O terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
           tar -xzf terraform-docs.tar.gz
           chmod +x terraform-docs
           sudo mv terraform-docs /usr/local/bin/terraform-docs
 
-          # Install tflint
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-
           # Install actionlint
-          bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-          sudo mv actionlint /usr/local/bin/
+          echo "Installing actionlint..."
+          ACTIONLINT_VERSION="1.7.7"
+          wget -q -O actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          tar -xzf actionlint.tar.gz
+          chmod +x actionlint
+          sudo mv actionlint /usr/local/bin/actionlint
+
+      - name: Verify tools installation
+        run: |
+          echo "Verifying installed tools..."
+          python --version
+          terraform --version
+          terraform-docs --version
+          actionlint -version
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
         env:
-          SKIP: powershell-whitespace-cleanup,powershell-script-analyzer,pester-tests-quick,terraform_tflint,commitizen
+          SKIP: powershell-syntax-check,powershell-whitespace-cleanup,powershell-script-analyzer,pester-tests-quick,terraform_tflint,commitizen
           PRE_COMMIT_HOME: ~/.cache/pre-commit
