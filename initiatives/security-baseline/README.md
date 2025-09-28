@@ -125,20 +125,6 @@ module "security_baseline" {
 | `environment` | string | "sandbox" | Environment name |
 | `owner` | string | "Policy-Team" | Owner of the policy initiative |
 
-## Outputs
-
-| Output | Description |
-|--------|-------------|
-| `initiative_id` | The ID of the created security baseline initiative |
-| `initiative_name` | The name of the created security baseline initiative |
-| `initiative_display_name` | The display name of the created security baseline initiative |
-| `assignment_id` | The ID of the created policy set assignment (if created) |
-| `assignment_name` | The name of the created policy set assignment (if created) |
-| `assignment_identity` | The identity of the created policy set assignment (if created) |
-| `storage_policy_id` | The ID of the storage public access policy |
-| `network_policy_id` | The ID of the network NSG policy |
-| `function_app_policy_id` | The ID of the function app HTTPS policy |
-
 ## Deployment Recommendations
 
 ### Development Environment

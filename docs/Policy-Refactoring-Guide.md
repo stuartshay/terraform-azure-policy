@@ -17,7 +17,7 @@ This document describes the refactoring improvements made to the Terraform Azure
 
 A new shared module was created at `policies/modules/azure-policy/` with the following structure:
 
-```
+```text
 policies/modules/azure-policy/
 ├── main.tf      # Core policy definition and assignment logic
 ├── variables.tf # Input variables for the module
@@ -189,7 +189,7 @@ If you have existing policy deployments using the old structure:
 
 The project now follows Terraform best practices with a clear separation of concerns:
 
-```
+```text
 terraform-azure-policy/
 ├── modules/                          # Reusable Terraform modules (ROOT LEVEL)
 │   ├── azure-policy/                # Shared policy module
