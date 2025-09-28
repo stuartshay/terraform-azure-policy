@@ -38,12 +38,12 @@ jobs:
         continue-on-error: true
         run: |
           echo "Installing terraform-docs..."
-          TERRAFORM_DOCS_VERSION="0.17.0"
+          TERRAFORM_DOCS_VERSION="0.20.0"
           wget -q -O terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
           tar -xzf terraform-docs.tar.gz terraform-docs
           chmod +x terraform-docs
           sudo mv terraform-docs /usr/local/bin/terraform-docs
-          echo "✓ terraform-docs installed"
+          echo "✓ terraform-docs v${TERRAFORM_DOCS_VERSION} installed"
 
       - name: Install actionlint
         continue-on-error: true
@@ -59,19 +59,19 @@ jobs:
       - name: Verify tools installation
         run: |
           echo "Verifying installed tools..."
-          python --version
-          terraform --version
+          echo "Python: $(python --version)"
+          echo "Terraform: $(terraform --version | head -1)"
 
           if command -v terraform-docs >/dev/null 2>&1; then
-            terraform-docs --version
+            echo "✓ terraform-docs: $(terraform-docs --version)"
           else
-            echo "terraform-docs not available"
+            echo "⚠ terraform-docs not available"
           fi
 
           if command -v actionlint >/dev/null 2>&1; then
-            actionlint -version
+            echo "✓ actionlint: $(actionlint -version 2>/dev/null || actionlint --version 2>/dev/null || echo 'version unknown')"
           else
-            echo "actionlint not available"
+            echo "⚠ actionlint not available"
           fi
 
       - name: Determine hooks to skip
