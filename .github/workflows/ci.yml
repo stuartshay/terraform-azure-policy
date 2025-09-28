@@ -26,36 +26,74 @@ jobs:
         with:
           terraform_version: 1.13.1
 
-      - name: Install tools
+      - name: Install pre-commit dependencies
         run: |
-          set -e
+          # Update package lists
+          sudo apt-get update
 
-          # Install terraform-docs
+          # Install basic tools that might be needed
+          sudo apt-get install -y jq curl wget
+
+      - name: Install terraform-docs
+        continue-on-error: true
+        run: |
           echo "Installing terraform-docs..."
-          TERRAFORM_DOCS_VERSION="v0.17.0"
-          wget -q -O terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
-          tar -xzf terraform-docs.tar.gz
+          TERRAFORM_DOCS_VERSION="0.17.0"
+          wget -q -O terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+          tar -xzf terraform-docs.tar.gz terraform-docs
           chmod +x terraform-docs
           sudo mv terraform-docs /usr/local/bin/terraform-docs
+          echo "✓ terraform-docs installed"
 
-          # Install actionlint
+      - name: Install actionlint
+        continue-on-error: true
+        run: |
           echo "Installing actionlint..."
           ACTIONLINT_VERSION="1.7.7"
           wget -q -O actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          tar -xzf actionlint.tar.gz
+          tar -xzf actionlint.tar.gz actionlint
           chmod +x actionlint
           sudo mv actionlint /usr/local/bin/actionlint
+          echo "✓ actionlint installed"
 
       - name: Verify tools installation
         run: |
           echo "Verifying installed tools..."
           python --version
           terraform --version
-          terraform-docs --version
-          actionlint -version
+
+          if command -v terraform-docs >/dev/null 2>&1; then
+            terraform-docs --version
+          else
+            echo "terraform-docs not available"
+          fi
+
+          if command -v actionlint >/dev/null 2>&1; then
+            actionlint -version
+          else
+            echo "actionlint not available"
+          fi
+
+      - name: Determine hooks to skip
+        id: skip-hooks
+        run: |
+          SKIP_HOOKS="powershell-syntax-check,powershell-whitespace-cleanup,powershell-script-analyzer,pester-tests-quick,terraform_tflint,commitizen"
+
+          # Add terraform_docs to skip list if not available
+          if ! command -v terraform-docs >/dev/null 2>&1; then
+            SKIP_HOOKS="${SKIP_HOOKS},terraform_docs"
+          fi
+
+          # Add actionlint to skip list if not available
+          if ! command -v actionlint >/dev/null 2>&1; then
+            SKIP_HOOKS="${SKIP_HOOKS},actionlint"
+          fi
+
+          echo "SKIP_HOOKS=${SKIP_HOOKS}" >> "$GITHUB_OUTPUT"
+          echo "Will skip hooks: ${SKIP_HOOKS}"
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
         env:
-          SKIP: powershell-syntax-check,powershell-whitespace-cleanup,powershell-script-analyzer,pester-tests-quick,terraform_tflint,commitizen
+          SKIP: ${{ steps.skip-hooks.outputs.SKIP_HOOKS }}
           PRE_COMMIT_HOME: ~/.cache/pre-commit

@@ -1,4 +1,6 @@
-# Azure Policy Project
+# Terraform Azure Policy Project
+
+[![CI](https://github.com/stuartshay/terraform-azure-policy/actions/workflows/ci.yml/badge.svg)](https://github.com/stuartshay/terraform-azure-policy/actions/workflows/ci.yml)
 
 A comprehensive Azure Policyframework using PowerShell, Terraform, and Pester for validating Azure governance policies.
 
