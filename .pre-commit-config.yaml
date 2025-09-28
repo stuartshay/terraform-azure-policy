@@ -23,6 +23,7 @@ repos:
       # Line ending consistency
       - id: mixed-line-ending
         args: ['--fix=lf']
+        exclude: '\.(ps1|psm1|psd1)$'
 
       # Terraform specific
       - id: check-yaml
