@@ -419,7 +419,7 @@ Describe 'Storage Account Feature Testing' -Tag @('Integration', 'Fast', 'Featur
                     # Upload a test blob
                     $blobName = 'test-file.txt'
                     $testContent = 'Initial version of test content'
-                    $blob = Set-AzStorageBlobContent -Container $containerName -Blob $blobName -BlobType Block -Context $storageContext -Force -ErrorAction SilentlyContinue
+                    $blob = $testContent | Set-AzStorageBlobContent -Container $containerName -Blob $blobName -BlobType Block -Context $storageContext -Force -ErrorAction SilentlyContinue
 
                     if ($blob) {
                         Write-Host "Uploaded test blob: $blobName" -ForegroundColor Green

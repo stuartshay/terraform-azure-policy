@@ -259,27 +259,21 @@ Check Azure Activity Log for policy evaluation details in the Azure Portal.
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.0 |
+No requirements.
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.117.1 |
+No providers.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_policy"></a> [policy](#module\_policy) | ../../../modules/azure-policy | n/a |
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [azurerm_policy_definition.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/policy_definition) | resource |
-| [azurerm_resource_group_policy_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_policy_assignment) | resource |
+No resources.
 
 ## Inputs
 
@@ -302,9 +296,8 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_policy_assignment_id"></a> [policy\_assignment\_id](#output\_policy\_assignment\_id) | The ID of the created policy assignment |
+| <a name="output_policy_assignment_identity"></a> [policy\_assignment\_identity](#output\_policy\_assignment\_identity) | The identity of the created policy assignment |
 | <a name="output_policy_assignment_name"></a> [policy\_assignment\_name](#output\_policy\_assignment\_name) | The name of the created policy assignment |
-| <a name="output_policy_assignment_principal_id"></a> [policy\_assignment\_principal\_id](#output\_policy\_assignment\_principal\_id) | The principal ID of the system assigned identity |
-| <a name="output_policy_definition_display_name"></a> [policy\_definition\_display\_name](#output\_policy\_definition\_display\_name) | The display name of the created policy definition |
 | <a name="output_policy_definition_id"></a> [policy\_definition\_id](#output\_policy\_definition\_id) | The ID of the created policy definition |
 | <a name="output_policy_definition_name"></a> [policy\_definition\_name](#output\_policy\_definition\_name) | The name of the created policy definition |
 <!-- END_TF_DOCS -->

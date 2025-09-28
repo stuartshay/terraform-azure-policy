@@ -1,22 +1,6 @@
 # Azure Policies - Main Deployment Configuration
 # This configuration deploys all Azure Policy definitions and assignments
 
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0"
-    }
-  }
-}
-
-# Configure the Microsoft Azure Provider
-provider "azurerm" {
-  features {}
-  subscription_id = var.subscription_id
-}
-
 # Deploy Storage Policies
 module "deny_storage_account_public_access" {
   source = "./storage/deny-storage-account-public-access"

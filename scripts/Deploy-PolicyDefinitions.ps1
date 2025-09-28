@@ -69,14 +69,14 @@ function Deploy-PolicyDefinition {
         Write-Host "  Description: $Description" -ForegroundColor Gray
 
         if ($WhatIfPreference) {
-            Write-Host "  [WHAT-IF] Would deploy policy definition" -ForegroundColor Cyan
+            Write-Host '  [WHAT-IF] Would deploy policy definition' -ForegroundColor Cyan
             return $true
         }
 
         # Determine deployment scope
         $DeploymentParams = @{
-            Name = $PolicyName
-            Policy = $FilePath
+            Name    = $PolicyName
+            Policy  = $FilePath
             Verbose = $true
         }
 
@@ -95,18 +95,18 @@ function Deploy-PolicyDefinition {
                 Write-Host "  Scope: Current Subscription ($($Context.Subscription.Id))" -ForegroundColor Gray
             }
             else {
-                throw "No Azure context found. Please run Connect-AzAccount first."
+                throw 'No Azure context found. Please run Connect-AzAccount first.'
             }
         }
 
         $Result = New-AzPolicyDefinition @DeploymentParams
 
         if ($Result) {
-            Write-Host "  ✓ Successfully deployed" -ForegroundColor Green
+            Write-Host '  ✓ Successfully deployed' -ForegroundColor Green
             return $true
         }
         else {
-            Write-Host "  ✗ Deployment failed" -ForegroundColor Red
+            Write-Host '  ✗ Deployment failed' -ForegroundColor Red
             return $false
         }
     }
@@ -116,7 +116,7 @@ function Deploy-PolicyDefinition {
     }
 }
 
-function Get-PolicyFiles {
+function Get-PolicyFile {
     <#
     .SYNOPSIS
     Get all policy definition files from a path
@@ -130,7 +130,7 @@ function Get-PolicyFiles {
         return @($Path)
     }
     elseif (Test-Path $Path -PathType Container) {
-        return Get-ChildItem -Path $Path -Filter "*.json" -Recurse | ForEach-Object { $_.FullName }
+        return Get-ChildItem -Path $Path -Filter '*.json' -Recurse | ForEach-Object { $_.FullName }
     }
     else {
         throw "Path not found: $Path"
@@ -139,31 +139,31 @@ function Get-PolicyFiles {
 
 # Main execution
 try {
-    Write-Host "Azure Policy Definition Deployment" -ForegroundColor Cyan
-    Write-Host "===================================" -ForegroundColor Cyan
+    Write-Host 'Azure Policy Definition Deployment' -ForegroundColor Cyan
+    Write-Host '===================================' -ForegroundColor Cyan
 
     if ($WhatIf) {
-        Write-Host "[WHAT-IF MODE] No actual deployments will be made" -ForegroundColor Yellow
+        Write-Host '[WHAT-IF MODE] No actual deployments will be made' -ForegroundColor Yellow
     }
 
     # Check Azure authentication
     $Context = Get-AzContext
     if (-not $Context) {
-        Write-Host "Not authenticated to Azure. Attempting to connect..." -ForegroundColor Yellow
+        Write-Host 'Not authenticated to Azure. Attempting to connect...' -ForegroundColor Yellow
         Connect-AzAccount
         $Context = Get-AzContext
 
         if (-not $Context) {
-            throw "Failed to authenticate to Azure"
+            throw 'Failed to authenticate to Azure'
         }
     }
 
-    Write-Host "Connected to Azure:" -ForegroundColor Green
+    Write-Host 'Connected to Azure:' -ForegroundColor Green
     Write-Host "  Account: $($Context.Account.Id)" -ForegroundColor White
     Write-Host "  Subscription: $($Context.Subscription.Name) ($($Context.Subscription.Id))" -ForegroundColor White
 
     # Get policy files
-    $PolicyFiles = Get-PolicyFiles -Path $PolicyPath
+    $PolicyFiles = Get-PolicyFile -Path $PolicyPath
 
     if ($PolicyFiles.Count -eq 0) {
         Write-Warning "No policy definition files found in: $PolicyPath"
@@ -181,7 +181,7 @@ try {
         $Success = Deploy-PolicyDefinition -FilePath $File -ManagementGroup $ManagementGroupId -Subscription $SubscriptionId -WhatIfPreference:$WhatIf
 
         $DeploymentResults += [PSCustomObject]@{
-            File = $File
+            File    = $File
             Success = $Success
         }
     }

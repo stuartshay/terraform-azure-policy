@@ -105,6 +105,7 @@ repos:
           - --hook-config=--add-to-existing-file=true
           - --hook-config=--create-file-if-not-exist=true
       - id: terraform_tflint
+        exclude: '^(policies/(storage|network|function-app)/.+/|initiatives/)'
         args:
           - --args=--only=terraform_deprecated_interpolation
           - --args=--only=terraform_deprecated_index

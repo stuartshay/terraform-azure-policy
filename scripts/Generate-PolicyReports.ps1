@@ -27,18 +27,18 @@ param(
     [string]$ResourceGroup,
 
     [Parameter(Mandatory = $false)]
-    [ValidateSet("All", "Assignments", "Compliance")]
-    [string]$ReportType = "All",
+    [ValidateSet('All', 'Assignments', 'Compliance')]
+    [string]$ReportType = 'All',
 
     [Parameter(Mandatory = $false)]
-    [ValidateSet("JSON", "CSV", "HTML", "All")]
-    [string]$Format = "All",
+    [ValidateSet('JSON', 'CSV', 'HTML', 'All')]
+    [string]$Format = 'All',
 
     [Parameter(Mandatory = $false)]
-    [string]$OutputPath = "./reports"
+    [string]$OutputPath = './reports'
 )
 
-function Get-PolicyAssignments {
+function Get-PolicyAssignment {
     <#
     .SYNOPSIS
     Get all policy assignments for a resource group
@@ -63,21 +63,21 @@ function Get-PolicyAssignments {
             $PolicyDef = az policy definition show --name (Split-Path $Assignment.policyDefinitionId -Leaf) 2>$null | ConvertFrom-Json
 
             [PSCustomObject]@{
-                AssignmentName = $Assignment.name
-                DisplayName = $Assignment.displayName
-                Description = $Assignment.description
-                PolicyDefinitionId = $Assignment.policyDefinitionId
+                AssignmentName       = $Assignment.name
+                DisplayName          = $Assignment.displayName
+                Description          = $Assignment.description
+                PolicyDefinitionId   = $Assignment.policyDefinitionId
                 PolicyDefinitionName = if ($PolicyDef) { $PolicyDef.displayName } else { Split-Path $Assignment.policyDefinitionId -Leaf }
-                PolicyType = if ($PolicyDef) { $PolicyDef.policyType } else { "Unknown" }
-                Category = if ($PolicyDef -and $PolicyDef.metadata.category) { $PolicyDef.metadata.category } else { "Unspecified" }
-                Effect = if ($Assignment.parameters -and $Assignment.parameters.effect) { $Assignment.parameters.effect.value } else { "Default" }
-                Scope = $Assignment.scope
-                EnforcementMode = if ($Assignment.enforcementMode) { $Assignment.enforcementMode } else { "Default" }
-                Identity = if ($Assignment.identity) { $Assignment.identity.type } else { "None" }
-                CreatedBy = if ($Assignment.metadata -and $Assignment.metadata.createdBy) { $Assignment.metadata.createdBy } else { "Unknown" }
-                CreatedOn = if ($Assignment.metadata -and $Assignment.metadata.createdOn) { $Assignment.metadata.createdOn } else { "Unknown" }
-                UpdatedBy = if ($Assignment.metadata -and $Assignment.metadata.updatedBy) { $Assignment.metadata.updatedBy } else { "Unknown" }
-                UpdatedOn = if ($Assignment.metadata -and $Assignment.metadata.updatedOn) { $Assignment.metadata.updatedOn } else { "Unknown" }
+                PolicyType           = if ($PolicyDef) { $PolicyDef.policyType } else { 'Unknown' }
+                Category             = if ($PolicyDef -and $PolicyDef.metadata.category) { $PolicyDef.metadata.category } else { 'Unspecified' }
+                Effect               = if ($Assignment.parameters -and $Assignment.parameters.effect) { $Assignment.parameters.effect.value } else { 'Default' }
+                Scope                = $Assignment.scope
+                EnforcementMode      = if ($Assignment.enforcementMode) { $Assignment.enforcementMode } else { 'Default' }
+                Identity             = if ($Assignment.identity) { $Assignment.identity.type } else { 'None' }
+                CreatedBy            = if ($Assignment.metadata -and $Assignment.metadata.createdBy) { $Assignment.metadata.createdBy } else { 'Unknown' }
+                CreatedOn            = if ($Assignment.metadata -and $Assignment.metadata.createdOn) { $Assignment.metadata.createdOn } else { 'Unknown' }
+                UpdatedBy            = if ($Assignment.metadata -and $Assignment.metadata.updatedBy) { $Assignment.metadata.updatedBy } else { 'Unknown' }
+                UpdatedOn            = if ($Assignment.metadata -and $Assignment.metadata.updatedOn) { $Assignment.metadata.updatedOn } else { 'Unknown' }
             }
         }
 
@@ -104,7 +104,7 @@ function Get-PolicyCompliance {
         Write-Host "Retrieving policy compliance for resource group: $ResourceGroupName" -ForegroundColor Yellow
 
         # Trigger compliance scan first
-        Write-Host "Triggering policy compliance scan..." -ForegroundColor Gray
+        Write-Host 'Triggering policy compliance scan...' -ForegroundColor Gray
         az policy state trigger-scan --resource-group $ResourceGroupName 2>$null
 
         # Wait a moment for scan to process
@@ -119,17 +119,17 @@ function Get-PolicyCompliance {
 
         $ComplianceDetails = foreach ($State in $ComplianceStates) {
             [PSCustomObject]@{
-                ResourceId = $State.resourceId
-                ResourceName = Split-Path $State.resourceId -Leaf
-                ResourceType = if ($State.resourceType) { $State.resourceType } else { "Unknown" }
-                PolicyDefinitionName = $State.policyDefinitionName
-                PolicyAssignmentName = $State.policyAssignmentName
-                ComplianceState = $State.complianceState
-                Timestamp = $State.timestamp
-                IsCompliant = $State.complianceState -eq "Compliant"
-                ComplianceReasonCode = if ($State.complianceReasonCode) { $State.complianceReasonCode } else { "N/A" }
-                PolicyDefinitionAction = if ($State.policyDefinitionAction) { $State.policyDefinitionAction } else { "N/A" }
-                PolicyAssignmentScope = if ($State.policyAssignmentScope) { $State.policyAssignmentScope } else { "N/A" }
+                ResourceId             = $State.resourceId
+                ResourceName           = Split-Path $State.resourceId -Leaf
+                ResourceType           = if ($State.resourceType) { $State.resourceType } else { 'Unknown' }
+                PolicyDefinitionName   = $State.policyDefinitionName
+                PolicyAssignmentName   = $State.policyAssignmentName
+                ComplianceState        = $State.complianceState
+                Timestamp              = $State.timestamp
+                IsCompliant            = $State.complianceState -eq 'Compliant'
+                ComplianceReasonCode   = if ($State.complianceReasonCode) { $State.complianceReasonCode } else { 'N/A' }
+                PolicyDefinitionAction = if ($State.policyDefinitionAction) { $State.policyDefinitionAction } else { 'N/A' }
+                PolicyAssignmentScope  = if ($State.policyAssignmentScope) { $State.policyAssignmentScope } else { 'N/A' }
             }
         }
 
@@ -160,14 +160,14 @@ function Export-ReportData {
 
     try {
         switch ($ExportFormat) {
-            "JSON" {
+            'JSON' {
                 $Data | ConvertTo-Json -Depth 10 | Out-File -FilePath $FilePath -Encoding UTF8
             }
-            "CSV" {
+            'CSV' {
                 $Data | Export-Csv -Path $FilePath -NoTypeInformation -Encoding UTF8
             }
-            "HTML" {
-                $Html = Generate-HtmlReport -Data $Data -Title (Split-Path $FilePath -LeafBase)
+            'HTML' {
+                $Html = New-HtmlReport -Data $Data -Title (Split-Path $FilePath -LeafBase)
                 $Html | Out-File -FilePath $FilePath -Encoding UTF8
             }
         }
@@ -178,7 +178,7 @@ function Export-ReportData {
     }
 }
 
-function Generate-HtmlReport {
+function New-HtmlReport {
     <#
     .SYNOPSIS
     Generate HTML report from data
@@ -227,39 +227,39 @@ function Generate-HtmlReport {
         }
     }
 
-    $Html += "</tr></thead><tbody>"
+    $Html += '</tr></thead><tbody>'
 
     # Add table rows
     foreach ($Item in $Data) {
-        $Html += "<tr>"
+        $Html += '<tr>'
         foreach ($Property in $Properties) {
             $Value = $Item.$Property
-            $CssClass = ""
+            $CssClass = ''
 
             # Add special formatting for compliance state
-            if ($Property -eq "ComplianceState") {
-                $CssClass = if ($Value -eq "Compliant") { "compliant" } else { "non-compliant" }
+            if ($Property -eq 'ComplianceState') {
+                $CssClass = if ($Value -eq 'Compliant') { 'compliant' } else { 'non-compliant' }
             }
 
             $Html += "<td class='$CssClass'>$Value</td>"
         }
-        $Html += "</tr>"
+        $Html += '</tr>'
     }
 
-    $Html += @"
+    $Html += @'
         </tbody>
     </table>
 </body>
 </html>
-"@
+'@
 
     return $Html
 }
 
 # Main execution
 try {
-    Write-Host "Azure Policy Report Generator" -ForegroundColor Cyan
-    Write-Host "============================" -ForegroundColor Cyan
+    Write-Host 'Azure Policy Report Generator' -ForegroundColor Cyan
+    Write-Host '============================' -ForegroundColor Cyan
     Write-Host "Resource Group: $ResourceGroup" -ForegroundColor White
     Write-Host "Report Type: $ReportType" -ForegroundColor White
     Write-Host "Format: $Format" -ForegroundColor White
@@ -268,7 +268,7 @@ try {
     # Check if Azure CLI is available and authenticated
     $AzVersion = az version 2>$null
     if ($LASTEXITCODE -ne 0) {
-        throw "Azure CLI not found. Please install Azure CLI first."
+        throw 'Azure CLI not found. Please install Azure CLI first.'
     }
 
     $Account = az account show 2>$null | ConvertFrom-Json
@@ -286,16 +286,16 @@ try {
     }
 
     # Generate timestamp for file names
-    $Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $ResourceGroupClean = $ResourceGroup -replace '[^a-zA-Z0-9-]', '-'
 
     # Generate policy assignments report
-    if ($ReportType -in @("All", "Assignments")) {
+    if ($ReportType -in @('All', 'Assignments')) {
         Write-Host "`n=== Generating Policy Assignments Report ===" -ForegroundColor Cyan
-        $Assignments = Get-PolicyAssignments -ResourceGroupName $ResourceGroup
+        $Assignments = Get-PolicyAssignment -ResourceGroupName $ResourceGroup
 
         if ($Assignments.Count -gt 0) {
-            $Formats = if ($Format -eq "All") { @("JSON", "CSV", "HTML") } else { @($Format) }
+            $Formats = if ($Format -eq 'All') { @('JSON', 'CSV', 'HTML') } else { @($Format) }
 
             foreach ($ExportFormat in $Formats) {
                 $Extension = $ExportFormat.ToLower()
@@ -308,12 +308,12 @@ try {
     }
 
     # Generate policy compliance report
-    if ($ReportType -in @("All", "Compliance")) {
+    if ($ReportType -in @('All', 'Compliance')) {
         Write-Host "`n=== Generating Policy Compliance Report ===" -ForegroundColor Cyan
         $Compliance = Get-PolicyCompliance -ResourceGroupName $ResourceGroup
 
         if ($Compliance.Count -gt 0) {
-            $Formats = if ($Format -eq "All") { @("JSON", "CSV", "HTML") } else { @($Format) }
+            $Formats = if ($Format -eq 'All') { @('JSON', 'CSV', 'HTML') } else { @($Format) }
 
             foreach ($ExportFormat in $Formats) {
                 $Extension = $ExportFormat.ToLower()
@@ -327,12 +327,13 @@ try {
             $ComplianceStats = $Compliance | Group-Object ComplianceState
             Write-Host "`n=== Compliance Summary ===" -ForegroundColor Cyan
             foreach ($Stat in $ComplianceStats) {
-                $Color = if ($Stat.Name -eq "Compliant") { "Green" } else { "Red" }
+                $Color = if ($Stat.Name -eq 'Compliant') { 'Green' } else { 'Red' }
                 Write-Host "$($Stat.Name): $($Stat.Count)" -ForegroundColor $Color
             }
-        } else {
-            Write-Host "No compliance data available. This may be normal for newly created policies." -ForegroundColor Yellow
-            Write-Host "Policy evaluation can take up to 15 minutes for new assignments." -ForegroundColor Yellow
+        }
+        else {
+            Write-Host 'No compliance data available. This may be normal for newly created policies.' -ForegroundColor Yellow
+            Write-Host 'Policy evaluation can take up to 15 minutes for new assignments.' -ForegroundColor Yellow
         }
     }
 

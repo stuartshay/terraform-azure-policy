@@ -66,7 +66,7 @@ function Test-PolicyDefinitionSyntax {
     }
 }
 
-function Get-PolicyFiles {
+function Get-PolicyFile {
     <#
     .SYNOPSIS
     Get all policy definition files from a path
@@ -92,7 +92,7 @@ try {
     Write-Host 'Validating Azure Policy Definitions...' -ForegroundColor Cyan
     Write-Host "Path: $PolicyPath" -ForegroundColor White
 
-    $PolicyFiles = Get-PolicyFiles -Path $PolicyPath
+    $PolicyFiles = Get-PolicyFile -Path $PolicyPath
 
     if ($PolicyFiles.Count -eq 0) {
         Write-Warning "No policy definition files found in: $PolicyPath"
