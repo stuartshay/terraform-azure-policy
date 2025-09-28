@@ -64,6 +64,9 @@ reports/*.csv
 !reports/*.md
 !reports/README.md
 
+# Generated output directory
+output/
+
 # Backup files
 *.bak
 *.backup

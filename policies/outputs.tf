@@ -31,6 +31,16 @@ output "deny_storage_version_assignment_id" {
   value       = module.deny_storage_version.policy_assignment_id
 }
 
+output "deny_storage_https_disabled_policy_id" {
+  description = "The ID of the deny storage HTTPS-disabled policy definition"
+  value       = module.deny_storage_https_disabled.policy_definition_id
+}
+
+output "deny_storage_https_disabled_assignment_id" {
+  description = "The ID of the deny storage HTTPS-disabled policy assignment"
+  value       = module.deny_storage_https_disabled.policy_assignment_id
+}
+
 # Network Policy Outputs
 output "deny_network_no_nsg_policy_id" {
   description = "The ID of the deny network no NSG policy definition"
@@ -73,6 +83,17 @@ output "deny_function_app_https_only_assignment_id" {
   value       = module.deny_function_app_https_only.policy_assignment_id
 }
 
+# App Service Policy Outputs
+output "deny_app_service_plan_not_zone_redundant_policy_id" {
+  description = "The ID of the deny App Service Plan not zone redundant policy definition"
+  value       = module.deny_app_service_plan_not_zone_redundant.policy_definition_id
+}
+
+output "deny_app_service_plan_not_zone_redundant_assignment_id" {
+  description = "The ID of the deny App Service Plan not zone redundant policy assignment"
+  value       = module.deny_app_service_plan_not_zone_redundant.policy_assignment_id
+}
+
 # Summary Outputs
 output "deployed_policies" {
   description = "List of deployed policy definitions"
@@ -90,6 +111,10 @@ output "deployed_policies" {
       id   = module.deny_storage_version.policy_definition_id
     },
     {
+      name = module.deny_storage_https_disabled.policy_definition_name
+      id   = module.deny_storage_https_disabled.policy_definition_id
+    },
+    {
       name = module.deny_network_no_nsg.policy_definition_name
       id   = module.deny_network_no_nsg.policy_definition_id
     },
@@ -104,6 +129,10 @@ output "deployed_policies" {
     {
       name = module.deny_function_app_https_only.policy_definition_name
       id   = module.deny_function_app_https_only.policy_definition_id
+    },
+    {
+      name = module.deny_app_service_plan_not_zone_redundant.policy_definition_name
+      id   = module.deny_app_service_plan_not_zone_redundant.policy_definition_id
     }
   ]
 }
@@ -124,6 +153,10 @@ output "deployed_assignments" {
       id   = module.deny_storage_version.policy_assignment_id
     },
     {
+      name = module.deny_storage_https_disabled.policy_assignment_name
+      id   = module.deny_storage_https_disabled.policy_assignment_id
+    },
+    {
       name = module.deny_network_no_nsg.policy_assignment_name
       id   = module.deny_network_no_nsg.policy_assignment_id
     },
@@ -138,6 +171,10 @@ output "deployed_assignments" {
     {
       name = module.deny_function_app_https_only.policy_assignment_name
       id   = module.deny_function_app_https_only.policy_assignment_id
+    },
+    {
+      name = module.deny_app_service_plan_not_zone_redundant.policy_assignment_name
+      id   = module.deny_app_service_plan_not_zone_redundant.policy_assignment_id
     }
   ]
 }

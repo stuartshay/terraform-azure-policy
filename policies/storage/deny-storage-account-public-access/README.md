@@ -2,6 +2,15 @@
 
 This policy denies the creation of Azure Storage accounts that allow public blob access or public container access. Storage accounts should have public access disabled for security purposes.
 
+## 🔒 Checkov Alignment
+
+This policy implements **Checkov CKV_AZURE_59**: "Ensure that Storage accounts disallow public access"
+
+- **Checkov Rule**: `CKV_AZURE_59`
+- **Checkov Category**: Storage
+- **Checkov Severity**: HIGH
+- **Policy Alignment**: ✅ Fully Compliant
+
 ## 📁 Structure
 
 ```text
@@ -21,14 +30,32 @@ deny-storage-account-public-access/
 - **Category**: Storage
 - **Mode**: All
 - **Policy Type**: Custom
+- **Checkov Rule**: `CKV_AZURE_59`
+- **Compliance Framework**: Azure Security Benchmark, CIS Azure
 
 ### Policy Conditions
 
-The policy triggers when a storage account is created or modified with any of these configurations:
+This policy aligns with **CKV_AZURE_59** requirements and triggers when a storage account is created or modified with any of these non-compliant configurations:
 
 1. **Blob Public Access Enabled**: `allowBlobPublicAccess = true`
+   - **Security Risk**: Allows anonymous public read access to blobs
+   - **CKV_AZURE_59 Requirement**: Must be set to `false`
+
 2. **Public Network Access Enabled**: `publicNetworkAccess = "Enabled"`
+   - **Security Risk**: Allows access from any public IP address
+   - **Best Practice**: Should be `"Disabled"` for enhanced security
+
 3. **Network ACLs Allow All**: `networkAcls.defaultAction = "Allow"`
+   - **Security Risk**: Permits traffic from all networks by default
+   - **Secure Configuration**: Should be `"Deny"` with explicit allow rules
+
+### Security Rationale
+
+Following CKV_AZURE_59 guidance, storage accounts with public access enabled pose significant security risks:
+
+- **Data Exposure**: Sensitive data may be accessible without authentication
+- **Compliance Violations**: May violate regulatory requirements (GDPR, HIPAA, etc.)
+- **Attack Surface**: Increases potential for data breaches and unauthorized access
 
 ### Available Effects
 
@@ -87,6 +114,28 @@ environment = "sandbox"
 owner = "Policy-Team"
 ```
 
+## ✅ CKV_AZURE_59 Compliance Validation
+
+### Checkov Scanning
+
+This policy addresses findings from Checkov rule CKV_AZURE_59. You can validate compliance using:
+
+```bash
+# Scan Terraform files with Checkov
+checkov -f main.tf --check CKV_AZURE_59
+
+# Scan entire directory
+checkov -d . --check CKV_AZURE_59
+
+# Generate compliance report
+checkov -d . --check CKV_AZURE_59 --output json > compliance-report.json
+```
+
+### Expected Checkov Results
+
+- **PASSED**: Storage accounts with `allowBlobPublicAccess = false`
+- **FAILED**: Storage accounts with `allowBlobPublicAccess = true` or missing property
+
 ## 🧪 Testing
 
 The policy can be tested using the parent project's test suite:
@@ -94,19 +143,51 @@ The policy can be tested using the parent project's test suite:
 ```bash
 # From project root
 ./scripts/Invoke-PolicyTests.ps1 -TestPath "tests/storage"
+
+# Test specific to CKV_AZURE_59 compliance
+./scripts/Generate-CheckovReport.ps1 | grep -i "CKV_AZURE_59"
 ```
 
 ### Test Scenarios
 
-1. **Compliant Storage Account**:
-   - `allowBlobPublicAccess = false`
-   - `publicNetworkAccess = "Disabled"`
-   - `networkAcls.defaultAction = "Deny"`
+#### ✅ CKV_AZURE_59 Compliant Configuration
 
-2. **Non-Compliant Storage Account** (triggers policy):
-   - `allowBlobPublicAccess = true`
-   - OR `publicNetworkAccess = "Enabled"`
-   - OR `networkAcls.defaultAction = "Allow"`
+```hcl
+resource "azurerm_storage_account" "compliant" {
+  name                          = "compliantstorageacct"
+  resource_group_name           = azurerm_resource_group.example.name
+  location                      = azurerm_resource_group.example.location
+  account_tier                  = "Standard"
+  account_replication_type      = "LRS"
+  allow_nested_items_to_be_public = false  # CKV_AZURE_59 requirement
+  public_network_access_enabled   = false  # Additional security
+
+  network_rules {
+    default_action = "Deny"
+    # Add specific IP ranges or virtual networks as needed
+  }
+}
+```
+
+#### ❌ Non-Compliant Configuration (triggers policy)
+
+```hcl
+resource "azurerm_storage_account" "non_compliant" {
+  name                            = "noncompliantstorageacct"
+  resource_group_name             = azurerm_resource_group.example.name
+  location                        = azurerm_resource_group.example.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = true   # ❌ Violates CKV_AZURE_59
+  public_network_access_enabled   = true   # ❌ Additional security risk
+}
+```
+
+**Policy Triggers**: Any of these conditions will trigger the policy:
+
+- `allowBlobPublicAccess = true` (Primary CKV_AZURE_59 violation)
+- `publicNetworkAccess = "Enabled"`
+- `networkAcls.defaultAction = "Allow"`
 
 ## 📊 Outputs
 
@@ -186,9 +267,23 @@ This policy integrates with:
 
 ## 📚 References
 
+### Checkov & Compliance
+
+- [Checkov CKV_AZURE_59](https://docs.checkov.io/4.Integrations/GitHubActions.html) - Ensure that Storage accounts disallow public access
+- [Azure Security Benchmark](https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-data-protection) - Data Protection controls
+- [CIS Azure Foundations Benchmark](https://www.cisecurity.org/benchmark/azure) - Storage Account security recommendations
+
+### Azure Documentation
+
 - [Azure Policy Definition Structure](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure)
 - [Storage Account Properties](https://docs.microsoft.com/en-us/azure/templates/microsoft.storage/storageaccounts)
 - [Azure Policy Effects](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/effects)
+- [Storage Account Security](https://docs.microsoft.com/en-us/azure/storage/common/storage-security-guide) - Comprehensive security guide
+
+### Tools & Testing
+
+- [Checkov Documentation](https://www.checkov.io/) - Static code analysis for infrastructure as code
+- [Azure Policy Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=AzurePolicy.azurepolicyextension) - Policy development tools
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

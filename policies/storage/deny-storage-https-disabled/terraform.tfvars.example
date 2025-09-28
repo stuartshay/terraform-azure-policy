@@ -1,0 +1,37 @@
+# Example terraform.tfvars for deny-storage-https-disabled policy
+
+# Basic Configuration
+environment = "production"
+owner       = "Security-Team"
+
+# Policy Configuration
+policy_effect = "Deny"  # Use "Audit" for monitoring, "Deny" for enforcement
+
+# Storage Account Types (all types by default for comprehensive coverage)
+storage_account_types = [
+  "Standard_LRS",
+  "Standard_GRS",
+  "Standard_RAGRS",
+  "Standard_ZRS",
+  "Standard_GZRS",
+  "Standard_RAGZRS",
+  "Premium_LRS",
+  "Premium_ZRS",
+  "BlobStorage",
+  "BlockBlobStorage",
+  "FileStorage"
+]
+
+# Exempted Storage Accounts (example - customize as needed)
+exempted_storage_accounts = [
+  # "legacy-http-storage",      # Legacy system that cannot support HTTPS-only
+  # "development-test-storage"  # Development environment exemption
+]
+
+# Assignment Configuration (uncomment and configure as needed)
+# create_assignment = true
+# assignment_scope_id = "/subscriptions/your-subscription-id/resourceGroups/rg-production"
+# assignment_location = "East US"
+
+# Management Group Configuration (optional)
+# management_group_id = "/providers/Microsoft.Management/managementGroups/corp"

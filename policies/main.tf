@@ -75,6 +75,34 @@ module "deny_storage_version" {
   owner       = var.owner
 }
 
+module "deny_storage_https_disabled" {
+  source = "./storage/deny-storage-https-disabled"
+
+  # Management Group (optional)
+  management_group_id = var.management_group_id
+
+  # Assignment Configuration
+  create_assignment              = var.create_assignments
+  assignment_scope_id            = var.assignment_scope_id
+  policy_assignment_name         = "deny-storage-https-disabled-assignment"
+  policy_assignment_display_name = "Deny Storage Account Without HTTPS-Only Traffic Assignment"
+  policy_assignment_description  = "This assignment enforces the policy to deny storage accounts that do not have HTTPS-only traffic enabled."
+  assignment_location            = var.assignment_location
+
+  # Policy Configuration
+  policy_effect = var.storage_https_policy_effect
+
+  # Storage account types that require HTTPS-only traffic
+  storage_account_types = var.storage_https_account_types
+
+  # Exempted storage accounts (optional)
+  exempted_storage_accounts = var.storage_https_exempted_accounts
+
+  # Environment
+  environment = var.environment
+  owner       = var.owner
+}
+
 # Deploy Network Policies
 module "deny_network_no_nsg" {
   source = "./network/deny-network-no-nsg"
@@ -183,6 +211,34 @@ module "deny_function_app_https_only" {
   # Exempted Function Apps and Resource Groups
   exempted_function_apps   = var.function_app_https_exempted_apps
   exempted_resource_groups = var.function_app_https_exempted_resource_groups
+
+  # Environment
+  environment = var.environment
+  owner       = var.owner
+}
+
+# Deploy App Service Policies
+module "deny_app_service_plan_not_zone_redundant" {
+  source = "./app-service/deny-app-service-plan-not-zone-redundant"
+
+  # Management Group (optional)
+  management_group_id = var.management_group_id
+
+  # Assignment Configuration
+  create_assignment              = var.create_assignments
+  assignment_scope_id            = var.assignment_scope_id
+  policy_assignment_name         = "deny-app-service-plan-not-zone-redundant-assignment"
+  policy_assignment_display_name = "Deny App Service Plan Without Zone Redundancy Assignment"
+  policy_assignment_description  = "This assignment enforces the policy to deny App Service Plans that do not have zone redundancy enabled."
+  assignment_location            = var.assignment_location
+
+  # Policy Configuration
+  policy_effect = var.app_service_policy_effect
+
+  # App Service Plan Configuration
+  required_sku_tiers         = var.app_service_required_sku_tiers
+  exempted_app_service_plans = var.app_service_exempted_plans
+  minimum_instance_count     = var.app_service_minimum_instance_count
 
   # Environment
   environment = var.environment

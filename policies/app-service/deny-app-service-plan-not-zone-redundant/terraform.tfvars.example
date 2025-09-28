@@ -1,0 +1,33 @@
+# Example terraform.tfvars for deny-app-service-plan-not-zone-redundant policy
+
+# Basic Configuration
+environment = "production"
+owner       = "Platform-Team"
+
+# Policy Configuration
+policy_effect = "Deny"  # Use "Audit" for monitoring, "Deny" for enforcement
+
+# Required SKU Tiers (all zone redundancy capable tiers by default)
+required_sku_tiers = [
+  "PremiumV2",
+  "PremiumV3",
+  "PremiumV4",
+  "IsolatedV2"
+]
+
+# Exempted App Service Plans (example - customize as needed)
+exempted_app_service_plans = [
+  # "legacy-asp-basic",         # Legacy plan that cannot support zone redundancy
+  # "development-test-asp"      # Development environment exemption
+]
+
+# Minimum Instance Count for Zone Redundancy
+minimum_instance_count = 2
+
+# Assignment Configuration (uncomment and configure as needed)
+# create_assignment = true
+# assignment_scope_id = "/subscriptions/your-subscription-id/resourceGroups/rg-production"
+# assignment_location = "East US"
+
+# Management Group Configuration (optional)
+# management_group_id = "/providers/Microsoft.Management/managementGroups/corp"
