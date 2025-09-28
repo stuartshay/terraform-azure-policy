@@ -22,6 +22,30 @@ deny-storage-softdelete/
 - **Mode**: All
 - **Policy Type**: Custom
 
+## 🔒 Checkov Alignment
+
+This policy provides **enhanced coverage** beyond existing Checkov rules for Azure Storage soft delete:
+
+- **Related Checkov Rule**: `CKV2_AZURE_38` - "Ensure soft-delete is enabled on Azure storage account"
+- **Policy Gap Filled**: Addresses the lack of comprehensive soft delete retention policy validation in Checkov
+- **Enhanced Coverage**: This policy provides more comprehensive soft delete controls including:
+  - ✅ Blob soft delete retention period validation
+  - ✅ Container soft delete retention period validation  
+  - ✅ Configurable minimum retention days (1-365 days)
+  - ✅ Multiple enforcement modes (Audit/Deny/Disabled)
+  - ✅ Granular policy conditions for different soft delete scenarios
+
+### Checkov CKV2_AZURE_38 Comparison
+
+| Feature | CKV2_AZURE_38 | This Policy |
+|---------|---------------|-------------|
+| **Scope** | Basic soft delete enabled check | Comprehensive retention validation |
+| **Blob Soft Delete** | ✅ Enabled check only | ✅ Enabled + retention period validation |
+| **Container Soft Delete** | ❌ Not covered | ✅ Enabled + retention period validation |
+| **Retention Validation** | ❌ No retention checks | ✅ Configurable minimum retention days |
+| **Enforcement Options** | ❌ Limited | ✅ Audit/Deny/Disabled modes |
+| **Customization** | ❌ Fixed behavior | ✅ Parameterized retention requirements |
+
 ### Policy Conditions
 
 The policy triggers when a storage account is created or modified with any of these configurations:
@@ -97,6 +121,43 @@ environment = "sandbox"
 owner = "Policy-Team"
 ```
 
+## ✅ Checkov Validation
+
+While Checkov CKV2_AZURE_38 provides basic soft delete validation, you can use it alongside this policy for comprehensive coverage:
+
+### Checkov Scanning
+
+```bash
+# Scan Terraform files for basic soft delete compliance (CKV2_AZURE_38)
+checkov -f main.tf --check CKV2_AZURE_38
+
+# Scan entire directory for all Azure storage policies
+checkov -d . --framework terraform --check CKV2_AZURE_38,CKV_AZURE_*
+
+# Generate compliance report for storage policies
+checkov -d . --framework terraform --check CKV2_AZURE_38 --output json > soft-delete-compliance.json
+```
+
+### Expected Checkov Results
+
+- **CKV2_AZURE_38 PASSED**: Storage accounts with basic soft delete enabled
+- **CKV2_AZURE_38 FAILED**: Storage accounts without soft delete enabled  
+- **Policy Gap**: CKV2_AZURE_38 won't validate retention periods (this policy fills that gap)
+
+### Combined Validation Strategy
+
+```bash
+# Use both Checkov and this policy for comprehensive coverage
+# 1. Run Checkov for basic compliance
+checkov -d . --check CKV2_AZURE_38
+
+# 2. Deploy this policy for retention period validation
+./scripts/Deploy-PolicyDefinitions.ps1 -PolicyPath "./policies/storage/deny-storage-softdelete"
+
+# 3. Test policy compliance
+./scripts/Test-PolicyCompliance.ps1
+```
+
 ## 🧪 Testing
 
 The policy can be tested using the parent project's test suite:
@@ -104,18 +165,80 @@ The policy can be tested using the parent project's test suite:
 ```bash
 # From project root
 ./scripts/Invoke-PolicyTests.ps1 -TestPath "tests/storage"
+
+# Test combined with Checkov validation
+./scripts/Generate-CheckovReport.ps1 | grep -i "CKV2_AZURE_38\|soft.delete"
 ```
 
 ### Test Scenarios
 
-1. **Compliant Storage Account**:
-   - Blob soft delete: `enabled = true`, `days >= minimumRetentionDays`
-   - Container soft delete: `enabled = true`, `days >= minimumRetentionDays`
+#### ✅ Fully Compliant Configuration (Passes Both Checkov & This Policy)
 
-2. **Non-Compliant Storage Account** (triggers policy):
-   - Blob soft delete disabled: `enabled = false`
-   - Container soft delete disabled: `enabled = false`
-   - Insufficient retention: `days < minimumRetentionDays`
+```hcl
+resource "azurerm_storage_account" "compliant" {
+  name                     = "compliantstorageacct"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  # Meets CKV2_AZURE_38 requirement
+  blob_properties {
+    delete_retention_policy {
+      enabled = true
+      days    = 30  # Sufficient retention period
+    }
+
+    container_delete_retention_policy {
+      enabled = true
+      days    = 30  # Sufficient retention period
+    }
+  }
+}
+```
+
+#### ⚠️ Partially Compliant (Passes Checkov CKV2_AZURE_38, Fails This Policy)
+
+```hcl
+resource "azurerm_storage_account" "partial_compliant" {
+  name                     = "partialstorageacct"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  blob_properties {
+    delete_retention_policy {
+      enabled = true
+      days    = 1  # ❌ Too low retention (< minimumRetentionDays)
+    }
+    # ❌ Missing container soft delete entirely
+  }
+}
+```
+
+#### ❌ Non-Compliant Configuration (Fails Both)
+
+```hcl
+resource "azurerm_storage_account" "non_compliant" {
+  name                     = "noncompliantstorageacct"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  # ❌ No soft delete configuration at all
+  # Fails both CKV2_AZURE_38 and this policy
+}
+```
+
+### Validation Results Summary
+
+| Configuration | CKV2_AZURE_38 | This Policy | Notes |
+|---------------|---------------|-------------|-------|
+| **Fully Compliant** | ✅ PASS | ✅ PASS | Comprehensive soft delete setup |
+| **Partially Compliant** | ✅ PASS | ❌ FAIL | Basic soft delete but insufficient retention |
+| **Non-Compliant** | ❌ FAIL | ❌ FAIL | No soft delete configuration |
 
 ### Manual Testing
 
@@ -276,10 +399,28 @@ az storage account blob-service-properties update \
 
 ## 📚 References
 
-- [Azure Blob Soft Delete](https://docs.microsoft.com/en-us/azure/storage/blobs/soft-delete-blob-overview)
-- [Azure Container Soft Delete](https://docs.microsoft.com/en-us/azure/storage/blobs/soft-delete-container-overview)  
-- [Azure Policy Definition Structure](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure)
-- [Storage Account Properties](https://docs.microsoft.com/en-us/azure/templates/microsoft.storage/storageaccounts)
+### Checkov & Compliance
+
+- [Checkov CKV2_AZURE_38](https://www.checkov.io/5.Policy%20Index/all.html) - Ensure soft-delete is enabled on Azure storage account
+- [Checkov Documentation](https://www.checkov.io/) - Static code analysis for infrastructure as code
+- [Azure Security Benchmark](https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-data-protection) - Data Protection controls
+
+### Azure Storage Soft Delete
+
+- [Azure Blob Soft Delete](https://docs.microsoft.com/en-us/azure/storage/blobs/soft-delete-blob-overview) - Comprehensive guide to blob soft delete
+- [Azure Container Soft Delete](https://docs.microsoft.com/en-us/azure/storage/blobs/soft-delete-container-overview) - Container soft delete overview  
+- [Storage Account Security Best Practices](https://docs.microsoft.com/en-us/azure/storage/common/storage-security-guide) - Security recommendations
+
+### Azure Policy & Governance
+
+- [Azure Policy Definition Structure](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure) - Policy authoring guide
+- [Storage Account Properties](https://docs.microsoft.com/en-us/azure/templates/microsoft.storage/storageaccounts) - ARM template reference
+- [Azure Policy Effects](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/effects) - Understanding policy effects
+
+### Tools & Validation
+
+- [Azure Policy Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=AzurePolicy.azurepolicyextension) - Policy development tools
+- [Checkov GitHub Repository](https://github.com/bridgecrewio/checkov) - Open source static analysis tool
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

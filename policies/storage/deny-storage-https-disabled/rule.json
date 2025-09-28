@@ -1,0 +1,105 @@
+{
+  "name": "deny-storage-https-disabled",
+  "properties": {
+    "description": "This policy denies the creation of Azure Storage accounts that do not have HTTPS-only traffic enabled. Enabling HTTPS-only traffic ensures secure transport encryption for all storage account communications.",
+    "displayName": "Deny Storage Account Without HTTPS-Only Traffic",
+    "metadata": {
+      "category": "Storage",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "exemptedStorageAccounts": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of storage account names that are exempt from this policy",
+          "displayName": "Exempted Storage Accounts"
+        },
+        "type": "Array"
+      },
+      "storageAccountTypes": {
+        "allowedValues": [
+          "Standard_LRS",
+          "Standard_GRS",
+          "Standard_RAGRS",
+          "Standard_ZRS",
+          "Premium_LRS",
+          "Premium_ZRS",
+          "Standard_GZRS",
+          "Standard_RAGZRS",
+          "BlobStorage",
+          "BlockBlobStorage",
+          "FileStorage"
+        ],
+        "defaultValue": [
+          "Standard_LRS",
+          "Standard_GRS",
+          "Standard_RAGRS",
+          "Standard_ZRS",
+          "Standard_GZRS",
+          "Standard_RAGZRS",
+          "Premium_LRS",
+          "Premium_ZRS",
+          "BlobStorage",
+          "BlockBlobStorage",
+          "FileStorage"
+        ],
+        "metadata": {
+          "description": "List of storage account types that require HTTPS-only traffic",
+          "displayName": "Storage Account Types"
+        },
+        "type": "Array"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Storage/storageAccounts",
+            "field": "type"
+          },
+          {
+            "field": "Microsoft.Storage/storageAccounts/sku.name",
+            "in": "[parameters('storageAccountTypes')]"
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedStorageAccounts')]"
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "exists": "false",
+                "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly"
+              },
+              {
+                "equals": "false",
+                "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

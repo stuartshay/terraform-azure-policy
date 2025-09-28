@@ -1,0 +1,100 @@
+{
+  "name": "deny-app-service-plan-not-zone-redundant",
+  "properties": {
+    "description": "This policy denies the creation of Azure App Service Plans that do not have zone redundancy enabled. Zone redundancy distributes App Service Plan instances across multiple availability zones to ensure high availability and resiliency against datacenter-level failures.",
+    "displayName": "Deny App Service Plan Without Zone Redundancy",
+    "metadata": {
+      "category": "App Service",
+      "checkovId": "CKV_AZURE_225",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "exemptedAppServicePlans": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of App Service Plan names that are exempt from this policy",
+          "displayName": "Exempted App Service Plans"
+        },
+        "type": "Array"
+      },
+      "minimumInstanceCount": {
+        "defaultValue": 2,
+        "metadata": {
+          "description": "Minimum number of instances required for zone redundancy (must be 2 or more)",
+          "displayName": "Minimum Instance Count"
+        },
+        "type": "Integer"
+      },
+      "requiredSkuTiers": {
+        "allowedValues": [
+          "PremiumV2",
+          "PremiumV3",
+          "PremiumV4",
+          "IsolatedV2"
+        ],
+        "defaultValue": [
+          "PremiumV2",
+          "PremiumV3",
+          "PremiumV4",
+          "IsolatedV2"
+        ],
+        "metadata": {
+          "description": "List of App Service Plan SKU tiers that support and require zone redundancy",
+          "displayName": "Required SKU Tiers"
+        },
+        "type": "Array"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Web/serverfarms",
+            "field": "type"
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedAppServicePlans')]"
+            }
+          },
+          {
+            "field": "Microsoft.Web/serverfarms/sku.tier",
+            "in": "[parameters('requiredSkuTiers')]"
+          },
+          {
+            "anyOf": [
+              {
+                "exists": "false",
+                "field": "Microsoft.Web/serverfarms/zoneRedundant"
+              },
+              {
+                "equals": "false",
+                "field": "Microsoft.Web/serverfarms/zoneRedundant"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

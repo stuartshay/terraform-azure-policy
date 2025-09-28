@@ -104,6 +104,50 @@ variable "storage_versioning_exempted_accounts" {
   default     = []
 }
 
+variable "storage_https_policy_effect" {
+  description = "The effect for storage HTTPS-only policy (Audit, Deny, or Disabled)"
+  type        = string
+  default     = "Audit"
+  validation {
+    condition     = contains(["Audit", "Deny", "Disabled"], var.storage_https_policy_effect)
+    error_message = "Storage HTTPS policy effect must be one of: Audit, Deny, Disabled."
+  }
+}
+
+variable "storage_https_account_types" {
+  description = "List of storage account types that require HTTPS-only traffic"
+  type        = list(string)
+  default = [
+    "Standard_LRS",
+    "Standard_GRS",
+    "Standard_RAGRS",
+    "Standard_ZRS",
+    "Standard_GZRS",
+    "Standard_RAGZRS",
+    "Premium_LRS",
+    "Premium_ZRS",
+    "BlobStorage",
+    "BlockBlobStorage",
+    "FileStorage"
+  ]
+  validation {
+    condition = alltrue([
+      for type in var.storage_https_account_types : contains([
+        "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS",
+        "Premium_LRS", "Premium_ZRS", "Standard_GZRS", "Standard_RAGZRS",
+        "BlobStorage", "BlockBlobStorage", "FileStorage"
+      ], type)
+    ])
+    error_message = "All storage account types must be valid Azure storage account SKUs."
+  }
+}
+
+variable "storage_https_exempted_accounts" {
+  description = "List of storage account names that are exempt from the HTTPS-only policy"
+  type        = list(string)
+  default     = []
+}
+
 variable "network_policy_effect" {
   description = "The effect for network policies (Audit, Deny, or Disabled)"
   type        = string
@@ -156,6 +200,51 @@ variable "function_app_https_exempted_resource_groups" {
   description = "List of resource group names that are exempt from the Function App HTTPS-only policy"
   type        = list(string)
   default     = []
+}
+
+variable "app_service_policy_effect" {
+  description = "The effect for App Service policies (Audit, Deny, or Disabled)"
+  type        = string
+  default     = "Audit"
+  validation {
+    condition     = contains(["Audit", "Deny", "Disabled"], var.app_service_policy_effect)
+    error_message = "App Service policy effect must be one of: Audit, Deny, Disabled."
+  }
+}
+
+variable "app_service_required_sku_tiers" {
+  description = "List of App Service Plan SKU tiers that support and require zone redundancy"
+  type        = list(string)
+  default = [
+    "PremiumV2",
+    "PremiumV3",
+    "PremiumV4",
+    "IsolatedV2"
+  ]
+  validation {
+    condition = alltrue([
+      for tier in var.app_service_required_sku_tiers : contains([
+        "PremiumV2", "PremiumV3", "PremiumV4", "IsolatedV2"
+      ], tier)
+    ])
+    error_message = "All SKU tiers must be valid Azure App Service Plan tiers that support zone redundancy."
+  }
+}
+
+variable "app_service_exempted_plans" {
+  description = "List of App Service Plan names that are exempt from the zone redundancy policy"
+  type        = list(string)
+  default     = []
+}
+
+variable "app_service_minimum_instance_count" {
+  description = "Minimum number of instances required for zone redundancy (must be 2 or more)"
+  type        = number
+  default     = 2
+  validation {
+    condition     = var.app_service_minimum_instance_count >= 2
+    error_message = "The minimum instance count must be 2 or more for zone redundancy."
+  }
 }
 
 variable "environment" {
