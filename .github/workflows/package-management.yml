@@ -1,0 +1,191 @@
+name: Package Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - list-releases
+          - validate-package
+          - cleanup-old-releases
+      version:
+        description: 'Version to validate (required for validate-package)'
+        required: false
+        type: string
+      keep_releases:
+        description: 'Number of releases to keep (for cleanup)'
+        required: false
+        default: '10'
+        type: string
+
+jobs:
+  list-releases:
+    if: github.event.inputs.action == 'list-releases'
+    runs-on: ubuntu-latest
+    steps:
+      - name: List Available Releases
+        run: |
+          # shellcheck disable=SC2086,SC2129
+          echo "## 📦 Available Package Releases" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get releases using GitHub API
+          curl -s "https://api.github.com/repos/${{ github.repository }}/releases" | \
+          jq -r '.[] | "| \(.tag_name) | \(.name) | \(.created_at | strptime("%Y-%m-%dT%H:%M:%SZ") | strftime("%Y-%m-%d %H:%M")) | \(.prerelease) |"' | \
+          head -20 > releases.txt
+
+          echo "| Version | Name | Created | Pre-release |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|---------|-------------|" >> $GITHUB_STEP_SUMMARY
+          cat releases.txt >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Quick Deploy Commands" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get latest version
+          LATEST_VERSION=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name' | sed 's/^v//')
+
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Deploy latest version ($LATEST_VERSION) to production" >> $GITHUB_STEP_SUMMARY
+          echo "gh workflow run deploy.yml \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f version=\"$LATEST_VERSION\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f resource_group=\"rg-azure-policy-prod\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f subscription_id=\"your-subscription-id\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f environment=\"production\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f policy_effect=\"Deny\"" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Dry run deployment" >> $GITHUB_STEP_SUMMARY
+          echo "gh workflow run deploy.yml \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f version=\"$LATEST_VERSION\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f resource_group=\"rg-azure-policy-test\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f subscription_id=\"your-subscription-id\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f environment=\"staging\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f policy_effect=\"Audit\" \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -f dry_run=\"true\"" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  validate-package:
+    if: github.event.inputs.action == 'validate-package'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Package
+        run: |
+          # shellcheck disable=SC2086,SC2129
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            echo "❌ Version is required for package validation"
+            exit 1
+          fi
+
+          VERSION="${{ github.event.inputs.version }}"
+          PACKAGE_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/terraform-azure-policy-checkov-${VERSION}.tar.gz"
+
+          echo "## 🔍 Package Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Package URL**: $PACKAGE_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Download and validate package
+          if curl -L -f -o package.tar.gz "$PACKAGE_URL"; then
+            echo "✅ Package download successful" >> $GITHUB_STEP_SUMMARY
+
+            # Extract and validate contents
+            mkdir -p validation
+            tar -xzf package.tar.gz -C validation
+
+            echo "### 📋 Package Contents" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            find validation -type f | sort >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+            # Validate required files
+            REQUIRED_FILES=("policies" "modules" "deployment.yml" "VERSION")
+            VALIDATION_PASSED=true
+
+            echo "### ✅ Validation Checks" >> $GITHUB_STEP_SUMMARY
+            for file in "${REQUIRED_FILES[@]}"; do
+              if [ -e "validation/$file" ]; then
+                echo "- ✅ $file" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "- ❌ $file (missing)" >> $GITHUB_STEP_SUMMARY
+                VALIDATION_PASSED=false
+              fi
+            done
+
+            # Check version consistency
+            if [ -f "validation/VERSION" ]; then
+              PACKAGE_VERSION=$(cat validation/VERSION)
+              if [ "$PACKAGE_VERSION" == "$VERSION" ]; then
+                echo "- ✅ Version consistency ($VERSION)" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "- ❌ Version mismatch (expected: $VERSION, found: $PACKAGE_VERSION)" >> $GITHUB_STEP_SUMMARY
+                VALIDATION_PASSED=false
+              fi
+            fi
+
+            if [ "$VALIDATION_PASSED" == "true" ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "🎉 **Package validation passed!**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Package validation failed!**" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          else
+            echo "❌ Package download failed" >> $GITHUB_STEP_SUMMARY
+            echo "Package may not exist or is not accessible" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+  cleanup-old-releases:
+    if: github.event.inputs.action == 'cleanup-old-releases'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup Old Releases
+        run: |
+          # shellcheck disable=SC2086,SC2129
+          KEEP_COUNT="${{ github.event.inputs.keep_releases }}"
+
+          echo "## 🧹 Release Cleanup" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Keeping the latest $KEEP_COUNT releases..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get all releases
+          curl -s "https://api.github.com/repos/${{ github.repository }}/releases" > all_releases.json
+
+          # Count total releases
+          TOTAL_RELEASES=$(jq length all_releases.json)
+          echo "**Total releases found**: $TOTAL_RELEASES" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$TOTAL_RELEASES" -le "$KEEP_COUNT" ]; then
+            echo "**Action**: No cleanup needed (total releases ≤ keep count)" >> $GITHUB_STEP_SUMMARY
+          else
+            RELEASES_TO_DELETE=$((TOTAL_RELEASES - KEEP_COUNT))
+            echo "**Releases to delete**: $RELEASES_TO_DELETE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Get release IDs to delete (oldest first)
+            jq -r ".[$KEEP_COUNT:] | .[] | \"\(.id) \(.tag_name) \(.created_at)\"" all_releases.json > releases_to_delete.txt
+
+            echo "### 🗑️ Releases to be deleted:" >> $GITHUB_STEP_SUMMARY
+            echo "| Release ID | Tag | Created |" >> $GITHUB_STEP_SUMMARY
+            echo "|------------|-----|---------|" >> $GITHUB_STEP_SUMMARY
+
+            while read -r release_id tag_name created_at; do
+              echo "| $release_id | $tag_name | $created_at |" >> $GITHUB_STEP_SUMMARY
+
+              # Delete the release (uncomment the following lines to actually delete)
+              # curl -X DELETE \
+              #   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              #   "https://api.github.com/repos/${{ github.repository }}/releases/$release_id"
+
+              echo "Would delete release: $tag_name (ID: $release_id)"
+            done < releases_to_delete.txt
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Note**: This was a dry run. To actually delete releases, uncomment the deletion code in the workflow." >> $GITHUB_STEP_SUMMARY
+          fi

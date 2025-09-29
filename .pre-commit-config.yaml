@@ -143,6 +143,7 @@ repos:
     hooks:
       - id: actionlint
         args:
+          - '-shellcheck='
           - '-config-file'
           - 'actionlint.yaml'
 

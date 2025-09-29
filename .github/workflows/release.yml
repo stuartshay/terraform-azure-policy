@@ -1,0 +1,216 @@
+name: Release Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: 'Custom version (optional, overrides version_type)'
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PACKAGE_NAME: terraform-azure-policy-checkov
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Get current version
+        id: current-version
+        run: |
+          # shellcheck disable=SC2086
+          if [ -f VERSION ]; then
+            CURRENT_VERSION=$(cat VERSION)
+          else
+            CURRENT_VERSION="0.0.0"
+            echo "0.0.0" > VERSION
+          fi
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: version
+        run: |
+          # shellcheck disable=SC2086
+          CURRENT_VERSION="${{ steps.current-version.outputs.current }}"
+
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            NEW_VERSION="${{ github.event.inputs.custom_version }}"
+            echo "Using custom version: $NEW_VERSION"
+          elif [ -n "${{ github.event.inputs.version_type }}" ]; then
+            VERSION_TYPE="${{ github.event.inputs.version_type }}"
+            IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+
+            case "$VERSION_TYPE" in
+              "major")
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              "minor")
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              "patch")
+                patch=$((patch + 1))
+                ;;
+            esac
+
+            NEW_VERSION="$major.$minor.$patch"
+            echo "Bumped $VERSION_TYPE version: $NEW_VERSION"
+          else
+            # Extract version from tag
+            NEW_VERSION=${GITHUB_REF#refs/tags/v}
+            echo "Using tag version: $NEW_VERSION"
+          fi
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update version file
+        run: |
+          echo "${{ steps.version.outputs.version }}" > VERSION
+          git add VERSION
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          cat << EOF > RELEASE_NOTES.md
+          # Azure Policy Package v${{ steps.version.outputs.version }}
+
+          ## 🔒 Checkov-Derived Security Policies
+
+          This package contains Azure Policy definitions derived from Checkov security rules, providing runtime enforcement of infrastructure security best practices.
+
+          ### 📦 Package Contents
+
+          - **Storage Policies**: 4 policies (CKV_AZURE_3, CKV_AZURE_190+)
+          - **Network Policies**: 2 policies (CKV_AZURE_9, CKV_AZURE_28+)
+          - **Function App Policies**: 2 policies (CKV_AZURE_70+)
+          - **App Service Policies**: 1 policy (CKV_AZURE_225)
+
+          ### 🚀 Deployment
+
+          Use the \`deploy.yml\` workflow to deploy this package to your Azure Resource Group:
+
+          \`\`\`bash
+          # Deploy to specific resource group
+          gh workflow run deploy.yml \\
+            -f version=${{ steps.version.outputs.version }} \\
+            -f resource_group="rg-azure-policy-prod" \\
+            -f environment="production"
+          \`\`\`
+
+          ### 📋 Requirements
+
+          - Terraform >= 1.13.1
+          - Azure Provider >= 4.45.0
+          - Azure permissions: Policy Contributor, Resource Policy Contributor
+
+          ### 🆕 What's New
+
+          $(git log --oneline --since="$(git describe --tags --abbrev=0 2>/dev/null || echo 'HEAD~10')" --until=HEAD)
+          EOF
+
+      - name: Create package archive
+        run: |
+          # Create package directory
+          mkdir -p package
+
+          # Copy files based on package.yml configuration
+          cp -r policies/ package/
+          cp -r modules/ package/
+          cp -r scripts/ package/
+          cp README.md package/
+          cp VERSION package/
+          cp requirements.psd1 package/
+          cp package.yml package/
+
+          # Create deployment configuration
+          cat << EOF > package/deployment.yml
+          version: "${{ steps.version.outputs.version }}"
+          package_name: "${{ env.PACKAGE_NAME }}"
+          created_at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          source_commit: "${{ github.sha }}"
+          source_ref: "${{ github.ref }}"
+          terraform_version: "1.13.1"
+          azurerm_provider_version: ">= 4.45.0"
+          EOF
+
+          # Create archive
+          tar -czf ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz -C package .
+
+          # Create zip for Windows compatibility
+          cd package && zip -r ../${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.zip . && cd ..
+
+          # Generate checksums
+          sha256sum ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz > ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz.sha256
+          sha256sum ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.zip > ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.zip.sha256
+
+      - name: Commit version update
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git add VERSION
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin HEAD --tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Azure Policy Package v${{ steps.version.outputs.version }}"
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz
+            ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz.sha256
+            ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.zip
+            ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.zip.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output release information
+        run: |
+          # shellcheck disable=SC2086,SC2129
+          {
+            echo "## 🎉 Package Release Created"
+            echo ""
+            echo "- **Version**: ${{ steps.version.outputs.version }}"
+            echo "- **Tag**: ${{ steps.version.outputs.tag }}"
+            echo "- **Package**: ${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.version }}"
+            echo ""
+            echo "### 🚀 Deploy this version:"
+            echo "\`\`\`bash"
+            echo "gh workflow run deploy.yml -f version=${{ steps.version.outputs.version }} -f resource_group=\"your-rg-name\""
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"

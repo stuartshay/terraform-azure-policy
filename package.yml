@@ -1,0 +1,49 @@
+# Azure Policy Package Configuration
+name: "terraform-azure-policy-checkov"
+description: "Azure Policy package derived from Checkov security rules"
+version_file: "VERSION"
+author: "Stuart Shay"
+repository: "stuartshay/terraform-azure-policy"
+
+# Package Contents
+include:
+  - "policies/**/*"
+  - "modules/**/*"
+  - "scripts/**/*"
+  - "README.md"
+  - "VERSION"
+  - "requirements.psd1"
+
+# Exclude from package
+exclude:
+  - ".git/**"
+  - ".github/**"
+  - "tests/**"
+  - "output/**"
+  - "reports/**"
+  - ".terraform/**"
+  - "*.terraform.lock.hcl"
+  - ".mypy_cache/**"
+
+# Deployment Configuration
+deployment:
+  terraform_version: "1.13.1"
+  azurerm_provider_version: ">= 4.45.0"
+  required_permissions:
+    - "Policy Contributor"
+    - "Resource Policy Contributor"
+
+# Policy Categories
+categories:
+  storage:
+    policies: 4
+    checkov_rules: ["CKV_AZURE_3", "CKV_AZURE_190"]
+  network:
+    policies: 2
+    checkov_rules: ["CKV_AZURE_9", "CKV_AZURE_28"]
+  function_app:
+    policies: 2
+    checkov_rules: ["CKV_AZURE_70"]
+  app_service:
+    policies: 1
+    checkov_rules: ["CKV_AZURE_225"]
