@@ -74,6 +74,12 @@ jobs:
             echo "⚠ actionlint not available"
           fi
 
+          if command -v pwsh >/dev/null 2>&1; then
+            echo "✓ PowerShell: $(pwsh --version)"
+          else
+            echo "⚠ PowerShell not available"
+          fi
+
       - name: Determine hooks to skip
         id: skip-hooks
         run: |
@@ -93,16 +99,71 @@ jobs:
           echo "Will skip hooks: ${SKIP_HOOKS}"
 
       - name: Setup PowerShell
-        uses: microsoft/setup-powershell@v1
-        with:
-          pwsh: true
+        shell: bash
+        run: |
+          # Update package index
+          sudo apt-get update
+
+          # Install PowerShell dependencies
+          sudo apt-get install -y wget apt-transport-https software-properties-common
+
+          # Download the Microsoft repository GPG keys
+          wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+
+          # Register the Microsoft repository GPG keys
+          sudo dpkg -i packages-microsoft-prod.deb
+
+          # Update the list of packages after adding packages.microsoft.com
+          sudo apt-get update
+
+          # Install PowerShell
+          sudo apt-get install -y powershell
+
+          # Verify installation
+          pwsh --version
 
       - name: Install PowerShell modules for testing
         run: |
           pwsh -Command "
-            Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.4.0
-            Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+            Write-Host 'Setting PSGallery as trusted repository...'
+            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+            Write-Host 'Installing Pester module...'
+            Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.4.0 -Verbose
+
+            Write-Host 'Installing PSScriptAnalyzer module...'
+            Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -Verbose
+
+            Write-Host 'Verifying module installations...'
+            Get-Module -ListAvailable -Name Pester | Select-Object Name, Version
+            Get-Module -ListAvailable -Name PSScriptAnalyzer | Select-Object Name, Version
+
             Write-Host 'PowerShell modules installed successfully'
+          "
+
+      - name: Verify PowerShell modules
+        run: | # pragma: allowlist secret
+          pwsh -Command "
+            Write-Host 'Verifying PowerShell environment...'
+            \$PSVersionTable
+
+            Write-Host 'Available modules:'
+            Get-Module -ListAvailable | Where-Object { \$_.Name -in @('Pester', 'PSScriptAnalyzer') } | Format-Table Name, Version, ModuleBase
+
+            Write-Host 'Testing module imports...'
+            try {
+              Import-Module Pester -Force
+              Write-Host '✓ Pester module imported successfully'
+            } catch {
+              Write-Error 'Failed to import Pester: \$_'
+            }
+
+            try {
+              Import-Module PSScriptAnalyzer -Force
+              Write-Host '✓ PSScriptAnalyzer module imported successfully'
+            } catch {
+              Write-Error 'Failed to import PSScriptAnalyzer: \$_'
+            }
           "
 
       - name: Run unit tests with code coverage
@@ -111,7 +172,7 @@ jobs:
             # Run fast tests that don't require Azure authentication
             Import-Module Pester
 
-            \$config = [PesterConfiguration]@{
+            \$config = [PesterConfiguration]@{ # pragma: allowlist secret
               Run = @{
                 Path = @(
                   'tests/storage/Quick-PolicyValidation.Tests.ps1',

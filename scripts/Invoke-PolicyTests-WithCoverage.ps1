@@ -262,6 +262,7 @@ try {
                     # Try to open the report
                     try {
                         if ($IsWindows -or $env:OS -eq 'Windows_NT') { # pragma: allowlist secret
+                            # pragma: allowlist secret
                             Start-Process $indexPath
                         }
                         elseif ($IsLinux) {
