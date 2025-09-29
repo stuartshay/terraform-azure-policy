@@ -35,10 +35,9 @@ rules:
 
 # Configuration for specific checks
 shellcheck:
-  # Enable ShellCheck integration for shell commands in workflows
+  # ShellCheck integration disabled via pre-commit args
+  # GitHub Actions workflows use template variables that cause false positives
   enable: true
-  # Exclude specific ShellCheck warnings if needed
-  exclude: []
 
 # Custom action validation
 actions:
