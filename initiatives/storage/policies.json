@@ -1,13 +1,13 @@
 [
    {
       "policy_display_name": "deny-storage-https-disabled",
-      "policy_definition_reference_id": "DenyStorageHttpsDisabled",
+      "policy_definition_reference_id": "CKV2_AZURE_33",
       "parameters": {},
       "version": "1.0.0"
    },
    {
       "policy_display_name": "deny-storage-softdelete",
-      "policy_definition_reference_id": "DenyStorageSoftDelete",
+      "policy_definition_reference_id": "CKV2_AZURE_38",
       "parameters": {},
       "version": "1.0.0"
    }
