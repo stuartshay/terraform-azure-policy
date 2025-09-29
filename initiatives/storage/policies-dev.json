@@ -1,0 +1,8 @@
+[
+   {
+      "policy_display_name": "deny-storage-version",
+      "policy_definition_reference_id": "DenyStorageVersioningDisabled",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]

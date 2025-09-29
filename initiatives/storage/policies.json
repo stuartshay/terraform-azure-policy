@@ -1,0 +1,14 @@
+[
+   {
+      "policy_display_name": "deny-storage-https-disabled",
+      "policy_definition_reference_id": "DenyStorageHttpsDisabled",
+      "parameters": {},
+      "version": "1.0.0"
+   },
+   {
+      "policy_display_name": "deny-storage-softdelete",
+      "policy_definition_reference_id": "DenyStorageSoftDelete",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]

@@ -1,0 +1,8 @@
+[
+   {
+      "policy_display_name": "deny-storage-account-public-access",
+      "policy_definition_reference_id": "DenyStoragePublicAccess",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]
