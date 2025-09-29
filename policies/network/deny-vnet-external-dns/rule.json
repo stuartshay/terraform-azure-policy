@@ -1,0 +1,68 @@
+{
+  "name": "deny-vnet-external-dns",
+  "properties": {
+    "description": "This policy ensures that Virtual Networks use DNS servers within their address space rather than external DNS servers to improve security and reduce dependencies on external services. Corresponds to Checkov policy CKV_AZURE_183.",
+    "displayName": "Deny VNET External DNS",
+    "metadata": {
+      "category": "Network",
+      "checkov_id": "CKV_AZURE_183",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Network/virtualNetworks",
+            "field": "type"
+          },
+          {
+            "exists": "true",
+            "field": "Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers[*]",
+                "in": [
+                  "8.8.8.8",
+                  "8.8.4.4",
+                  "1.1.1.1",
+                  "1.0.0.1",
+                  "208.67.222.222",
+                  "208.67.220.220",
+                  "9.9.9.9",
+                  "149.112.112.112",
+                  "76.76.19.19",
+                  "76.223.100.101",
+                  "8.26.56.26",
+                  "8.20.247.20"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

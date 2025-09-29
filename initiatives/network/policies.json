@@ -1,1 +1,20 @@
-[]
+[
+   {
+      "policy_display_name": "deny-network-no-nsg",
+      "policy_definition_reference_id": "CKV2_AZURE_31",
+      "parameters": {},
+      "version": "1.0.0"
+   },
+   {
+      "policy_display_name": "deny-network-private-ips",
+      "policy_definition_reference_id": "CKV_AZURE_119",
+      "parameters": {},
+      "version": "1.0.0"
+   },
+   {
+      "policy_display_name": "deny-vnet-external-dns",
+      "policy_definition_reference_id": "CKV_AZURE_183",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]
