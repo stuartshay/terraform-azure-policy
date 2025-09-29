@@ -187,9 +187,14 @@ Configuration in `.vscode/settings.json`:
 
 ### **Test Configuration**
 
-Global test settings in `PesterConfiguration.ps1`:
+Test settings are configured in:
 
-- Output formats and paths
+- **`.vscode/settings.json`** - VS Code Pester extension settings
+- **Individual test scripts** - Build their own Pester configurations inline
+
+Configuration includes:
+
+- Output formats and paths  
 - Test discovery patterns
 - Execution preferences
 

@@ -37,10 +37,8 @@ Complete guide for using VS Code Test Panel with Pester tests:
 
 The project includes several configuration files for optimal Test Panel experience:
 
-- **`.vscode/settings.json`** - Pester extension configuration
-- **`.vscode/PesterSettings.psd1`** - Workspace-specific Pester settings
+- **`.vscode/settings.json`** - VS Code and Pester extension configuration
 - **`.vscode/launch.json`** - Debug configurations for tests
-- **`PesterConfiguration.ps1`** - Global Pester preferences
 
 ## 🎮 **Using the Test Panel**
 
