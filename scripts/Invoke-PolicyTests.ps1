@@ -94,11 +94,11 @@ $env:AZURE_POLICY_TEST_SUBSCRIPTION_ID = $context.Subscription.Id
 
 # Configure Pester
 $pesterConfig = @{
-    Run = @{
-        Path = $TestPath
+    Run        = @{
+        Path     = $TestPath
         PassThru = $PassThru.IsPresent
     }
-    Output = @{
+    Output     = @{
         Verbosity = 'Detailed'
     }
     TestResult = @{
@@ -112,7 +112,8 @@ if ($OutputFormat -ne "None") {
 
     if ($OutputPath) {
         $pesterConfig.TestResult.OutputPath = $OutputPath
-    } else {
+    }
+    else {
         # Generate default output path
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
         $defaultPath = "TestResults_$timestamp.$($OutputFormat.ToLower() -replace 'xml$', '.xml')"
@@ -134,7 +135,7 @@ try {
     Write-Host "`nTest Summary:" -ForegroundColor Green
     Write-Host "  Total Tests: $($results.TotalCount)" -ForegroundColor Gray
     Write-Host "  Passed: $($results.PassedCount)" -ForegroundColor Green
-    Write-Host "  Failed: $($results.FailedCount)" -ForegroundColor $(if($results.FailedCount -gt 0) {'Red'} else {'Gray'})
+    Write-Host "  Failed: $($results.FailedCount)" -ForegroundColor $(if ($results.FailedCount -gt 0) { 'Red' } else { 'Gray' })
     Write-Host "  Skipped: $($results.SkippedCount)" -ForegroundColor Yellow
     Write-Host "  Duration: $($results.Duration)" -ForegroundColor Gray
 
@@ -156,14 +157,17 @@ try {
     # Exit with appropriate code
     if ($results.FailedCount -gt 0) {
         exit 1
-    } else {
+    }
+    else {
         exit 0
     }
 
-} catch {
+}
+catch {
     Write-Error "Failed to run tests: $($_.Exception.Message)"
     exit 1
-} finally {
+}
+finally {
     # Clean up environment variables
     Remove-Item -Path "env:AZURE_POLICY_TEST_RESOURCE_GROUP" -ErrorAction SilentlyContinue
     Remove-Item -Path "env:AZURE_POLICY_TEST_SUBSCRIPTION_ID" -ErrorAction SilentlyContinue
