@@ -292,7 +292,7 @@ Test files are available in the `tests/` directory:
 ```bash
 # Run policy tests
 cd tests/function-app
-./Test-DenyFunctionAppAnonymous.Tests.ps1
+./FunctionApp.Test-DenyFunctionAppAnonymous.Tests.ps1
 ```
 
 ## Security Considerations

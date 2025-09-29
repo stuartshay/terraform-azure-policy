@@ -175,8 +175,8 @@ jobs:
             \$config = [PesterConfiguration]@{ # pragma: allowlist secret
               Run = @{
                 Path = @(
-                  'tests/storage/Quick-PolicyValidation.Tests.ps1',
-                  'tests/storage/Quick-SoftDeletePolicyValidation.Tests.ps1',
+                  'tests/storage/Storage.Quick-PolicyValidation.Tests.ps1',
+                  'tests/storage/Storage.Quick-SoftDeletePolicyValidation.Tests.ps1',
                   'tests/network'
                 )
                 PassThru = \$true

@@ -82,7 +82,7 @@ repos:
         args:
           [
             '-Command',
-            'if (Get-Module -ListAvailable -Name Pester) { Invoke-Pester -Path "tests/storage/Quick-PolicyValidation.Tests.ps1" -CI } else { Write-Host "Pester not installed, skipping tests..." }',
+            'if (Get-Module -ListAvailable -Name Pester) { Invoke-Pester -Path "tests/storage/Storage.Quick-PolicyValidation.Tests.ps1" -CI } else { Write-Host "Pester not installed, skipping tests..." }',
           ]
         language: system
         files: '(\.ps1|policies/.*/rule\.json)$'
