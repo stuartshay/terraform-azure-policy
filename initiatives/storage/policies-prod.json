@@ -1,0 +1,8 @@
+[
+   {
+      "policy_display_name": "deny-storage-account-public-access",
+      "policy_definition_reference_id": "CKV_AZURE_59",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]

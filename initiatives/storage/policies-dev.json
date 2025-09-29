@@ -1,0 +1,14 @@
+[
+   {
+      "policy_display_name": "deny-storage-version",
+      "policy_definition_reference_id": "CKV2_AZURE_39",
+      "parameters": {},
+      "version": "1.0.0"
+   },
+   {
+      "policy_display_name": "deny-storage-blob-logging-disabled",
+      "policy_definition_reference_id": "CKV2_AZURE_21",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]

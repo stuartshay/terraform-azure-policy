@@ -1,0 +1,127 @@
+{
+  "name": "deny-storage-blob-logging-disabled",
+  "properties": {
+    "description": "This policy ensures that blob service logging is enabled for Azure Storage accounts. Logging provides audit trails for access to storage data and helps with security monitoring and compliance requirements.",
+    "displayName": "Deny Storage Blob Logging Disabled",
+    "metadata": {
+      "category": "Storage",
+      "checkovId": "CKV2_AZURE_21",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Storage/storageAccounts/blobServices",
+            "field": "type"
+          },
+          {
+            "anyOf": [
+              {
+                "exists": "false",
+                "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings"
+              },
+              {
+                "allOf": [
+                  {
+                    "exists": "true",
+                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings"
+                  },
+                  {
+                    "count": {
+                      "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*]",
+                      "where": {
+                        "allOf": [
+                          {
+                            "exists": "true",
+                            "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs"
+                          },
+                          {
+                            "count": {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*]",
+                              "where": {
+                                "allOf": [
+                                  {
+                                    "equals": "StorageRead",
+                                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*].category"
+                                  },
+                                  {
+                                    "equals": "true",
+                                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*].enabled"
+                                  }
+                                ]
+                              }
+                            },
+                            "greater": 0
+                          },
+                          {
+                            "count": {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*]",
+                              "where": {
+                                "allOf": [
+                                  {
+                                    "equals": "StorageWrite",
+                                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*].category"
+                                  },
+                                  {
+                                    "equals": "true",
+                                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*].enabled"
+                                  }
+                                ]
+                              }
+                            },
+                            "greater": 0
+                          },
+                          {
+                            "count": {
+                              "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*]",
+                              "where": {
+                                "allOf": [
+                                  {
+                                    "equals": "StorageDelete",
+                                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*].category"
+                                  },
+                                  {
+                                    "equals": "true",
+                                    "field": "Microsoft.Storage/storageAccounts/blobServices/diagnosticSettings[*].logs[*].enabled"
+                                  }
+                                ]
+                              }
+                            },
+                            "greater": 0
+                          }
+                        ]
+                      }
+                    },
+                    "equals": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}
