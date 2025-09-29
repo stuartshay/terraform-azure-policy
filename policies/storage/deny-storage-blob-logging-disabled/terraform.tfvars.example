@@ -6,7 +6,7 @@
 
 # Policy Assignment Configuration
 create_assignment = true
-assignment_scope_id = "/subscriptions/09e01a7d-07d4-43ee-80c7-8b2c0d7ec41f/resourceGroups/rg-azure-policy-testing"
+assignment_scope_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/your-resource-group-name"
 policy_assignment_name = "deny-storage-blob-logging-disabled-assignment"
 policy_assignment_display_name = "Deny Storage Blob Logging Disabled Assignment"
 policy_assignment_description = "This assignment enforces the policy to ensure blob service logging is enabled for storage accounts."
