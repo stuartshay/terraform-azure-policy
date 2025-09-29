@@ -1,1 +1,20 @@
-[]
+[
+   {
+      "policy_display_name": "deny-function-app-anonymous",
+      "policy_definition_reference_id": "CKV_AZURE_56",
+      "parameters": {},
+      "version": "1.0.0"
+   },
+   {
+      "policy_display_name": "deny-function-app-https-only",
+      "policy_definition_reference_id": "CKV_AZURE_70",
+      "parameters": {},
+      "version": "1.0.0"
+   },
+   {
+      "policy_display_name": "deny-function-app-http-version",
+      "policy_definition_reference_id": "CKV_AZURE_67",
+      "parameters": {},
+      "version": "1.0.0"
+   }
+]

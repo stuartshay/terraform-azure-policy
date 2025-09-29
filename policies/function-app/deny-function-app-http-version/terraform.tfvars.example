@@ -1,0 +1,27 @@
+# Example Terraform variables for Function App HTTP Version Policy
+
+# Assignment Configuration
+create_assignment              = true
+assignment_scope_id            = "/subscriptions/12345678-1234-1234-1234-123456789012"
+policy_assignment_name         = "deny-function-app-http-version"
+policy_assignment_display_name = "Deny Function App Outdated HTTP Version"
+policy_assignment_description  = "This policy assignment denies Function Apps that do not use HTTP/2 to ensure optimal performance and security."
+assignment_location            = "East US"
+
+# Policy Configuration
+policy_effect = "Deny"
+
+# Exemptions (optional)
+exempted_function_apps = [
+  # "legacy-function-app-1",
+  # "temp-function-app-2"
+]
+
+exempted_resource_groups = [
+  # "rg-legacy-apps",
+  # "rg-temp-resources"
+]
+
+# Environment
+environment = "dev"
+owner       = "platform-team"
