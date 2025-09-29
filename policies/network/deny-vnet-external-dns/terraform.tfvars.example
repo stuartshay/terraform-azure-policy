@@ -1,0 +1,30 @@
+# Example configuration for deny-vnet-external-dns Azure Policy
+# Copy this file to terraform.tfvars and modify the values as needed
+
+# Policy Definition Configuration
+policy_name         = "deny-vnet-external-dns"
+policy_display_name = "Deny VNET External DNS"
+policy_description  = "This policy ensures that Virtual Networks use DNS servers within their address space rather than external DNS servers to improve security and reduce dependencies on external services. Corresponds to Checkov policy CKV_AZURE_183."
+policy_category     = "Network"
+policy_version      = "1.0.0"
+
+# Optional: Management Group ID for policy scope
+# Uncomment and set if deploying to a specific management group
+# management_group_id = "/providers/Microsoft.Management/managementGroups/your-mg-id"
+
+# Common Environment Configurations:
+
+# Development Environment
+# policy_name         = "dev-deny-vnet-external-dns"
+# policy_display_name = "[DEV] Deny VNET External DNS"
+# policy_description  = "[Development] This policy ensures that Virtual Networks use DNS servers within their address space rather than external DNS servers."
+
+# Production Environment
+# policy_name         = "prod-deny-vnet-external-dns"
+# policy_display_name = "[PROD] Deny VNET External DNS"
+# policy_description  = "[Production] This policy ensures that Virtual Networks use DNS servers within their address space rather than external DNS servers."
+
+# Testing Environment
+# policy_name         = "test-deny-vnet-external-dns"
+# policy_display_name = "[TEST] Deny VNET External DNS"
+# policy_description  = "[Testing] This policy ensures that Virtual Networks use DNS servers within their address space rather than external DNS servers."

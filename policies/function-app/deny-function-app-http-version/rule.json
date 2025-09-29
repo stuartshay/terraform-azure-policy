@@ -1,0 +1,106 @@
+{
+  "name": "deny-function-app-http-version",
+  "properties": {
+    "description": "This policy denies the creation or update of Azure Function Apps that do not use the latest HTTP version (HTTP/2). Function Apps should enable HTTP/2 to improve performance and security through features like multiplexing, server push, and header compression.",
+    "displayName": "Deny Function App Outdated HTTP Version",
+    "metadata": {
+      "category": "Function App",
+      "checkov": {
+        "description": "Ensure that 'HTTP Version' is the latest, if used to run the Function app",
+        "id": "CKV_AZURE_67"
+      },
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "exemptedFunctionApps": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of Function App names that are exempt from this policy",
+          "displayName": "Exempted Function Apps"
+        },
+        "type": "Array"
+      },
+      "exemptedResourceGroups": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of resource group names that are exempt from this policy",
+          "displayName": "Exempted Resource Groups"
+        },
+        "type": "Array"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Web/sites",
+            "field": "type"
+          },
+          {
+            "anyOf": [
+              {
+                "equals": "functionapp",
+                "field": "kind"
+              },
+              {
+                "field": "kind",
+                "like": "functionapp,*"
+              },
+              {
+                "field": "kind",
+                "like": "*,functionapp"
+              },
+              {
+                "field": "kind",
+                "like": "*,functionapp,*"
+              }
+            ]
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedFunctionApps')]"
+            }
+          },
+          {
+            "not": {
+              "field": "Microsoft.Web/sites/resourceGroup",
+              "in": "[parameters('exemptedResourceGroups')]"
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "exists": "false",
+                "field": "Microsoft.Web/sites/siteConfig.http20Enabled"
+              },
+              {
+                "equals": "false",
+                "field": "Microsoft.Web/sites/siteConfig.http20Enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}
