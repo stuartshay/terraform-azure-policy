@@ -76,18 +76,18 @@ repos:
         pass_filenames: false
         description: 'Run PSScriptAnalyzer on PowerShell files (critical issues only)'
 
-      - id: pester-tests-quick
-        name: Run Quick Pester Tests
+      - id: pester-tests-unit
+        name: Run Pester Unit Tests
         entry: pwsh
         args:
           [
             '-Command',
-            'if (Get-Module -ListAvailable -Name Pester) { Invoke-Pester -Path "tests/storage/Quick-PolicyValidation.Tests.ps1" -CI } else { Write-Host "Pester not installed, skipping tests..." }',
+            'if (Get-Module -ListAvailable -Name Pester) { $unitTests = Get-ChildItem -Path "tests" -Filter "*Unit*.Tests.ps1" -Recurse; if ($unitTests) { Invoke-Pester -Path $unitTests.FullName -CI } else { Write-Host "No unit tests found, skipping..." } } else { Write-Host "Pester not installed, skipping tests..." }',
           ]
         language: system
         files: '(\.ps1|policies/.*/rule\.json)$'
         pass_filenames: false
-        description: 'Run quick policy validation tests'
+        description: 'Run all unit tests (tests with Unit in filename)'
 
   # Terraform formatting and validation
   - repo: https://github.com/antonbabenko/pre-commit-terraform
@@ -247,7 +247,7 @@ ci:
       powershell-syntax-check,
       powershell-whitespace-cleanup,
       powershell-script-analyzer,
-      pester-tests-quick,
+      pester-tests-unit,
       terraform_tflint,
       commitizen,
     ] # Skip resource-intensive hooks in CI

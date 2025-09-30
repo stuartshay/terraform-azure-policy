@@ -7,7 +7,7 @@ This directory contains comprehensive Pester tests for validating Azure Policy d
 ```text
 tests/
 ├── storage/
-│   └── Deny-StorageAccountPublicAccess.Tests.ps1    # Storage policy tests
+│   └── Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1    # Storage policy tests
 ├── network/                                          # Network policy tests (future)
 ├── PolicyTestConfig.ps1                              # Test configuration
 └── README.md                                         # This file
@@ -59,7 +59,7 @@ tests/
 
 ```powershell
 # Run specific test file
-Invoke-Pester -Path "tests/storage/Deny-StorageAccountPublicAccess.Tests.ps1"
+Invoke-Pester -Path "tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1"
 ```
 
 ## 🧪 Test Categories
@@ -236,7 +236,7 @@ New-AzResourceGroup -Name "rg-azure-policy-testing" -Location "East US"
 1. **Run tests individually:**
 
    ```powershell
-   Invoke-Pester -Path "tests/storage/Deny-StorageAccountPublicAccess.Tests.ps1" -Tag "PolicyDefinition"
+   Invoke-Pester -Path "tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1" -Tag "PolicyDefinition"
    ```
 
 2. **Enable verbose output:**

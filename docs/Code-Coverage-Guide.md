@@ -51,7 +51,7 @@ This document describes the implementation of code coverage tools for the Azure 
 ./scripts/Invoke-PolicyTests-WithCoverage.ps1 -GenerateHtmlReport
 
 # Run only fast tests with coverage
-./scripts/Invoke-PolicyTests-WithCoverage.ps1 -TestPath "tests/storage/Quick-PolicyValidation.Tests.ps1,tests/network"
+./scripts/Invoke-PolicyTests-WithCoverage.ps1 -TestPath "tests/storage/Storage.Unit-DenyStorageAccountPublicAccess.Tests.ps1,tests/network"
 ```
 
 ### **VS Code Integration**
