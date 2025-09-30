@@ -31,14 +31,14 @@ Tests are organized by tags for better filtering:
 
 #### **🚀 Fast Tests** (`Unit`, `Fast`)
 
-- `Storage.Quick-PolicyValidation.Tests.ps1` - JSON validation, no Azure required
+- `Storage.Unit-DenyStorageAccountPublicAccess.Tests.ps1` - JSON validation, no Azure required
 - Policy definition structure validation
 - Policy logic validation
 - Simulated compliance scenarios
 
 #### **🔗 Integration Tests** (`Integration`)
 
-- `Storage.Deny-StorageAccountPublicAccess.Tests.ps1` - Full Azure integration
+- `Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1` - Full Azure integration
 - Policy assignment validation
 - Real resource compliance testing
 - Policy remediation testing
@@ -129,7 +129,7 @@ Pre-configured debug options in `Run and Debug` panel:
 
 ```powershell
 # Run quick validation tests (no Azure required)
-tests/storage/Storage.Quick-PolicyValidation.Tests.ps1
+tests/storage/Storage.Unit-DenyStorageAccountPublicAccess.Tests.ps1
 ```
 
 - Tests JSON structure
@@ -141,7 +141,7 @@ tests/storage/Storage.Quick-PolicyValidation.Tests.ps1
 
 ```powershell
 # Run full integration tests (requires Azure)
-tests/storage/Storage.Deny-StorageAccountPublicAccess.Tests.ps1
+tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1
 ```
 
 - Tests actual Azure policy behavior
@@ -286,7 +286,7 @@ Set-AzContext -SubscriptionId "your-subscription-id"
 ### **Policy Development**
 
 1. Create/modify policy JSON
-2. Run `Storage.Quick-PolicyValidation.Tests.ps1` (fast)
+2. Run `Storage.Unit-DenyStorageAccountPublicAccess.Tests.ps1` (fast)
 3. Fix any JSON/logic issues
 4. Run full integration tests
 5. Deploy and validate in Azure

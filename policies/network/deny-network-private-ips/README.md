@@ -189,7 +189,7 @@ Test files are available in the `tests/` directory:
 ```bash
 # Run policy tests
 cd tests
-./Network.Test-DenyNetworkPrivateIPs.Tests.ps1
+./Network.Integration-DenyNetworkPrivateIPs.Tests.ps1
 ```
 
 ## Security Considerations

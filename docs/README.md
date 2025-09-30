@@ -18,8 +18,8 @@ Complete guide for using VS Code Test Panel with Pester tests:
 
 1. **Install the Pester Test extension**: `pspester.pester-test`
 2. **Open Test Panel**: `View` → `Testing` or `Ctrl+Shift+P` → "Test: Focus on Test Explorer View"
-3. **Run fast tests**: Click ▶️ next to `Storage.Quick-PolicyValidation.Tests.ps1`
-4. **Run integration tests**: Click ▶️ next to `Storage.Deny-StorageAccountPublicAccess.Tests.ps1` (requires Azure auth)
+3. **Run fast tests**: Click ▶️ next to `Storage.Unit-DenyStorageAccountPublicAccess.Tests.ps1`
+4. **Run integration tests**: Click ▶️ next to `Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1` (requires Azure auth)
 
 ## 🎯 **Test Categories**
 
