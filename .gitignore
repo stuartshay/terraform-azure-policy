@@ -95,7 +95,6 @@ bin
 obj
 appsettings.json
 local.settings.json
-.vscode/extensions.json
 
 # Certificates and keys
 *.pfx
