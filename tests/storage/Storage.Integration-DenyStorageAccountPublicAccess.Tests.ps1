@@ -15,35 +15,36 @@
 #>
 
 BeforeAll {
-    # Import required modules
-    Import-Module Az.Accounts -Force
-    Import-Module Az.Resources -Force
-    Import-Module Az.Storage -Force
-    Import-Module Az.PolicyInsights -Force
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
-    # Test configuration
-    $script:ResourceGroupName = 'rg-azure-policy-testing'
-    $script:PolicyName = 'deny-storage-account-public-access'
-    $script:PolicyDisplayName = 'Deny Storage Account Public Access'
-    $script:TestStorageAccountPrefix = 'testpolicysa'
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access'
 
-    # Get current context
-    $script:Context = Get-AzContext
-    if (-not $script:Context) {
-        throw 'No Azure context found. Please run Connect-AzAccount first.'
+    # Import required modules using centralized configuration
+    Import-PolicyTestModule -ModuleTypes @('Required', 'Storage')
+
+    # Initialize test environment
+    $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig
+    if (-not $envInit.Success) {
+        throw "Environment initialization failed: $($envInit.Errors -join '; ')"
     }
 
-    $script:SubscriptionId = $script:Context.Subscription.Id
+    # Set script variables from configuration
+    $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName
+    $script:PolicyName = $script:TestConfig.Policy.Name
+    $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
+    $script:TestStorageAccountPrefix = $script:TestConfig.Policy.ResourcePrefix
+
+    # Set Azure context variables
+    $script:Context = $envInit.Context
+    $script:SubscriptionId = $envInit.SubscriptionId
+    $script:ResourceGroup = $envInit.ResourceGroup
+
     Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
 
-    # Verify resource group exists
-    $script:ResourceGroup = Get-AzResourceGroup -Name $script:ResourceGroupName -ErrorAction SilentlyContinue
-    if (-not $script:ResourceGroup) {
-        throw "Resource group '$script:ResourceGroupName' not found. Please create it first."
-    }
-
-    # Load policy definition from file
-    $policyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-account-public-access\rule.json'
+    # Load policy definition from file using centralized path resolution
+    $policyPath = Get-PolicyDefinitionPath -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -TestScriptPath $PSScriptRoot
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
     }
@@ -127,14 +128,9 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
 Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance', 'RequiresCleanup') {
     Context 'Storage Account Compliance Scenarios' {
         BeforeAll {
-            # Generate unique storage account names
-            $timestamp = Get-Date -Format 'yyyyMMddHHmmss'
-            $script:CompliantStorageName = "$script:TestStorageAccountPrefix$timestamp" + 'comp'
-            $script:NonCompliantStorageName = "$script:TestStorageAccountPrefix$timestamp" + 'nonc'
-
-            # Ensure names are valid (lowercase, max 24 chars)
-            $script:CompliantStorageName = $script:CompliantStorageName.ToLower().Substring(0, [Math]::Min(24, $script:CompliantStorageName.Length))
-            $script:NonCompliantStorageName = $script:NonCompliantStorageName.ToLower().Substring(0, [Math]::Min(24, $script:NonCompliantStorageName.Length))
+            # Generate unique storage account names using centralized configuration
+            $script:CompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'compliant'  # pragma: allowlist secret
+            $script:NonCompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'nonCompliant'  # pragma: allowlist secret
 
             Write-Host "Test storage accounts: $script:CompliantStorageName, $script:NonCompliantStorageName" -ForegroundColor Yellow
         }
@@ -144,7 +140,7 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
             $compliantStorage = New-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
                 -Name $script:CompliantStorageName `
                 -Location $script:ResourceGroup.Location `
-                -SkuName 'Standard_LRS' `
+                -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
                 -AllowBlobPublicAccess $false `
                 -PublicNetworkAccess 'Disabled' `
                 -ErrorAction SilentlyContinue
@@ -158,7 +154,7 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
             $nonCompliantStorage = New-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
                 -Name $script:NonCompliantStorageName `
                 -Location $script:ResourceGroup.Location `
-                -SkuName 'Standard_LRS' `
+                -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
                 -AllowBlobPublicAccess $true `
                 -PublicNetworkAccess 'Enabled' `
                 -ErrorAction SilentlyContinue
@@ -168,9 +164,10 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
         }
 
         It 'Should wait for policy evaluation to complete' {
-            # Wait for Azure Policy to evaluate the resources
-            Write-Host 'Waiting 60 seconds for policy evaluation...' -ForegroundColor Yellow
-            Start-Sleep -Seconds 60
+            # Wait for Azure Policy to evaluate the resources using centralized timeout
+            $waitTime = $script:TestConfig.Timeouts.PolicyEvaluationWaitSeconds
+            Write-Host "Waiting $waitTime seconds for policy evaluation..." -ForegroundColor Yellow
+            Start-Sleep -Seconds $waitTime
         }
     }
 
@@ -179,7 +176,8 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
             # Trigger policy compliance scan
             try {
                 Start-AzPolicyComplianceScan -ResourceGroupName $script:ResourceGroupName -AsJob | Out-Null
-                Start-Sleep -Seconds 30
+                $complianceScanWait = $script:TestConfig.Timeouts.ComplianceScanWaitSeconds
+                Start-Sleep -Seconds $complianceScanWait
             }
             catch {
                 Write-Warning "Could not trigger compliance scan: $($_.Exception.Message)"
@@ -256,8 +254,9 @@ Describe 'Policy Remediation Testing' -Tag @('Integration', 'Slow', 'Remediation
         }
 
         It 'Should wait for policy re-evaluation after remediation' {
-            Write-Host 'Waiting 30 seconds for policy re-evaluation...' -ForegroundColor Yellow
-            Start-Sleep -Seconds 30
+            $reEvalWait = $script:TestConfig.Timeouts.RemediationWaitSeconds
+            Write-Host "Waiting $reEvalWait seconds for policy re-evaluation..." -ForegroundColor Yellow
+            Start-Sleep -Seconds $reEvalWait
         }
     }
 }

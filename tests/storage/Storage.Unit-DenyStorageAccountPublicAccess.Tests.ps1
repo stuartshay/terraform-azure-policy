@@ -14,10 +14,16 @@
 #>
 
 BeforeAll {
-    # Test configuration
-    $script:PolicyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-account-public-access\rule.json'
-    $script:ExpectedPolicyName = 'deny-storage-account-public-access'
-    $script:ExpectedDisplayName = 'Deny Storage Account Public Access'
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
+
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access'
+
+    # Set script variables from configuration
+    $script:PolicyPath = Get-PolicyDefinitionPath -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -TestScriptPath $PSScriptRoot
+    $script:ExpectedPolicyName = $script:TestConfig.Policy.Name
+    $script:ExpectedDisplayName = $script:TestConfig.Policy.DisplayName
 }
 
 Describe 'Policy JSON Validation' -Tag @('Unit', 'Fast', 'Static') {

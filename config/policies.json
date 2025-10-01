@@ -1,0 +1,196 @@
+{
+    "policies": {
+        "storage": {
+            "deny-storage-account-public-access": {
+                "name": "deny-storage-account-public-access",
+                "displayName": "Deny Storage Account Public Access",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-account-public-access/rule.json",
+                "resourcePrefix": "testpolicysa",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS"
+                }
+            },
+            "deny-storage-version": {
+                "name": "deny-storage-version",
+                "displayName": "Deny Storage Account Blob Versioning Disabled",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-version/rule.json",
+                "resourcePrefix": "testpolicyver",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS"
+                }
+            },
+            "deny-storage-https-disabled": {
+                "name": "deny-storage-https-disabled",
+                "displayName": "Deny Storage Account HTTPS Disabled",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-https-disabled/rule.json",
+                "resourcePrefix": "testpolicyhttps",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS"
+                }
+            },
+            "deny-storage-blob-logging-disabled": {
+                "name": "deny-storage-blob-logging-disabled",
+                "displayName": "Deny Storage Account Blob Logging Disabled",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-blob-logging-disabled/rule.json",
+                "resourcePrefix": "testpolicylog",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS"
+                }
+            },
+            "deny-storage-softdelete": {
+                "name": "deny-storage-softdelete",
+                "displayName": "Deny Storage Account Soft Delete Disabled",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-softdelete/rule.json",
+                "resourcePrefix": "testpolicysoft",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS",
+                    "minimumRetentionDays": 7
+                }
+            }
+        },
+        "function-app": {
+            "deny-function-app-anonymous": {
+                "name": "deny-function-app-anonymous",
+                "displayName": "Deny Function App Anonymous Access",
+                "category": "Function App",
+                "policyPath": "policies/function-app/deny-function-app-anonymous/rule.json",
+                "resourcePrefix": "testpolicyfn",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "runtime": "PowerShell"
+                }
+            },
+            "deny-function-app-https-only": {
+                "name": "deny-function-app-https-only",
+                "displayName": "Deny Function App HTTPS Only Disabled",
+                "category": "Function App",
+                "policyPath": "policies/function-app/deny-function-app-https-only/rule.json",
+                "resourcePrefix": "testpolicyfnhttps",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "runtime": "PowerShell"
+                }
+            },
+            "deny-function-app-http-version": {
+                "name": "deny-function-app-http-version",
+                "displayName": "Deny Function App HTTP Version",
+                "category": "Function App",
+                "policyPath": "policies/function-app/deny-function-app-http-version/rule.json",
+                "resourcePrefix": "testpolicyfnhttp",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "runtime": "PowerShell"
+                }
+            }
+        },
+        "network": {
+            "deny-network-no-nsg": {
+                "name": "deny-network-no-nsg",
+                "displayName": "Deny Network Resources Without NSG",
+                "category": "Network",
+                "policyPath": "policies/network/deny-network-no-nsg/rule.json",
+                "resourcePrefix": "testpolicynet",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "exemptedSubnets": [
+                        "GatewaySubnet",
+                        "AzureFirewallSubnet",
+                        "AzureFirewallManagementSubnet",
+                        "RouteServerSubnet",
+                        "AzureBastionSubnet"
+                    ]
+                }
+            },
+            "deny-network-private-ips": {
+                "name": "deny-network-private-ips",
+                "displayName": "Deny Network Private IPs",
+                "category": "Network",
+                "policyPath": "policies/network/deny-network-private-ips/rule.json",
+                "resourcePrefix": "testpolicyip",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            },
+            "deny-vnet-external-dns": {
+                "name": "deny-vnet-external-dns",
+                "displayName": "Deny VNet External DNS",
+                "category": "Network",
+                "policyPath": "policies/network/deny-vnet-external-dns/rule.json",
+                "resourcePrefix": "testpolicydns",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            }
+        },
+        "app-service": {
+            "deny-app-service-plan-not-zone-redundant": {
+                "name": "deny-app-service-plan-not-zone-redundant",
+                "displayName": "Deny App Service Plan Not Zone Redundant",
+                "category": "App Service",
+                "policyPath": "policies/app-service/deny-app-service-plan-not-zone-redundant/rule.json",
+                "resourcePrefix": "testpolicyapp",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "skuName": "P1v3",
+                    "zoneRedundant": true
+                }
+            }
+        }
+    },
+    "environments": {
+        "dev": {
+            "resourceGroupName": "rg-azure-policy-testing-dev",
+            "subscriptionId": null,
+            "location": "East US"
+        },
+        "staging": {
+            "resourceGroupName": "rg-azure-policy-testing-staging",
+            "subscriptionId": null,
+            "location": "East US 2"
+        },
+        "prod": {
+            "resourceGroupName": "rg-azure-policy-testing",
+            "subscriptionId": null,
+            "location": "East US"
+        }
+    },
+    "metadata": {
+        "version": "1.0.0",
+        "lastUpdated": "2025-01-10",
+        "description": "Centralized policy configuration for Azure Policy functional tests"
+    }
+}

@@ -3,13 +3,16 @@
 # network resources that use public IP addresses
 
 BeforeAll {
-    # Import shared test configuration
-    . "$PSScriptRoot\..\PolicyTestConfig.ps1"
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
-    # Test configuration
-    $script:PolicyPath = "$PSScriptRoot\..\..\policies\network\deny-network-private-ips\rule.json"
-    $script:PolicyName = 'deny-network-private-ips'
-    $script:PolicyDisplayName = 'Deny Network Resources with Public IP Addresses'
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'network' -PolicyName 'deny-network-private-ips'
+
+    # Set script variables from configuration
+    $script:PolicyPath = Get-PolicyDefinitionPath -PolicyCategory 'network' -PolicyName 'deny-network-private-ips' -TestScriptPath $PSScriptRoot
+    $script:PolicyName = $script:TestConfig.Policy.Name
+    $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
 }
 
 Describe 'Deny Network Private IPs Policy Tests' {

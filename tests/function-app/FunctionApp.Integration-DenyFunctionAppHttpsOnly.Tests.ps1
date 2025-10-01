@@ -15,17 +15,26 @@
 #>
 
 BeforeAll {
-    # Import required modules
-    Import-Module Az.Accounts -Force
-    Import-Module Az.Resources -Force
-    Import-Module Az.Functions -Force
-    Import-Module Az.PolicyInsights -Force
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
-    # Test configuration
-    $script:ResourceGroupName = 'rg-azure-policy-testing'
-    $script:PolicyName = 'deny-function-app-https-only'
-    $script:PolicyDisplayName = 'Deny Function App Non-HTTPS Access'
-    $script:TestFunctionAppPrefix = 'testpolicyfnhttps'
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-https-only'  # pragma: allowlist secret
+
+    # Import required modules using centralized configuration
+    Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')  # pragma: allowlist secret
+
+    # Initialize test environment
+    $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig
+    if (-not $envInit.Success) {
+        throw "Environment initialization failed: $($envInit.Errors -join '; ')"
+    }
+
+    # Set script variables from configuration
+    $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName
+    $script:PolicyName = $script:TestConfig.Policy.Name
+    $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
+    $script:TestFunctionAppPrefix = $script:TestConfig.Policy.ResourcePrefix
 
     # Get current context
     $script:Context = Get-AzContext

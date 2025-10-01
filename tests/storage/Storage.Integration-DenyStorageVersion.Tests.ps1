@@ -15,35 +15,36 @@
 #>
 
 BeforeAll {
-    # Import required modules
-    Import-Module Az.Accounts -Force
-    Import-Module Az.Resources -Force
-    Import-Module Az.Storage -Force
-    Import-Module Az.PolicyInsights -Force
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
-    # Test configuration
-    $script:ResourceGroupName = 'rg-azure-policy-testing'
-    $script:PolicyName = 'deny-storage-version'
-    $script:PolicyDisplayName = 'Deny Storage Account Blob Versioning Disabled'
-    $script:TestStorageAccountPrefix = 'testpolicyver'
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'storage' -PolicyName 'deny-storage-version'
 
-    # Get current context
-    $script:Context = Get-AzContext
-    if (-not $script:Context) {
-        throw 'No Azure context found. Please run Connect-AzAccount first.'
+    # Import required modules using centralized configuration
+    Import-PolicyTestModule -ModuleTypes @('Required', 'Storage')
+
+    # Initialize test environment
+    $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig
+    if (-not $envInit.Success) {
+        throw "Environment initialization failed: $($envInit.Errors -join '; ')"
     }
 
-    $script:SubscriptionId = $script:Context.Subscription.Id
+    # Set script variables from configuration
+    $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName
+    $script:PolicyName = $script:TestConfig.Policy.Name
+    $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
+    $script:TestStorageAccountPrefix = $script:TestConfig.Policy.ResourcePrefix
+
+    # Set Azure context variables
+    $script:Context = $envInit.Context
+    $script:SubscriptionId = $envInit.SubscriptionId
+    $script:ResourceGroup = $envInit.ResourceGroup
+
     Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
 
-    # Verify resource group exists
-    $script:ResourceGroup = Get-AzResourceGroup -Name $script:ResourceGroupName -ErrorAction SilentlyContinue
-    if (-not $script:ResourceGroup) {
-        throw "Resource group '$script:ResourceGroupName' not found. Please create it first."
-    }
-
-    # Load policy definition from file
-    $policyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-version\rule.json'
+    # Load policy definition from file using centralized path resolution
+    $policyPath = Get-PolicyDefinitionPath -PolicyCategory 'storage' -PolicyName 'deny-storage-version' -TestScriptPath $PSScriptRoot
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
     }
