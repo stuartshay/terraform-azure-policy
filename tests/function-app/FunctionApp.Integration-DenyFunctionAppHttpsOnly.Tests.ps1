@@ -36,13 +36,9 @@ BeforeAll {
     $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
     $script:TestFunctionAppPrefix = $script:TestConfig.Policy.ResourcePrefix
 
-    # Get current context
-    $script:Context = Get-AzContext
-    if (-not $script:Context) {
-        throw 'No Azure context found. Please run Connect-AzAccount first.'
-    }
-
-    $script:SubscriptionId = $script:Context.Subscription.Id
+    # Use context from environment initialization
+    $script:Context = $envInit.Context
+    $script:SubscriptionId = $envInit.SubscriptionId
     Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
 
     # Verify resource group exists

@@ -247,8 +247,13 @@ function Get-PolicyDefinitionPath {
     # Build the full path relative to the test script location
     $policyPath = Join-Path $TestScriptPath '..\..\' $policyConfig.policyPath
 
-    # Resolve the path to handle relative components
-    return Resolve-Path $policyPath -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path
+    # Resolve the path to handle relative components, but check if it exists first
+    if (Test-Path $policyPath) {
+        return (Resolve-Path $policyPath).Path
+    } else {
+        Write-Error "Policy definition path not found: $policyPath"
+        return $null
+    }
 }
 
 <#
