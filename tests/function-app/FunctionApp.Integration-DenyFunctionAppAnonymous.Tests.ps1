@@ -19,7 +19,7 @@ BeforeAll {
     . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
     # Initialize test configuration for this specific policy
-    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-anonymous'  # pragma: allowlist secret
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-anonymous'
 
     # Import required modules using centralized configuration
     Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')
@@ -49,7 +49,7 @@ BeforeAll {
     Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
 
     # Load policy definition from file using centralized path resolution
-    $policyPath = Get-PolicyDefinitionPath -PolicyCategory 'function-app' -PolicyName 'deny-function-app-anonymous' -TestScriptPath $PSScriptRoot  # pragma: allowlist secret
+    $policyPath = Get-PolicyDefinitionPath -PolicyCategory 'function-app' -PolicyName 'deny-function-app-anonymous' -TestScriptPath $PSScriptRoot
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
     }

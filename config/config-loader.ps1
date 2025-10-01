@@ -186,7 +186,7 @@ function Initialize-PolicyTestConfig {
 #>
 function New-PolicyTestResourceName {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Function only generates a name string, does not change system state')]  # pragma: allowlist secret
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Function only generates a name string, does not change system state')]
     param(
         [Parameter(Mandatory)]
         [string]$PolicyCategory,

@@ -118,10 +118,10 @@ Run tests with explicit Azure connection check:
 ./scripts/Run-StorageTest.ps1
 
 # Run specific test file
-Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Output Detailed  # pragma: allowlist secret
+Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Output Detailed
 
 # Run all storage tests
-Invoke-Pester -Path tests/storage/ -Output Detailed  # pragma: allowlist secret
+Invoke-Pester -Path tests/storage/ -Output Detailed
 ```
 
 ## Troubleshooting

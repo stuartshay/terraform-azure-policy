@@ -166,10 +166,8 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
             }
         }
 
-        It 'Should have policy assigned to resource group' -Skip {
-            # SKIP: Policy not yet deployed to test resource group
-            # Deploy with: ./scripts/Deploy-PolicyDefinitions.ps1 -PolicyPath ./policies/storage/deny-storage-version
-            $script:TargetAssignment | Should -Not -BeNullOrEmpty
+        It 'Should have policy assigned to resource group' -Skip:($null -eq $script:TargetAssignment) {
+            $script:TargetAssignment | Should -Not -BeNullOrEmpty -Because "Policy '$script:PolicyName' should be assigned to resource group '$script:ResourceGroupName'. Deploy with: ./scripts/Deploy-PolicyDefinitions.ps1 -PolicyPath ./policies/storage/deny-storage-version"
         }
 
         It 'Should be assigned at resource group scope' {
@@ -239,15 +237,10 @@ Describe 'Policy Logic Testing' -Tag @('Unit', 'Fast', 'PolicyLogic') {
 Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance', 'RequiresCleanup') {
     Context 'Storage Account Compliance Scenarios' {
         BeforeAll {
-            # Generate unique storage account names (must be 3-24 chars, lowercase, alphanumeric)
-            # Using shorter timestamp format to fit within 24 char limit
-            $timestamp = Get-Date -Format 'MMddHHmmss'  # 10 chars
-            $basePrefix = 'testver'  # 7 chars, leaves room for timestamp + suffix
-
-            # Build names: basePrefix (7) + timestamp (10) + suffix (4) = 21-24 chars
-            $script:CompliantStorageName = ($basePrefix + $timestamp + 'comp').ToLower()
-            $script:NonCompliantStorageName = ($basePrefix + $timestamp + 'nonc').ToLower()
-            $script:ExemptedStorageName = ($basePrefix + $timestamp + 'exem').ToLower()
+            # Generate unique storage account names using centralized function
+            $script:CompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-version' -ResourceType 'compliant'
+            $script:NonCompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-version' -ResourceType 'nonCompliant'
+            $script:ExemptedStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-version' -ResourceType 'exempted'
 
             Write-Host "Test storage accounts: $script:CompliantStorageName, $script:NonCompliantStorageName, $script:ExemptedStorageName" -ForegroundColor Yellow
         }

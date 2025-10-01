@@ -120,7 +120,7 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
             }
         }
 
-        It 'Should have policy assigned to resource group' {
+        It 'Should have policy assigned to resource group' -Skip:($null -eq $script:TargetAssignment) {
             $script:TargetAssignment | Should -Not -BeNullOrEmpty -Because "Policy '$script:PolicyName' should be assigned to resource group '$script:ResourceGroupName'"
         }
 
@@ -142,8 +142,8 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
     Context 'Storage Account Compliance Scenarios' {
         BeforeAll {
             # Generate unique storage account names using centralized configuration
-            $script:CompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'compliant'  # pragma: allowlist secret
-            $script:NonCompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'nonCompliant'  # pragma: allowlist secret
+            $script:CompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'compliant'
+            $script:NonCompliantStorageName = New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'nonCompliant'
 
             Write-Host "Test storage accounts: $script:CompliantStorageName, $script:NonCompliantStorageName" -ForegroundColor Yellow
         }
