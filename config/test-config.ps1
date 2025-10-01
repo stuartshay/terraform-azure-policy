@@ -243,13 +243,39 @@ function New-UniqueResourceName {
     $timestamp = Get-Date -Format $script:TestConfig.Naming.TimestampFormat
     $prefix = $script:TestConfig.Naming.TestResourcePrefix
 
-    $fullName = "$prefix$BaseName$timestamp$Suffix"
+    # Build name ensuring suffix is preserved by calculating available space
+    $reservedLength = $prefix.Length + $Suffix.Length
+    $availableForBaseAndTime = $MaxLength - $reservedLength
 
-    # Ensure name is lowercase and within length limits
-    $fullName = $fullName.ToLower()
-    if ($fullName.Length -gt $MaxLength) {
-        $fullName = $fullName.Substring(0, $MaxLength)
+    # Combine base and timestamp
+    $baseAndTime = "$BaseName$timestamp"
+
+    # If too long, truncate the base+timestamp part, not the suffix
+    if ($baseAndTime.Length -gt $availableForBaseAndTime) {
+        # Prioritize keeping more timestamp chars (at least last 8 chars for uniqueness)
+        $minTimestampChars = 8
+        if ($timestamp.Length -gt $minTimestampChars) {
+            $keepTimestamp = $minTimestampChars
+        }
+        else {
+            $keepTimestamp = $timestamp.Length
+        }
+
+        $availableForBase = $availableForBaseAndTime - $keepTimestamp
+        if ($availableForBase -gt 0) {
+            $trimmedBase = $BaseName.Substring(0, [Math]::Min($BaseName.Length, $availableForBase))
+            $trimmedTimestamp = $timestamp.Substring($timestamp.Length - $keepTimestamp, $keepTimestamp)
+            $baseAndTime = "$trimmedBase$trimmedTimestamp"
+        }
+        else {
+            $baseAndTime = $timestamp.Substring($timestamp.Length - $availableForBaseAndTime, $availableForBaseAndTime)
+        }
     }
+
+    $fullName = "$prefix$baseAndTime$Suffix"
+
+    # Ensure name is lowercase
+    $fullName = $fullName.ToLower()
 
     return $fullName
 }

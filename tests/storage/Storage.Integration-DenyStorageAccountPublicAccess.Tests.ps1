@@ -74,23 +74,29 @@ Describe 'Policy Definition Validation' -Tag @('Unit', 'Fast', 'PolicyDefinition
             $policyRule.if.allOf[0].equals | Should -Be 'Microsoft.Storage/storageAccounts'
         }
 
-        It 'Should have Audit effect (for testing)' {
+        It 'Should have parameterized effect' {
             $policyRule = $script:PolicyDefinitionJson.properties.policyRule
-            $policyRule.then.effect | Should -Be 'Audit'
+            $policyRule.then.effect | Should -Be "[parameters('effect')]"
         }
 
         It 'Should check allowBlobPublicAccess property' {
             $policyRule = $script:PolicyDefinitionJson.properties.policyRule
             $conditions = $policyRule.if.allOf
-            $blobCondition = $conditions | Where-Object { $_.field -eq 'Microsoft.Storage/storageAccounts/allowBlobPublicAccess' }
+            # The policy uses anyOf structure, so we need to check within that
+            $anyOfConditions = $conditions | Where-Object { $_.anyOf -ne $null }
+            $anyOfConditions | Should -Not -BeNullOrEmpty
+            $blobCondition = $anyOfConditions.anyOf | Where-Object { $_.field -eq 'Microsoft.Storage/storageAccounts/allowBlobPublicAccess' }
             $blobCondition | Should -Not -BeNullOrEmpty
-            $blobCondition.equals | Should -Be $true
+            $blobCondition.equals | Should -Be 'true'
         }
 
         It 'Should check publicNetworkAccess property' {
             $policyRule = $script:PolicyDefinitionJson.properties.policyRule
             $conditions = $policyRule.if.allOf
-            $networkCondition = $conditions | Where-Object { $_.field -eq 'Microsoft.Storage/storageAccounts/publicNetworkAccess' }
+            # The policy uses anyOf structure, so we need to check within that
+            $anyOfConditions = $conditions | Where-Object { $_.anyOf -ne $null }
+            $anyOfConditions | Should -Not -BeNullOrEmpty
+            $networkCondition = $anyOfConditions.anyOf | Where-Object { $_.field -eq 'Microsoft.Storage/storageAccounts/publicNetworkAccess' }
             $networkCondition | Should -Not -BeNullOrEmpty
             $networkCondition.equals | Should -Be 'Enabled'
         }
@@ -101,25 +107,27 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
     Context 'Policy Assignment Exists' {
         BeforeAll {
             $script:PolicyAssignments = Get-AzPolicyAssignment -Scope $script:ResourceGroup.ResourceId
+            # Look for the policy assignment by checking the policy definition name in the PolicyDefinitionId
             $script:TargetAssignment = $script:PolicyAssignments | Where-Object {
-                $_.Properties.DisplayName -like "*$script:PolicyDisplayName*" -or
-                $_.Name -like "*$script:PolicyName*"
+                $_.DisplayName -like "*$script:PolicyDisplayName*" -or
+                $_.Name -like "*$script:PolicyName*" -or
+                $_.PolicyDefinitionId -like "*$script:PolicyName*"
             }
         }
 
         It 'Should have policy assigned to resource group' {
-            $script:TargetAssignment | Should -Not -BeNullOrEmpty
+            $script:TargetAssignment | Should -Not -BeNullOrEmpty -Because "Policy '$script:PolicyName' should be assigned to resource group '$script:ResourceGroupName'"
         }
 
         It 'Should be assigned at resource group scope' {
             if ($script:TargetAssignment) {
-                $script:TargetAssignment.Properties.Scope | Should -Be $script:ResourceGroup.ResourceId
+                $script:TargetAssignment.Scope | Should -Be $script:ResourceGroup.ResourceId
             }
         }
 
         It 'Should have policy definition associated' {
             if ($script:TargetAssignment) {
-                $script:TargetAssignment.Properties.PolicyDefinitionId | Should -Not -BeNullOrEmpty
+                $script:TargetAssignment.PolicyDefinitionId | Should -Not -BeNullOrEmpty
             }
         }
     }
@@ -136,31 +144,75 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
         }
 
         It 'Should create compliant storage account (public access disabled)' {
-            # Create storage account with public access disabled
-            $compliantStorage = New-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
+            # Check if storage account already exists
+            $existingStorage = Get-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
                 -Name $script:CompliantStorageName `
-                -Location $script:ResourceGroup.Location `
-                -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
-                -AllowBlobPublicAccess $false `
-                -PublicNetworkAccess 'Disabled' `
                 -ErrorAction SilentlyContinue
 
-            $compliantStorage | Should -Not -BeNullOrEmpty
-            $script:CompliantStorage = $compliantStorage
+            if ($existingStorage) {
+                Write-Host "Storage account $script:CompliantStorageName already exists, using existing account" -ForegroundColor Yellow
+                $script:CompliantStorage = $existingStorage
+            }
+            else {
+                # Create storage account with public access disabled
+                try {
+                    $script:CompliantStorage = New-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
+                        -Name $script:CompliantStorageName `
+                        -Location $script:ResourceGroup.Location `
+                        -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
+                        -AllowBlobPublicAccess $false `
+                        -PublicNetworkAccess 'Disabled' `
+                        -ErrorAction Stop
+                }
+                catch {
+                    Write-Host "Error creating storage account: $($_.Exception.Message)" -ForegroundColor Red
+                    throw
+                }
+            }
+
+            # Note: Using ($null -ne $variable) | Should -BeTrue instead of $variable | Should -Not -BeNull
+            # due to Pester 5.7.1 bug where Should -Not -BeNull fails with PSStorageAccount objects
+            ($null -ne $script:CompliantStorage) | Should -BeTrue
+            $script:CompliantStorage.StorageAccountName | Should -Be $script:CompliantStorageName
         }
 
         It 'Should create non-compliant storage account (public access enabled)' {
-            # Create storage account with public access enabled (violates policy)
-            $nonCompliantStorage = New-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
+            # Check if storage account already exists
+            $existingStorage = Get-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
                 -Name $script:NonCompliantStorageName `
-                -Location $script:ResourceGroup.Location `
-                -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
-                -AllowBlobPublicAccess $true `
-                -PublicNetworkAccess 'Enabled' `
                 -ErrorAction SilentlyContinue
 
-            $nonCompliantStorage | Should -Not -BeNullOrEmpty
-            $script:NonCompliantStorage = $nonCompliantStorage
+            if ($existingStorage) {
+                Write-Host "Storage account $script:NonCompliantStorageName already exists, using existing account" -ForegroundColor Yellow
+                $script:NonCompliantStorage = $existingStorage
+            }
+            else {
+                # Create storage account with public access enabled (violates policy)
+                # Note: This may be blocked by policy if effect is set to 'Deny'
+                try {
+                    $script:NonCompliantStorage = New-AzStorageAccount -ResourceGroupName $script:ResourceGroupName `
+                        -Name $script:NonCompliantStorageName `
+                        -Location $script:ResourceGroup.Location `
+                        -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
+                        -AllowBlobPublicAccess $true `
+                        -PublicNetworkAccess 'Enabled' `
+                        -ErrorAction Stop
+                }
+                catch {
+                    if ($_.Exception.Message -match 'RequestDisallowedByPolicy|disallowed by policy') {
+                        Write-Host "Storage account creation blocked by policy (expected behavior for Deny effect)" -ForegroundColor Yellow
+                        Set-ItResult -Skipped -Because "Policy with Deny effect prevents creation of non-compliant resources"
+                        return
+                    }
+                    Write-Host "Error creating storage account: $($_.Exception.Message)" -ForegroundColor Red
+                    throw
+                }
+            }
+
+            # Note: Using ($null -ne $variable) | Should -BeTrue instead of $variable | Should -Not -BeNull
+            # due to Pester 5.7.1 bug where Should -Not -BeNull fails with PSStorageAccount objects
+            ($null -ne $script:NonCompliantStorage) | Should -BeTrue
+            $script:NonCompliantStorage.StorageAccountName | Should -Be $script:NonCompliantStorageName
         }
 
         It 'Should wait for policy evaluation to complete' {
