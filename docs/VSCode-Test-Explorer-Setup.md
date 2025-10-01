@@ -191,10 +191,10 @@ Save-AzContext -Path "$HOME/.azure/AzureContext.json" -Force
 
    ```powershell
    # Run only fast tests (no Azure resources created)
-   Invoke-Pester -Path tests/storage/*.Tests.ps1 -Tag 'Fast' -Output Detailed  # pragma: allowlist secret
+   Invoke-Pester -Path tests/storage/*.Tests.ps1 -Tag 'Fast' -Output Detailed
 
    # Run only unit tests
-   Invoke-Pester -Path tests/storage/*.Tests.ps1 -Tag 'Unit' -Output Detailed  # pragma: allowlist secret
+   Invoke-Pester -Path tests/storage/*.Tests.ps1 -Tag 'Unit' -Output Detailed
    ```
 
 4. **Monitor Azure Costs**
