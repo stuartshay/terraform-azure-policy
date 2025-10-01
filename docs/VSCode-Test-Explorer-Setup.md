@@ -17,10 +17,10 @@ This is the easiest approach for local development:
    ```powershell
    # Open PowerShell terminal in VS Code
    Connect-AzAccount
-   
+
    # Verify connection
    Get-AzContext
-   
+
    # Save the context (enables automatic reuse)
    Save-AzContext -Path "$HOME/.azure/AzureContext.json"
    ```
@@ -131,6 +131,7 @@ Invoke-Pester -Path tests/storage/ -Output Detailed  # pragma: allowlist secret
 **Cause:** No active or saved Azure authentication
 
 **Solution:**
+
 ```powershell
 Connect-AzAccount
 Save-AzContext -Path "$HOME/.azure/AzureContext.json"
@@ -141,6 +142,7 @@ Save-AzContext -Path "$HOME/.azure/AzureContext.json"
 **Cause:** Test resource group doesn't exist
 
 **Solution:**
+
 ```powershell
 New-AzResourceGroup -Name "rg-azure-policy-testing" -Location "eastus"
 ```
@@ -150,6 +152,7 @@ New-AzResourceGroup -Name "rg-azure-policy-testing" -Location "eastus"
 **Cause:** Saved context is expired
 
 **Solution:**
+
 ```powershell
 # Re-authenticate
 Connect-AzAccount
@@ -163,7 +166,9 @@ Save-AzContext -Path "$HOME/.azure/AzureContext.json" -Force
 **Cause:** Azure operations can be slow
 
 **Solution:**
+
 - Adjust timeouts in `config/test-config.ps1`:
+
   ```powershell
   Timeouts = @{
       PolicyEvaluationWaitSeconds = 60  # Increase if needed
@@ -183,10 +188,11 @@ Save-AzContext -Path "$HOME/.azure/AzureContext.json" -Force
    - Check resource cleanup after tests
 
 3. **Use Tags for Selective Testing**
+
    ```powershell
    # Run only fast tests (no Azure resources created)
    Invoke-Pester -Path tests/storage/*.Tests.ps1 -Tag 'Fast' -Output Detailed  # pragma: allowlist secret
-   
+
    # Run only unit tests
    Invoke-Pester -Path tests/storage/*.Tests.ps1 -Tag 'Unit' -Output Detailed  # pragma: allowlist secret
    ```
