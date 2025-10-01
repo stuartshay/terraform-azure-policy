@@ -19,7 +19,7 @@ BeforeAll {
     . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
     # Initialize test configuration for this specific policy
-    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-https-only'  # pragma: allowlist secret
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-https-only'
 
     # Import required modules using centralized configuration
     Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')
