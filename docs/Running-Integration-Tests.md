@@ -63,20 +63,7 @@ Use the helper script to automatically check and create the resource group:
 ### Run All Tests in a File
 
 ```powershell
-Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Output Detailed  # pragma: allowlist secret
-```
-
-### Run Specific Test Tags
-
-```powershell
-# Run only fast tests (no Azure resources created)
-Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Tag 'Fast' -Output Detailed  # pragma: allowlist secret
-
-# Run only unit tests
-Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Tag 'Unit' -Output Detailed  # pragma: allowlist secret
-
-# Run compliance tests
-Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Tag 'Compliance' -Output Detailed  # pragma: allowlist secret
+Invoke-Pester -Path tests/storage/Storage.Integration-DenyStorageAccountPublicAccess.Tests.ps1 -Output Detailed
 ```
 
 ### Run All Storage Tests
