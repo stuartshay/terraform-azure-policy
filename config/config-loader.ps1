@@ -185,6 +185,8 @@ function Initialize-PolicyTestConfig {
     New-PolicyTestResourceName -PolicyCategory 'storage' -PolicyName 'deny-storage-account-public-access' -ResourceType 'compliant'
 #>
 function New-PolicyTestResourceName {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Function only generates a name string, does not change system state')]  # pragma: allowlist secret
     param(
         [Parameter(Mandatory)]
         [string]$PolicyCategory,
@@ -245,12 +247,13 @@ function Get-PolicyDefinitionPath {
     $policyConfig = Get-PolicyConfig -PolicyCategory $PolicyCategory -PolicyName $PolicyName
 
     # Build the full path relative to the test script location
-    $policyPath = Join-Path $TestScriptPath '..\..\' $policyConfig.policyPath
+    $policyPath = Join-Path -Path $TestScriptPath -ChildPath '..\..\' -AdditionalChildPath $policyConfig.policyPath
 
     # Resolve the path to handle relative components, but check if it exists first
     if (Test-Path $policyPath) {
         return (Resolve-Path $policyPath).Path
-    } else {
+    }
+    else {
         Write-Error "Policy definition path not found: $policyPath"
         return $null
     }
