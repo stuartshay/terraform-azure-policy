@@ -34,7 +34,30 @@ tests/
 
 ### Running Tests
 
-#### Option 1: VS Code Tasks (Recommended)
+#### Option 1: VS Code Test Explorer (Recommended)
+
+Tests can be discovered and run directly from VS Code's Test Explorer:
+
+1. **Open Test Explorer**: Click the Testing icon (flask/beaker) in VS Code sidebar
+2. **Ensure Azure Context**: Tests require Azure authentication
+   - Check connection: Run `Get-AzContext` in a PowerShell terminal
+   - If needed: Run `Connect-AzAccount` to authenticate
+   - See [VS Code Test Explorer Setup](../docs/VSCode-Test-Explorer-Setup.md) for detailed configuration
+
+3. **Run Tests**:
+   - Click ▶️ "Run All Tests" to run entire test suite
+   - Click individual test files to run specific tests
+   - Right-click tests for more options (Run, Debug, etc.)
+
+**Note**: Tests will gracefully skip if no Azure context is available. To change this behavior, modify `config/test-config.ps1`:
+
+```powershell
+Azure = @{
+    SkipIfNoContext = $true  # Set to $false to fail instead of skip
+}
+```
+
+#### Option 2: VS Code Tasks
 
 1. Open Command Palette (`Ctrl+Shift+P`)
 2. Select "Tasks: Run Task"
@@ -42,7 +65,7 @@ tests/
    - **"Run Policy Tests"** - All policy tests
    - **"Run Storage Policy Tests"** - Only storage tests with XML output
 
-#### Option 2: PowerShell Script
+#### Option 3: PowerShell Script
 
 ```powershell
 # Run all tests
@@ -55,7 +78,7 @@ tests/
 ./scripts/Invoke-PolicyTests.ps1 -OutputFormat "NUnitXml" -OutputPath "TestResults.xml"
 ```
 
-#### Option 3: Direct Pester
+#### Option 4: Direct Pester
 
 ```powershell
 # Run specific test file

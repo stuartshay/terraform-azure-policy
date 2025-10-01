@@ -22,11 +22,16 @@ BeforeAll {
     $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-https-only'  # pragma: allowlist secret
 
     # Import required modules using centralized configuration
-    Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')  # pragma: allowlist secret
+    Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')
 
-    # Initialize test environment
-    $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig
+    # Initialize test environment with skip-on-no-context for VS Code Test Explorer
+    $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig -SkipIfNoContext $script:TestConfig.Azure.SkipIfNoContext
     if (-not $envInit.Success) {
+        if ($envInit.ShouldSkip) {
+            # Skip all tests if no Azure context is available
+            Write-Host 'Skipping all tests - no Azure context available' -ForegroundColor Yellow
+            return
+        }
         throw "Environment initialization failed: $($envInit.Errors -join '; ')"
     }
 

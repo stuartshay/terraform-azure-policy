@@ -24,6 +24,10 @@ $script:TestConfig = @{
         # Subscription validation settings
         RequireValidSubscription    = $true
         ValidateResourceGroupExists = $true
+
+        # Skip tests instead of failing when no Azure context is available
+        # Useful for running tests in VS Code Test Explorer without active Azure session
+        SkipIfNoContext             = $true
     }
 
     # Test Timing Configuration
@@ -126,15 +130,19 @@ function Get-PolicyTestConfig {
 .SYNOPSIS
     Validates the test environment and Azure context
 .DESCRIPTION
-    Performs validation checks for Azure context, subscription, and resource group
+    Performs validation checks for Azure context, subscription, and resource group.
+    Attempts to use cached Azure credentials if available.
 .PARAMETER Config
     The test configuration object (optional, uses default if not provided)
+.PARAMETER SkipIfNoContext
+    If true, marks tests as skipped instead of failing when no Azure context is found
 .OUTPUTS
     Hashtable containing validation results and Azure context information
 #>
 function Initialize-PolicyTestEnvironment {
     param(
-        [hashtable]$Config = $script:TestConfig
+        [hashtable]$Config = $script:TestConfig,
+        [bool]$SkipIfNoContext = $false
     )
 
     $result = @{
@@ -143,14 +151,43 @@ function Initialize-PolicyTestEnvironment {
         SubscriptionId = $null
         ResourceGroup  = $null
         Errors         = @()
+        ShouldSkip     = $false
     }
 
     try {
-        # Validate Azure context
-        $result.Context = Get-AzContext
+        # Try to get current Azure context
+        $result.Context = Get-AzContext -ErrorAction SilentlyContinue
+
+        # If no context, try to load saved context (for VS Code Test Explorer)
         if (-not $result.Context) {
-            $result.Success = $false
-            $result.Errors += 'No Azure context found. Please run Connect-AzAccount first.'
+            try {
+                # Attempt to import a saved context
+                $savedContexts = Get-AzContext -ListAvailable -ErrorAction SilentlyContinue
+                if ($savedContexts -and $savedContexts.Count -gt 0) {
+                    # Use the first available context
+                    $result.Context = Select-AzContext -Name $savedContexts[0].Name -ErrorAction SilentlyContinue
+                    if ($result.Context) {
+                        Write-Host "Using saved Azure context: $($result.Context.Name)" -ForegroundColor Cyan
+                    }
+                }
+            }
+            catch {
+                Write-Verbose "Could not load saved Azure context: $($_.Exception.Message)"
+            }
+        }
+
+        # If still no context, handle based on SkipIfNoContext flag
+        if (-not $result.Context) {
+            if ($SkipIfNoContext) {
+                $result.Success = $true
+                $result.ShouldSkip = $true
+                $result.Errors += 'No Azure context found. Tests will be skipped. Run Connect-AzAccount to enable integration tests.'
+                Write-Host 'ℹ️  No Azure context - tests will be skipped. Run Connect-AzAccount to enable.' -ForegroundColor Yellow
+            }
+            else {
+                $result.Success = $false
+                $result.Errors += 'No Azure context found. Please run Connect-AzAccount first.'
+            }
             return $result
         }
 
