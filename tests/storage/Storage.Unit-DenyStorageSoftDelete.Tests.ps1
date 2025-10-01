@@ -14,10 +14,16 @@
 #>
 
 BeforeAll {
-    # Test configuration
-    $script:PolicyPath = Join-Path $PSScriptRoot '..\..\policies\storage\deny-storage-softdelete\rule.json'
-    $script:ExpectedPolicyName = 'deny-storage-softdelete'
-    $script:ExpectedDisplayName = 'Deny Storage Account Soft Delete Disabled'
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
+
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'storage' -PolicyName 'deny-storage-softdelete'
+
+    # Set script variables from configuration
+    $script:PolicyPath = Get-PolicyDefinitionPath -PolicyCategory 'storage' -PolicyName 'deny-storage-softdelete' -TestScriptPath $PSScriptRoot
+    $script:ExpectedPolicyName = $script:TestConfig.Policy.Name
+    $script:ExpectedDisplayName = $script:TestConfig.Policy.DisplayName
 }
 
 Describe 'Deny Storage Soft Delete Policy JSON Validation' -Tag @('Unit', 'Fast', 'Static', 'SoftDelete') {

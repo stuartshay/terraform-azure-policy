@@ -10,7 +10,6 @@
         "ms-vscode.azure-account",
         "ms-azuretools.vscode-azureresourcegroups",
         "ms-azuretools.vscode-azurefunctions",
-        "ms-azure-devops.azure-pipelines",
         // YAML & JSON Support
         "redhat.vscode-yaml",
         "ms-vscode.vscode-json-languageservice",

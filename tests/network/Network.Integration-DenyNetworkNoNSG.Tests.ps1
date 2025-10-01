@@ -3,13 +3,16 @@
 # network resources that don't have NSGs associated
 
 BeforeAll {
-    # Import shared test configuration
-    . "$PSScriptRoot\..\PolicyTestConfig.ps1"
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
-    # Test configuration
-    $script:PolicyPath = "$PSScriptRoot\..\..\policies\network\deny-network-no-nsg\rule.json"
-    $script:PolicyName = 'deny-network-no-nsg'
-    $script:PolicyDisplayName = 'Deny Network Resources Without NSG'
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'network' -PolicyName 'deny-network-no-nsg'
+
+    # Set script variables from configuration
+    $script:PolicyPath = Get-PolicyDefinitionPath -PolicyCategory 'network' -PolicyName 'deny-network-no-nsg' -TestScriptPath $PSScriptRoot
+    $script:PolicyName = $script:TestConfig.Policy.Name
+    $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
 }
 
 Describe 'Deny Network No NSG Policy Tests' {

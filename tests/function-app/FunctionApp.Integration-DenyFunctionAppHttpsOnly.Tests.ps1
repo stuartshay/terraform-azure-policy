@@ -15,25 +15,35 @@
 #>
 
 BeforeAll {
-    # Import required modules
-    Import-Module Az.Accounts -Force
-    Import-Module Az.Resources -Force
-    Import-Module Az.Functions -Force
-    Import-Module Az.PolicyInsights -Force
+    # Import centralized configuration
+    . "$PSScriptRoot\..\..\config\config-loader.ps1"
 
-    # Test configuration
-    $script:ResourceGroupName = 'rg-azure-policy-testing'
-    $script:PolicyName = 'deny-function-app-https-only'
-    $script:PolicyDisplayName = 'Deny Function App Non-HTTPS Access'
-    $script:TestFunctionAppPrefix = 'testpolicyfnhttps'
+    # Initialize test configuration for this specific policy
+    $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-https-only'
 
-    # Get current context
-    $script:Context = Get-AzContext
-    if (-not $script:Context) {
-        throw 'No Azure context found. Please run Connect-AzAccount first.'
+    # Import required modules using centralized configuration
+    Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')
+
+    # Initialize test environment with skip-on-no-context for VS Code Test Explorer
+    $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig -SkipIfNoContext $script:TestConfig.Azure.SkipIfNoContext
+    if (-not $envInit.Success) {
+        if ($envInit.ShouldSkip) {
+            # Skip all tests if no Azure context is available
+            Write-Host 'Skipping all tests - no Azure context available' -ForegroundColor Yellow
+            return
+        }
+        throw "Environment initialization failed: $($envInit.Errors -join '; ')"
     }
 
-    $script:SubscriptionId = $script:Context.Subscription.Id
+    # Set script variables from configuration
+    $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName
+    $script:PolicyName = $script:TestConfig.Policy.Name
+    $script:PolicyDisplayName = $script:TestConfig.Policy.DisplayName
+    $script:TestFunctionAppPrefix = $script:TestConfig.Policy.ResourcePrefix
+
+    # Use context from environment initialization
+    $script:Context = $envInit.Context
+    $script:SubscriptionId = $envInit.SubscriptionId
     Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
 
     # Verify resource group exists
