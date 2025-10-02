@@ -1,5 +1,5 @@
 {
-    "powershell.powerShellDefaultVersion": "pwsh",
+    "powershell.powerShellDefaultVersion": "PowerShell Core",
     "powershell.promptToUpdatePowerShell": false,
     "powershell.integratedConsole.showOnStartup": false,
     "powershell.debugging.createTemporaryIntegratedConsole": false,
