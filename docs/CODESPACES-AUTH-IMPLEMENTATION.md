@@ -175,7 +175,7 @@ The authentication script is CI/CD ready:
 
    ```json
    {
-     "postStartCommand": "pwsh -Command './scripts/Connect-AzureServicePrincipal.ps1'"  
+     "postStartCommand": "pwsh -Command './scripts/Connect-AzureServicePrincipal.ps1'"
    }
    ```
 <!-- pragma: allowlist secret -->
