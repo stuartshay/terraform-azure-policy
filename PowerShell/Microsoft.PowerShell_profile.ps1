@@ -17,8 +17,7 @@ foreach ($Module in $RequiredModules) {
         try {
             Install-Module -Name $Module -Scope CurrentUser -Force -AllowClobber
             Write-Host "Successfully installed: $Module" -ForegroundColor Green
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to install module: $Module - $($_.Exception.Message)"
         }
     }
@@ -28,8 +27,7 @@ foreach ($Module in $RequiredModules) {
 foreach ($Module in $RequiredModules) {
     try {
         Import-Module $Module -Force -DisableNameChecking -WarningAction SilentlyContinue
-    }
-    catch {
+    } catch {
         Write-Warning "Failed to import module: $Module"
     }
 }
@@ -61,8 +59,7 @@ function Test-AzurePolicyCompliance {
     try {
         $ComplianceResults = Get-AzPolicyState -ResourceGroupName $null -PolicyDefinitionName $PolicyName
         return $ComplianceResults
-    }
-    catch {
+    } catch {
         Write-Error "Failed to get policy compliance: $($_.Exception.Message)"
     }
 }
@@ -97,15 +94,13 @@ function Deploy-AzurePolicyDefinition {
 
         if ($ManagementGroupId) {
             $Policy = New-AzPolicyDefinition -Name $PolicyName -Policy $PolicyFile -ManagementGroupName $ManagementGroupId
-        }
-        else {
+        } else {
             $Policy = New-AzPolicyDefinition -Name $PolicyName -Policy $PolicyFile
         }
 
         Write-Host "Successfully deployed policy: $PolicyName" -ForegroundColor Green
         return $Policy
-    }
-    catch {
+    } catch {
         Write-Error "Failed to deploy policy: $($_.Exception.Message)"
     }
 }
@@ -132,8 +127,7 @@ function Get-PolicyComplianceReport {
         }
 
         return $ComplianceStates
-    }
-    catch {
+    } catch {
         Write-Error "Failed to generate compliance report: $($_.Exception.Message)"
     }
 }
@@ -155,8 +149,7 @@ function Initialize-AzurePolicyProject {
             Write-Host "Loaded configuration from: $ConfigPath" -ForegroundColor Green
             Write-Host "Subscription ID: $($Config.subcription_id)" -ForegroundColor White
             Write-Host "Management Group ID: $($Config.mangement_group_id)" -ForegroundColor White
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to load configuration: $($_.Exception.Message)"
         }
     }
@@ -166,12 +159,10 @@ function Initialize-AzurePolicyProject {
         $Context = Get-AzContext
         if ($Context) {
             Write-Host "Connected to Azure as: $($Context.Account.Id)" -ForegroundColor Green
-        }
-        else {
+        } else {
             Write-Host 'Not connected to Azure. Run Connect-AzAccount to authenticate.' -ForegroundColor Yellow
         }
-    }
-    catch {
+    } catch {
         Write-Host 'Azure PowerShell not available or not authenticated.' -ForegroundColor Yellow
     }
 }
@@ -181,6 +172,18 @@ Set-Alias -Name 'tpc' -Value 'Test-AzurePolicyCompliance'
 Set-Alias -Name 'dpd' -Value 'Deploy-AzurePolicyDefinition'
 Set-Alias -Name 'gcr' -Value 'Get-PolicyComplianceReport'
 Set-Alias -Name 'init-azure' -Value 'Initialize-AzurePolicyProject'
+
+# Auto-authenticate to Azure in Codespaces if ARM variables are present
+if ($env:CODESPACES -eq 'true' -and $env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET) {
+    $azContext = Get-AzContext -ErrorAction SilentlyContinue
+    if (-not $azContext) {
+        Write-Host '🔐 Auto-authenticating to Azure...' -ForegroundColor Cyan
+        $authScript = Join-Path $ProjectRoot 'scripts/Connect-AzureServicePrincipal.ps1'
+        if (Test-Path $authScript) {
+            & $authScript
+        }
+    }
+}
 
 # Display welcome message
 Write-Host "`n=== Azure Policy Testing Environment ===" -ForegroundColor Cyan
