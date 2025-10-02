@@ -60,7 +60,7 @@
                         "icon": "terminal-bash"
                     }
                 },
-                "powershell.powerShellDefaultVersion": "PowerShell (x64)",
+                "powershell.powerShellDefaultVersion": "PowerShell Core",
                 "powershell.scriptAnalysis.enable": true,
                 "powershell.codeFormatting.preset": "OTBS",
                 "terraform.languageServer.enable": true,
