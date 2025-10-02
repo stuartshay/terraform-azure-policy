@@ -151,6 +151,8 @@ try {
 }
 
 # Run a test of the hooks
+# The $SkipTest parameter can be set to skip running pre-commit hook tests,
+# for example during automated devcontainer setup or CI/CD pipelines.
 if (-not $SkipTest) {
     Write-Host 'Testing pre-commit hooks...' -ForegroundColor Yellow
     try {
