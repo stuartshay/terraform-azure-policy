@@ -301,7 +301,7 @@ Instead of hardcoding secrets:
 
 ```bash
 # ❌ BAD
-export AZURE_CLIENT_SECRET="your-client-secret"
+export AZURE_CLIENT_SECRET="your-client-secret"  # pragma: allowlist secret
 
 # ✅ GOOD
 export AZURE_CLIENT_SECRET="${AZURE_CLIENT_SECRET}"
