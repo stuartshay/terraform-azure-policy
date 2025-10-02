@@ -163,8 +163,8 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
         }
 
         It 'Should have policy assigned to resource group' -Skip:($null -eq $script:TargetAssignment) {
-            $script:TargetAssignment | Should -Not -BeNullOrEmpty
-        } -Because 'If policy is not assigned, tests cannot validate compliance. Deploy policy using: terraform apply -var-file=config/vars/sandbox.tfvars.json'
+            $script:TargetAssignment | Should -Not -BeNullOrEmpty -Because 'If policy is not assigned, tests cannot validate compliance. Deploy policy using: terraform apply -var-file=config/vars/sandbox.tfvars.json'
+        }
 
         It 'Should be assigned at resource group scope' {
             if ($script:TargetAssignment) {
@@ -226,9 +226,12 @@ Describe 'Storage HTTPS-Only Compliance Tests' -Tag @('Integration', 'Slow', 'Co
                 -SkuName $script:TestConfig.Policy.TestConfig.storageAccountSku `
                 -Kind 'StorageV2' `
                 -EnableHttpsTrafficOnly $true `
-                -AllowBlobPublicAccess $false
+                -AllowBlobPublicAccess $false `
+                -ErrorAction Stop
 
-            $storageAccount | Should -Not -BeNullOrEmpty
+            # Verify the storage account was created
+            $null -eq $storageAccount | Should -Be $false -Because 'Storage account creation should return an object'
+            $storageAccount.StorageAccountName | Should -Be $script:CompliantStorageName
             $storageAccount.EnableHttpsTrafficOnly | Should -Be $true
             $script:CreatedStorageAccounts += $storageAccount
         }
@@ -242,9 +245,10 @@ Describe 'Storage HTTPS-Only Compliance Tests' -Tag @('Integration', 'Slow', 'Co
             # Wait for policy evaluation
             Start-Sleep -Seconds $script:TestConfig.Timeouts.PolicyEvaluationWaitSeconds
 
+            $resourceId = "/subscriptions/$script:SubscriptionId/resourceGroups/$script:ResourceGroupName/providers/Microsoft.Storage/storageAccounts/$script:CompliantStorageName"
             $complianceStates = Get-AzPolicyState `
                 -ResourceGroupName $script:ResourceGroupName `
-                -Filter "PolicyDefinitionName eq '$script:PolicyName' and ResourceId like '*$script:CompliantStorageName*'"
+                -Filter "PolicyDefinitionName eq '$script:PolicyName' and ResourceId eq '$resourceId'"
 
             if ($complianceStates) {
                 $complianceStates | Should -Not -BeNullOrEmpty
@@ -296,9 +300,10 @@ Describe 'Storage HTTPS-Only Compliance Tests' -Tag @('Integration', 'Slow', 'Co
                 # Wait for policy evaluation
                 Start-Sleep -Seconds $script:TestConfig.Timeouts.PolicyEvaluationWaitSeconds
 
+                $resourceId = "/subscriptions/$script:SubscriptionId/resourceGroups/$script:ResourceGroupName/providers/Microsoft.Storage/storageAccounts/$script:NonCompliantStorageName"
                 $complianceStates = Get-AzPolicyState `
                     -ResourceGroupName $script:ResourceGroupName `
-                    -Filter "PolicyDefinitionName eq '$script:PolicyName' and ResourceId like '*$script:NonCompliantStorageName*'"
+                    -Filter "PolicyDefinitionName eq '$script:PolicyName' and ResourceId eq '$resourceId'"
 
                 if ($complianceStates) {
                     $complianceStates | Should -Not -BeNullOrEmpty
@@ -343,8 +348,6 @@ Describe 'Storage HTTPS-Only Compliance Tests' -Tag @('Integration', 'Slow', 'Co
     Context 'Updating Existing Storage Account' {
         It 'Should allow updating compliant storage account' {
             # Verify we can update a compliant storage account (with HTTPS enabled)
-            $existingAccount = Get-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -Name $script:CompliantStorageName
-
             # Add a tag to verify update capability
             Set-AzStorageAccount `
                 -ResourceGroupName $script:ResourceGroupName `
