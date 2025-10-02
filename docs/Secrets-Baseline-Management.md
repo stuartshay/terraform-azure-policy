@@ -20,7 +20,7 @@ This project uses `detect-secrets` to scan for hardcoded secrets in the codebase
 
 The `.secrets.baseline` file stores **approved findings** that are not actual secrets. This prevents false positives from blocking commits.
 
-Current baseline: **10,415 lines** with approved false positives
+The baseline contains thousands of entries with approved false positives
 
 ### What's in the Baseline?
 
