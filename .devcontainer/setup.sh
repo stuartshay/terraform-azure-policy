@@ -21,6 +21,23 @@ print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
+# Determine workspace root
+WORKSPACE_ROOT="${WORKSPACE_ROOT:-/workspaces/terraform-azure-policy}"
+if [ ! -d "$WORKSPACE_ROOT" ]; then
+    # Try to find it from current directory
+    if [ -f "$(pwd)/requirements.psd1" ]; then
+        WORKSPACE_ROOT="$(pwd)"
+    elif [ -f "$(pwd)/../requirements.psd1" ]; then
+        WORKSPACE_ROOT="$(cd .. && pwd)"
+    else
+        print_warning "Could not determine workspace root, using: $(pwd)"
+        WORKSPACE_ROOT="$(pwd)"
+    fi
+fi
+
+print_status "Workspace root: $WORKSPACE_ROOT"
+cd "$WORKSPACE_ROOT"
+
 # Update package lists
 print_status "Updating package lists..."
 sudo apt-get update -qq
@@ -43,9 +60,13 @@ sudo apt-get install -y --no-install-recommends \
 # Install actionlint for GitHub Actions validation
 print_status "Installing actionlint..."
 if ! command -v actionlint &> /dev/null; then
-    bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin
-    sudo chmod +x /usr/local/bin/actionlint
-    print_success "actionlint installed"
+    bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin || {
+        print_warning "Failed to install actionlint, will try with sudo..."
+        sudo bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin || print_warning "actionlint installation failed, continuing anyway..."
+    }
+    if command -v actionlint &> /dev/null; then
+        print_success "actionlint installed"
+    fi
 else
     print_success "actionlint already installed"
 fi
@@ -118,16 +139,18 @@ fi
 
 # Install PowerShell modules using centralized script
 print_status "Installing PowerShell modules..."
-if [ -f "scripts/Install-Requirements.ps1" ]; then
+if [ -f "$WORKSPACE_ROOT/scripts/Install-Requirements.ps1" ]; then
     if command -v pwsh &> /dev/null; then
         print_status "Running Install-Requirements.ps1 script..."
-        pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Install-Requirements.ps1 -IncludeOptional || print_warning "Install-Requirements.ps1 completed with warnings"
+        pwsh -NoProfile -ExecutionPolicy Bypass -File "$WORKSPACE_ROOT/scripts/Install-Requirements.ps1" -IncludeOptional || {
+            print_warning "Install-Requirements.ps1 completed with warnings"
+        }
         print_success "PowerShell modules installed via centralized script"
     else
         print_warning "PowerShell not found, skipping module installation"
     fi
 else
-    print_warning "Install-Requirements.ps1 not found, skipping module installation"
+    print_warning "Install-Requirements.ps1 not found at $WORKSPACE_ROOT/scripts/, skipping module installation"
 fi
 
 # Setup Git configuration for the container
@@ -146,15 +169,15 @@ git config --global --add safe.directory /workspaces/terraform-azure-policy
 
 # Install and configure pre-commit hooks using PowerShell script
 print_status "Configuring pre-commit hooks..."
-if [ -f "scripts/Setup-PreCommit.ps1" ]; then
+if [ -f "$WORKSPACE_ROOT/scripts/Setup-PreCommit.ps1" ]; then
     if command -v pwsh &> /dev/null; then
         print_status "Running Setup-PreCommit.ps1 script..."
-        pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Setup-PreCommit.ps1 -SkipInstall -SkipTest || print_warning "Setup-PreCommit.ps1 completed with warnings"
+        pwsh -NoProfile -ExecutionPolicy Bypass -File "$WORKSPACE_ROOT/scripts/Setup-PreCommit.ps1" -SkipInstall -SkipTest || print_warning "Setup-PreCommit.ps1 completed with warnings"
         print_success "Pre-commit hooks configured via PowerShell script"
     else
         print_warning "PowerShell not found, using fallback configuration"
         # Fallback: basic pre-commit setup
-        if command -v pre-commit &> /dev/null && [ -f ".pre-commit-config.yaml" ]; then
+        if command -v pre-commit &> /dev/null && [ -f "$WORKSPACE_ROOT/.pre-commit-config.yaml" ]; then
             pre-commit install --install-hooks || print_warning "Failed to install pre-commit hooks"
             pre-commit install --hook-type commit-msg || print_warning "Failed to install commit-msg hook"
             print_success "Pre-commit hooks configured (basic setup)"
@@ -163,28 +186,28 @@ if [ -f "scripts/Setup-PreCommit.ps1" ]; then
         fi
     fi
 else
-    print_warning "Setup-PreCommit.ps1 not found, skipping pre-commit setup"
+    print_warning "Setup-PreCommit.ps1 not found at $WORKSPACE_ROOT/scripts/, skipping pre-commit setup"
 fi
 
 # Initialize Terraform (if terraform files exist)
 print_status "Initializing Terraform..."
-if [ -f "policies/main.tf" ]; then
-    cd policies
+if [ -f "$WORKSPACE_ROOT/policies/main.tf" ]; then
+    cd "$WORKSPACE_ROOT/policies"
     terraform init -backend=false || print_warning "Terraform init failed (this is expected without backend configuration)"
-    cd ..
+    cd "$WORKSPACE_ROOT"
 fi
 
 # Setup PowerShell profile
 print_status "Setting up PowerShell profile..."
 PROFILE_DIR="/home/vscode/.config/powershell"
 mkdir -p "$PROFILE_DIR"
-if [ -f "PowerShell/Microsoft.PowerShell_profile.ps1" ]; then
-    cp PowerShell/Microsoft.PowerShell_profile.ps1 "$PROFILE_DIR/Microsoft.PowerShell_profile.ps1"
+if [ -f "$WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1" ]; then
+    cp "$WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1" "$PROFILE_DIR/Microsoft.PowerShell_profile.ps1"
     print_success "PowerShell profile configured"
 fi
 
 # Create reports directory
-mkdir -p reports
+mkdir -p "$WORKSPACE_ROOT/reports"
 
 # Display environment information
 print_status "Environment Information:"
