@@ -116,89 +116,18 @@ else
     print_warning "PowerShell is not installed"
 fi
 
-# Install PowerShell modules
+# Install PowerShell modules using centralized script
 print_status "Installing PowerShell modules..."
-pwsh -NoProfile -Command "
-    Write-Host 'Setting PSGallery as trusted repository...'
-    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue
-
-    Write-Host 'Installing required PowerShell modules...'
-    \$modules = @(
-        @{ Name = 'Pester'; Version = '5.4.0'; Priority = 1 },
-        @{ Name = 'PSScriptAnalyzer'; Version = '1.21.0'; Priority = 1 },
-        @{ Name = 'PowerShellGet'; Version = '2.2.5'; Priority = 2 },
-        @{ Name = 'PackageManagement'; Version = '1.4.8.1'; Priority = 2 },
-        @{ Name = 'Az.Accounts'; Version = '2.12.1'; Priority = 3 },
-        @{ Name = 'Az.Resources'; Version = '6.6.0'; Priority = 3 },
-        @{ Name = 'Az.PolicyInsights'; Version = '1.6.1'; Priority = 3 },
-        @{ Name = 'Az.Storage'; Version = '6.0.0'; Priority = 3 }
-    )
-
-    # Sort by priority to install critical testing modules first
-    \$modules | Sort-Object Priority | ForEach-Object {
-        Write-Host \"Installing \$(\$_.Name) version \$(\$_.Version)...\"
-        try {
-            if (-not (Get-Module -ListAvailable -Name \$_.Name | Where-Object Version -eq \$_.Version)) {
-                Install-Module -Name \$_.Name -RequiredVersion \$_.Version -Scope CurrentUser -Force -AllowClobber -AllowPrerelease:\$false -ErrorAction Stop -Verbose
-                Write-Host \"✓ \$(\$_.Name) \$(\$_.Version) installed successfully\"
-            } else {
-                Write-Host \"✓ \$(\$_.Name) \$(\$_.Version) already installed\"
-            }
-        } catch {
-            Write-Host \"⚠ Failed to install \$(\$_.Name): \$(\$_.Exception.Message)\"
-        }
-    }
-
-    # Optional modules
-    Write-Host 'Installing optional PowerShell modules...'
-    \$optionalModules = @(
-        @{ Name = 'Az.ResourceGraph'; Version = '0.13.0' },
-        @{ Name = 'ImportExcel'; Version = '7.8.4' },
-        @{ Name = 'PSWriteColor'; Version = '1.0.1' }
-    )
-
-    foreach (\$module in \$optionalModules) {
-        Write-Host \"Installing \$(\$module.Name) version \$(\$module.Version)...\"
-        try {
-            if (-not (Get-Module -ListAvailable -Name \$module.Name | Where-Object Version -eq \$module.Version)) {
-                Install-Module -Name \$module.Name -RequiredVersion \$module.Version -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
-                Write-Host \"✓ \$(\$module.Name) installed\"
-            } else {
-                Write-Host \"✓ \$(\$module.Name) already installed\"
-            }
-        } catch {
-            Write-Host \"⚠ Failed to install \$(\$module.Name): \$(\$_.Exception.Message)\"
-        }
-    }
-
-    Write-Host ''
-    Write-Host 'Verifying critical modules...'
-    \$criticalModules = @('Pester', 'PSScriptAnalyzer')
-    \$allInstalled = \$true
-    foreach (\$moduleName in \$criticalModules) {
-        \$module = Get-Module -ListAvailable -Name \$moduleName | Select-Object -First 1
-        if (\$module) {
-            Write-Host \"✓ \$moduleName \$(\$module.Version) is available\"
-        } else {
-            Write-Host \"✗ \$moduleName is NOT installed\"
-            \$allInstalled = \$false
-        }
-    }
-
-    if (\$allInstalled) {
-        Write-Host ''
-        Write-Host '✅ PowerShell modules installation complete!'
-    } else {
-        Write-Host ''
-        Write-Host '⚠️  Some critical modules failed to install. Run the setup script again or install manually.'
-        exit 1
-    }
-"
-
-if [ $? -eq 0 ]; then
-    print_success "PowerShell modules installed and verified"
+if [ -f "scripts/Install-Requirements.ps1" ]; then
+    if command -v pwsh &> /dev/null; then
+        print_status "Running Install-Requirements.ps1 script..."
+        pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Install-Requirements.ps1 -IncludeOptional || print_warning "Install-Requirements.ps1 completed with warnings"
+        print_success "PowerShell modules installed via centralized script"
+    else
+        print_warning "PowerShell not found, skipping module installation"
+    fi
 else
-    print_warning "PowerShell module installation had issues - please check the output above"
+    print_warning "Install-Requirements.ps1 not found, skipping module installation"
 fi
 
 # Setup Git configuration for the container

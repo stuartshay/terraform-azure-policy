@@ -1,10 +1,15 @@
-# Pre-Commit Setup in DevContainer
+# DevContainer Automated Setup Guide
 
 ## Overview
 
-Pre-commit hooks are now automatically installed when the devcontainer is built. This ensures code quality checks run before every commit.
+The devcontainer automatically installs PowerShell modules and configures pre-commit hooks when the container is built. This ensures a consistent development environment with all required tools and code quality checks.
 
-The setup uses a centralized PowerShell script (`scripts/Setup-PreCommit.ps1`) that handles all pre-commit configuration, providing consistent setup whether you're in a devcontainer or running locally.
+The setup uses centralized PowerShell scripts for all configuration:
+
+- **`scripts/Install-Requirements.ps1`** - Handles all PowerShell module installation
+- **`scripts/Setup-PreCommit.ps1`** - Handles all pre-commit hook configuration
+
+This approach provides consistent setup whether you're in a devcontainer or running locally, with single source of truth for all requirements.
 
 ## What's Included
 
@@ -17,24 +22,33 @@ The `.devcontainer/setup.sh` script performs the following:
    - `commitizen` - Conventional commit message formatting
    - `detect-secrets` - Secret scanning
 
-2. **Calls `scripts/Setup-PreCommit.ps1`:**
+2. **Calls `scripts/Install-Requirements.ps1`:**
+   - Reads module requirements from `requirements.psd1`
+   - Installs all required PowerShell modules (Pester, PSScriptAnalyzer, Az modules)
+   - Installs optional modules (Az.ResourceGraph, ImportExcel, PSWriteColor)
+   - Verifies installation and provides detailed status
+   - Sets PSGallery as trusted repository
+
+3. **Calls `scripts/Setup-PreCommit.ps1`:**
    - Verifies pre-commit installation
    - Installs git hooks (pre-commit and commit-msg)
    - Checks for optional dependencies (PSScriptAnalyzer, Pester, Terraform)
    - Creates initial secrets baseline if needed
    - Provides detailed status and troubleshooting info
 
-3. **Fallback configuration:**
-   - If PowerShell is unavailable, uses basic bash-based setup
-   - Ensures hooks are installed even in minimal environments
+4. **Fallback configuration:**
+   - If PowerShell is unavailable, setup gracefully degrades
+   - Critical functionality still available
 
-### Benefits of Centralized Script
+### Benefits of Centralized Scripts
 
-- **Single source of truth**: All pre-commit setup logic in one place
+- **Single source of truth**: All setup logic in PowerShell scripts, not duplicated in bash
 - **Consistent setup**: Same process for devcontainer and local development
-- **Better diagnostics**: PowerShell script provides detailed output and checks
-- **Easy maintenance**: Update once, applies everywhere
-- **Manual setup**: Users can run `./scripts/Setup-PreCommit.ps1` directly anytime
+- **Better diagnostics**: PowerShell scripts provide detailed output and checks
+- **Easy maintenance**: Update `requirements.psd1` or scripts once, applies everywhere
+- **Manual control**: Users can run scripts directly anytime:
+  - `./scripts/Install-Requirements.ps1 -IncludeOptional`
+  - `./scripts/Setup-PreCommit.ps1`
 
 ## Pre-Commit Hooks Configuration
 
@@ -123,11 +137,55 @@ Skip specific hooks:
 SKIP=pester-tests-unit,terraform_tflint git commit -m "fix: quick fix"
 ```
 
-## Manual Setup with PowerShell Script
+## Manual Setup
+
+### Install PowerShell Modules
+
+You can manually install or update PowerShell modules anytime using the centralized script:
+
+#### Install Required Modules Only
+
+```powershell
+./scripts/Install-Requirements.ps1
+```
+
+#### Install Required + Optional Modules
+
+```powershell
+./scripts/Install-Requirements.ps1 -IncludeOptional
+```
+
+This installs:
+
+- **Required:** Pester, PSScriptAnalyzer, Az.Accounts, Az.Resources, Az.PolicyInsights, Az.Storage
+- **Optional:** Az.ResourceGraph, ImportExcel, PSWriteColor
+
+#### Force Reinstall/Update Modules
+
+```powershell
+./scripts/Install-Requirements.ps1 -IncludeOptional -Force
+```
+
+#### Install to Current User Scope
+
+```powershell
+./scripts/Install-Requirements.ps1 -Scope CurrentUser
+```
+
+#### Module Definitions
+
+All module requirements are defined in `requirements.psd1`:
+
+- Module names and version numbers
+- Descriptions and dependencies
+- PowerShell version requirements
+- Single file to update when versions change
+
+### Configure Pre-Commit Hooks
 
 You can manually run the setup script anytime to reconfigure or verify pre-commit hooks:
 
-### Full Setup (Install pre-commit and configure)
+#### Full Setup (Install pre-commit and configure)
 
 ```powershell
 ./scripts/Setup-PreCommit.ps1
@@ -142,7 +200,7 @@ This will:
 - Run a full test of all hooks
 - Create secrets baseline if needed
 
-### Configure Only (Skip Installation)
+#### Configure Only (Skip Installation)
 
 If pre-commit is already installed:
 
@@ -150,7 +208,7 @@ If pre-commit is already installed:
 ./scripts/Setup-PreCommit.ps1 -SkipInstall
 ```
 
-### Quick Configuration (No Testing)
+#### Quick Configuration (No Testing)
 
 For fast setup without running all hooks (used by devcontainer):
 
@@ -158,7 +216,7 @@ For fast setup without running all hooks (used by devcontainer):
 ./scripts/Setup-PreCommit.ps1 -SkipInstall -SkipTest
 ```
 
-### Force Reinstall Hooks
+#### Force Reinstall Hooks
 
 To overwrite existing hooks:
 
@@ -166,21 +224,51 @@ To overwrite existing hooks:
 ./scripts/Setup-PreCommit.ps1 -Force
 ```
 
+### Complete Manual Setup
+
+Run both scripts for full setup:
+
+```bash
+# Install all PowerShell modules
+pwsh -ExecutionPolicy Bypass -File ./scripts/Install-Requirements.ps1 -IncludeOptional
+
+# Setup pre-commit hooks
+pwsh -ExecutionPolicy Bypass -File ./scripts/Setup-PreCommit.ps1
+```
+
 ### Script Features
 
-The `Setup-PreCommit.ps1` script provides:
+The centralized PowerShell scripts (`Install-Requirements.ps1` and `Setup-PreCommit.ps1`) provide:
 
-- ✅ Detailed status messages with color output
-- ✅ Python version verification
-- ✅ Pre-commit installation and verification
-- ✅ Optional dependency checks (PSScriptAnalyzer, Pester, Terraform)
-- ✅ Automatic secrets baseline creation
-- ✅ Full hook testing (when not skipped)
-- ✅ Helpful next steps and troubleshooting info
+- ✅ **Color-coded output:** Clear success, warning, error messages
+- ✅ **Environment validation:** Checks PowerShell version, Python, pip, git
+- ✅ **Smart installation:** Only installs missing modules, skips already installed
+- ✅ **Version verification:** Confirms installed versions match requirements
+- ✅ **Dependency checks:** Validates PSScriptAnalyzer, Pester, Terraform availability
+- ✅ **Secrets baseline:** Automatic `.secrets.baseline` creation if needed
+- ✅ **Hook testing:** Full validation of all hooks (when not skipped)
+- ✅ **Comprehensive summary:** Shows what was installed, what was skipped, next steps
+- ✅ **Error handling:** Detailed troubleshooting guidance on failures
+- ✅ **Single source of truth:** Both devcontainer and manual setup use same scripts
 
 ## Verification
 
-After container rebuild, verify pre-commit is installed:
+After container rebuild or manual setup, verify everything is installed:
+
+### Check PowerShell Modules
+
+```powershell
+# List installed Az modules
+Get-Module -ListAvailable Az.*
+
+# Check specific required modules
+Get-Module -ListAvailable Pester, PSScriptAnalyzer, Az.Accounts
+
+# Verify module versions
+Get-InstalledModule Az.Accounts, Az.Resources, Az.PolicyInsights
+```
+
+### Check Pre-Commit
 
 ```bash
 # Check pre-commit version
@@ -194,6 +282,21 @@ pre-commit run --all-files --verbose
 ```
 
 ## Troubleshooting
+
+### PowerShell Module Issues
+
+If modules are missing or old versions:
+
+```powershell
+# Reinstall all modules with force
+./scripts/Install-Requirements.ps1 -IncludeOptional -Force
+
+# Check PSGallery trust
+Get-PSRepository
+
+# Manually trust PSGallery if needed
+Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+```
 
 ### Pre-commit not found
 
