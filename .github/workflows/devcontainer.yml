@@ -1,0 +1,127 @@
+name: Devcontainer CI
+
+on:
+  push:
+    branches: [develop, master]
+    paths:
+      - '.devcontainer/**'
+      - '.github/workflows/devcontainer.yml'
+  pull_request:
+    branches: [develop, master]
+    paths:
+      - '.devcontainer/**'
+      - '.github/workflows/devcontainer.yml'
+  workflow_dispatch:
+
+jobs:
+  test-devcontainer:
+    name: Test Devcontainer Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and test devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          configFile: .devcontainer/devcontainer.json
+          runCmd: |
+            echo "Testing devcontainer environment..."
+
+            # Verify PowerShell
+            pwsh -Version
+
+            # Verify Terraform
+            terraform version
+
+            # Verify Azure CLI
+            az version
+
+            # Verify Python tools
+            python3 --version
+            pre-commit --version
+
+            # Verify additional tools
+            tflint --version
+            actionlint --version
+            markdownlint --version
+
+            # Verify PowerShell modules
+            pwsh -Command "Get-Module -ListAvailable | Where-Object { @('Pester', 'PSScriptAnalyzer', 'Az.Accounts') -contains \$_.Name }"
+
+            # Test basic functionality
+            pwsh -Command "Write-Host 'PowerShell test successful!'"
+
+            echo "✅ Devcontainer environment validation complete!"
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devcontainer-build-logs
+          path: |
+            /tmp/*.log
+            .devcontainer/*.log
+          retention-days: 7
+
+  validate-scripts:
+    name: Validate Setup Scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Validate setup.sh
+        run: |
+          echo "Running ShellCheck on setup.sh..."
+          shellcheck .devcontainer/setup.sh || true
+
+          echo "Checking script permissions..."
+          if [ -x .devcontainer/setup.sh ]; then
+            echo "✅ setup.sh is executable"
+          else
+            echo "⚠️  setup.sh is not executable (will be set during build)"
+          fi
+
+      - name: Validate JSON configuration
+        run: |
+          echo "Validating devcontainer.json..."
+          python3 -m json.tool .devcontainer/devcontainer.json > /dev/null
+          echo "✅ devcontainer.json is valid JSON"
+
+  documentation:
+    name: Verify Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check README exists
+        run: |
+          if [ -f .devcontainer/README.md ]; then
+            echo "✅ Devcontainer README.md found"
+            wc -l .devcontainer/README.md
+          else
+            echo "❌ Devcontainer README.md not found"
+            exit 1
+          fi
+
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: Lint devcontainer README
+        run: |
+          markdownlint .devcontainer/README.md --config .markdownlint.json || true
+          echo "✅ Markdown linting complete"

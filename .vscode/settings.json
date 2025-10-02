@@ -1,5 +1,5 @@
 {
-    "powershell.powerShellDefaultVersion": "PowerShell (x64)",
+    "powershell.powerShellDefaultVersion": "pwsh",
     "powershell.promptToUpdatePowerShell": false,
     "powershell.integratedConsole.showOnStartup": false,
     "powershell.debugging.createTemporaryIntegratedConsole": false,
@@ -25,7 +25,7 @@
     },
     "files.defaultLanguage": "powershell",
     "terminal.integrated.profiles.linux": {
-        "PowerShell": {
+        "pwsh": {
             "source": "PowerShell",
             "args": [
                 "-NoProfile",
@@ -36,7 +36,7 @@
             ]
         }
     },
-    "terminal.integrated.defaultProfile.linux": "PowerShell",
+    "terminal.integrated.defaultProfile.linux": "pwsh",
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
     "editor.insertSpaces": true,
