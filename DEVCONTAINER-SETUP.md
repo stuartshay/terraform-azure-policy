@@ -42,7 +42,7 @@ The following files have been set up for a complete development container experi
 
 ### Documentation
 
-6. **`docs/DevContainer-Quick-Reference.md`**
+1. **`docs/DevContainer-Quick-Reference.md`**
    - Quick reference guide for common tasks
    - Troubleshooting commands
    - Common workflows
@@ -51,7 +51,7 @@ The following files have been set up for a complete development container experi
 
 ### CI/CD Integration
 
-7. **`.github/workflows/devcontainer.yml`**
+1. **`.github/workflows/devcontainer.yml`**
    - Automated testing of devcontainer build
    - Validates setup scripts
    - Checks documentation
@@ -59,17 +59,19 @@ The following files have been set up for a complete development container experi
 
 ### Updated Files
 
-8. **`.gitignore`**
+1. **`.gitignore`**
    - Added devcontainer-specific ignores
    - `.devcontainer/.tmp/`, `build.log`, `.env`
 
-9. **`README.md`**
-   - Added Dev Container as recommended setup option
-   - Link to devcontainer documentation
+1. **`.vscode/settings.json`**
+   - Updated PowerShell version to `pwsh` for Linux compatibility
+   - Configured terminal profiles for devcontainer
 
-10. **`docs/README.md`**
-    - Added DevContainer Quick Reference to documentation index
-    - Organized docs by category
+1. **`requirements.psd1`**
+    - Added Az.Storage module documentation
+    - Updated for integration tests
+
+1. **`.secrets.baseline`**
 
 ## 🚀 How to Use
 
@@ -314,7 +316,7 @@ After setup, you should be able to:
 
 ---
 
-**Created**: October 2025  
-**For**: terraform-azure-policy project  
-**Author**: GitHub Copilot  
+**Created**: October 2025
+**For**: terraform-azure-policy project
+**Author**: GitHub Copilot
 **Status**: ✅ Ready to use

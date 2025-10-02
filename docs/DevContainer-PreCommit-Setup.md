@@ -4,29 +4,37 @@
 
 Pre-commit hooks are now automatically installed when the devcontainer is built. This ensures code quality checks run before every commit.
 
+The setup uses a centralized PowerShell script (`scripts/Setup-PreCommit.ps1`) that handles all pre-commit configuration, providing consistent setup whether you're in a devcontainer or running locally.
+
 ## What's Included
 
 ### Automatic Installation
 
-The `.devcontainer/setup.sh` script now installs:
+The `.devcontainer/setup.sh` script performs the following:
 
-1. **Python packages:**
+1. **Installs Python packages:**
    - `pre-commit` - Git hook framework
    - `commitizen` - Conventional commit message formatting
    - `detect-secrets` - Secret scanning
 
-2. **Git hooks:**
-   - `pre-commit` hook - Runs before each commit
-   - `commit-msg` hook - Validates commit message format
+2. **Calls `scripts/Setup-PreCommit.ps1`:**
+   - Verifies pre-commit installation
+   - Installs git hooks (pre-commit and commit-msg)
+   - Checks for optional dependencies (PSScriptAnalyzer, Pester, Terraform)
+   - Creates initial secrets baseline if needed
+   - Provides detailed status and troubleshooting info
 
-3. **PowerShell modules:**
-   - `Pester` 5.4.0 - Testing framework
-   - `PSScriptAnalyzer` 1.21.0 - Code analysis
-   - `Az.Storage` 6.0.0 - Azure storage (for integration tests)
-   - All other Az modules for Azure integration
+3. **Fallback configuration:**
+   - If PowerShell is unavailable, uses basic bash-based setup
+   - Ensures hooks are installed even in minimal environments
 
-4. **Terraform tools:**
-   - `terraform-docs` - Automatic documentation generation for Terraform modules
+### Benefits of Centralized Script
+
+- **Single source of truth**: All pre-commit setup logic in one place
+- **Consistent setup**: Same process for devcontainer and local development
+- **Better diagnostics**: PowerShell script provides detailed output and checks
+- **Easy maintenance**: Update once, applies everywhere
+- **Manual setup**: Users can run `./scripts/Setup-PreCommit.ps1` directly anytime
 
 ## Pre-Commit Hooks Configuration
 
@@ -114,6 +122,61 @@ Skip specific hooks:
 ```bash
 SKIP=pester-tests-unit,terraform_tflint git commit -m "fix: quick fix"
 ```
+
+## Manual Setup with PowerShell Script
+
+You can manually run the setup script anytime to reconfigure or verify pre-commit hooks:
+
+### Full Setup (Install pre-commit and configure)
+
+```powershell
+./scripts/Setup-PreCommit.ps1
+```
+
+This will:
+
+- Check Python installation
+- Install/upgrade pre-commit via pip
+- Install git hooks
+- Check optional dependencies (PSScriptAnalyzer, Pester, Terraform)
+- Run a full test of all hooks
+- Create secrets baseline if needed
+
+### Configure Only (Skip Installation)
+
+If pre-commit is already installed:
+
+```powershell
+./scripts/Setup-PreCommit.ps1 -SkipInstall
+```
+
+### Quick Configuration (No Testing)
+
+For fast setup without running all hooks (used by devcontainer):
+
+```powershell
+./scripts/Setup-PreCommit.ps1 -SkipInstall -SkipTest
+```
+
+### Force Reinstall Hooks
+
+To overwrite existing hooks:
+
+```powershell
+./scripts/Setup-PreCommit.ps1 -Force
+```
+
+### Script Features
+
+The `Setup-PreCommit.ps1` script provides:
+
+- ✅ Detailed status messages with color output
+- ✅ Python version verification
+- ✅ Pre-commit installation and verification
+- ✅ Optional dependency checks (PSScriptAnalyzer, Pester, Terraform)
+- ✅ Automatic secrets baseline creation
+- ✅ Full hook testing (when not skipped)
+- ✅ Helpful next steps and troubleshooting info
 
 ## Verification
 

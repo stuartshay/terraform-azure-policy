@@ -106,7 +106,7 @@ pwsh -Command "Get-AzContext"
 
 Expected output:
 
-```
+```text
 Account               : your-email@domain.com
 SubscriptionName      : Your Subscription Name
 SubscriptionId        : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

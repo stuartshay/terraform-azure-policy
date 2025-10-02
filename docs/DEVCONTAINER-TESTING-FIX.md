@@ -36,7 +36,7 @@ pwsh -Command "Get-Module -ListAvailable Pester, PSScriptAnalyzer | Select-Objec
 
 Expected output:
 
-```
+```text
 Name             Version Path
 ----             ------- ----
 Pester           5.4.0   /home/vscode/.local/share/powershell/Modules/Pester/5.4.0/Pester.psd1

@@ -215,25 +215,26 @@ fi
 # Configure Git
 git config --global --add safe.directory /workspaces/terraform-azure-policy
 
-# Install and configure pre-commit hooks
+# Install and configure pre-commit hooks using PowerShell script
 print_status "Configuring pre-commit hooks..."
-if [ -f ".pre-commit-config.yaml" ]; then
-    # Verify pre-commit is installed
-    if command -v pre-commit &> /dev/null; then
-        print_success "pre-commit is installed: $(pre-commit --version)"
-
-        # Install the git hooks
-        pre-commit install --install-hooks || print_warning "Failed to install pre-commit hooks"
-
-        # Install commit-msg hook for commitizen
-        pre-commit install --hook-type commit-msg || print_warning "Failed to install commit-msg hook"
-
-        print_success "Pre-commit hooks configured"
+if [ -f "scripts/Setup-PreCommit.ps1" ]; then
+    if command -v pwsh &> /dev/null; then
+        print_status "Running Setup-PreCommit.ps1 script..."
+        pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Setup-PreCommit.ps1 -SkipInstall -SkipTest || print_warning "Setup-PreCommit.ps1 completed with warnings"
+        print_success "Pre-commit hooks configured via PowerShell script"
     else
-        print_warning "pre-commit not found, skipping hook installation"
+        print_warning "PowerShell not found, using fallback configuration"
+        # Fallback: basic pre-commit setup
+        if command -v pre-commit &> /dev/null && [ -f ".pre-commit-config.yaml" ]; then
+            pre-commit install --install-hooks || print_warning "Failed to install pre-commit hooks"
+            pre-commit install --hook-type commit-msg || print_warning "Failed to install commit-msg hook"
+            print_success "Pre-commit hooks configured (basic setup)"
+        else
+            print_warning "pre-commit not available or config not found"
+        fi
     fi
 else
-    print_warning "No .pre-commit-config.yaml found, skipping pre-commit setup"
+    print_warning "Setup-PreCommit.ps1 not found, skipping pre-commit setup"
 fi
 
 # Initialize Terraform (if terraform files exist)

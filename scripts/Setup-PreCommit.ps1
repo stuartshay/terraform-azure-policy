@@ -17,6 +17,9 @@
 .EXAMPLE
     ./scripts/Setup-PreCommit.ps1 -SkipInstall
     Configures pre-commit hooks without installing pre-commit itself
+.EXAMPLE
+    ./scripts/Setup-PreCommit.ps1 -SkipInstall -SkipTest
+    Configures hooks without installing pre-commit and without testing (used by devcontainer setup)
 #>
 
 [CmdletBinding()]
@@ -25,7 +28,10 @@ param(
     [switch]$SkipInstall,
 
     [Parameter()]
-    [switch]$Force
+    [switch]$Force,
+
+    [Parameter()]
+    [switch]$SkipTest
 )
 
 # Set error action preference
@@ -156,14 +162,19 @@ catch {
 }
 
 # Run a test of the hooks
-Write-Host 'Testing pre-commit hooks...' -ForegroundColor Yellow
-try {
-    pre-commit run --all-files --verbose
-    Write-Host '✓ Pre-commit hooks test completed' -ForegroundColor Green
+if (-not $SkipTest) {
+    Write-Host 'Testing pre-commit hooks...' -ForegroundColor Yellow
+    try {
+        pre-commit run --all-files --verbose
+        Write-Host '✓ Pre-commit hooks test completed' -ForegroundColor Green
+    }
+    catch {
+        Write-Warning 'Pre-commit hooks test had some issues. Check the output above.'
+        Write-Host 'You can fix issues and run: pre-commit run --all-files' -ForegroundColor Gray
+    }
 }
-catch {
-    Write-Warning 'Pre-commit hooks test had some issues. Check the output above.'
-    Write-Host 'You can fix issues and run: pre-commit run --all-files' -ForegroundColor Gray
+else {
+    Write-Host '⊘ Skipping pre-commit hooks test' -ForegroundColor Gray
 }
 
 # Create initial secrets baseline if it doesn't exist
