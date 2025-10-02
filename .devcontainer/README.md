@@ -2,7 +2,40 @@
 
 This devcontainer provides a complete development environment for the Azure Policy Terraform project with all necessary tools and dependencies pre-installed.
 
-## 🚀 Features
+## � Configuration Files
+
+This project includes multiple devcontainer configurations for different scenarios:
+
+- **`devcontainer.json`** - CI/CD optimized configuration (used by GitHub Actions)
+  - Minimal mounts for GitHub Actions compatibility
+  - Optimized for automated testing
+  - No host directory dependencies
+
+- **`devcontainer.local.json`** - Local development configuration
+  - Includes Azure credentials and SSH key mounts
+  - Full IDE integration
+  - For use with VS Code locally or Codespaces
+
+- **`devcontainer.codespaces.json`** - GitHub Codespaces specific
+  - Resource requirements and port forwarding
+  - Secret management for Azure credentials
+  - Codespaces-specific optimizations
+
+### Using the Local Configuration
+
+To use the local development configuration with mounts:
+
+1. Rename `devcontainer.json` to `devcontainer.ci.json`
+2. Rename `devcontainer.local.json` to `devcontainer.json`
+3. Reopen in container
+
+Or use the Dev Containers CLI:
+
+```bash
+devcontainer up --workspace-folder . --config .devcontainer/devcontainer.local.json
+```
+
+## �🚀 Features
 
 ### Tools & Dependencies
 

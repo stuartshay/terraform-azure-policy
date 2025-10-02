@@ -1,7 +1,19 @@
 #!/bin/bash
+# Exit on error, but allow individual commands to fail gracefully
 set -e
 
 echo "🚀 Starting Azure Policy Development Container Setup..."
+
+# Detect CI environment
+IS_CI="${CI:-false}"
+IS_GITHUB_ACTIONS="${GITHUB_ACTIONS:-false}"
+
+if [ "$IS_CI" = "true" ] || [ "$IS_GITHUB_ACTIONS" = "true" ]; then
+    echo "Running in CI environment - adapting setup..."
+    export CI_MODE=true
+else
+    export CI_MODE=false
+fi
 
 # Color output
 GREEN='\033[0;32m'
@@ -48,7 +60,11 @@ set +e
 
 # Update package lists
 print_status "Updating package lists..."
-sudo apt-get update -qq
+if [ "$CI_MODE" = "true" ]; then
+    sudo apt-get update -qq || print_warning "apt-get update failed, continuing..."
+else
+    sudo apt-get update -qq
+fi
 
 # Install additional dependencies
 print_status "Installing additional system packages..."
@@ -173,13 +189,17 @@ fi
 
 # Setup Git configuration for the container
 print_status "Setting up Git configuration..."
-if [ -d "/home/vscode/.ssh-localhost" ]; then
+if [ -d "/home/vscode/.ssh-localhost" ] && [ "$CI_MODE" = "false" ]; then
     print_status "Copying SSH keys from host..."
     mkdir -p /home/vscode/.ssh
     cp -r /home/vscode/.ssh-localhost/* /home/vscode/.ssh/ 2>/dev/null || true
     chmod 700 /home/vscode/.ssh
     chmod 600 /home/vscode/.ssh/* 2>/dev/null || true
     print_success "SSH keys configured"
+elif [ "$CI_MODE" = "true" ]; then
+    print_status "CI mode - skipping SSH key setup"
+else
+    print_warning "SSH directory not found, skipping SSH setup"
 fi
 
 # Configure Git
