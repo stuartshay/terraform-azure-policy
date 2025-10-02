@@ -7,6 +7,7 @@ echo "🚀 Starting Azure Policy Development Container Setup..."
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 print_status() {
@@ -19,6 +20,10 @@ print_success() {
 
 print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
 # Determine workspace root
@@ -37,6 +42,9 @@ fi
 
 print_status "Workspace root: $WORKSPACE_ROOT"
 cd "$WORKSPACE_ROOT"
+
+# Disable exit on error for optional installations
+set +e
 
 # Update package lists
 print_status "Updating package lists..."
@@ -60,12 +68,14 @@ sudo apt-get install -y --no-install-recommends \
 # Install actionlint for GitHub Actions validation
 print_status "Installing actionlint..."
 if ! command -v actionlint &> /dev/null; then
-    bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin || {
-        print_warning "Failed to install actionlint, will try with sudo..."
-        sudo bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin || print_warning "actionlint installation failed, continuing anyway..."
-    }
-    if command -v actionlint &> /dev/null; then
+    if bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin 2>/dev/null; then
         print_success "actionlint installed"
+    else
+        if sudo bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin 2>/dev/null; then
+            print_success "actionlint installed with sudo"
+        else
+            print_warning "Failed to install actionlint - will be skipped in validation"
+        fi
     fi
 else
     print_success "actionlint already installed"
@@ -73,11 +83,18 @@ fi
 
 # Install markdownlint-cli
 print_status "Installing markdownlint-cli..."
-if ! command -v markdownlint &> /dev/null; then
-    sudo npm install -g markdownlint-cli
-    print_success "markdownlint-cli installed"
+if command -v npm &> /dev/null; then
+    if ! command -v markdownlint &> /dev/null; then
+        if sudo npm install -g markdownlint-cli 2>/dev/null; then
+            print_success "markdownlint-cli installed"
+        else
+            print_warning "Failed to install markdownlint-cli - continuing anyway"
+        fi
+    else
+        print_success "markdownlint-cli already installed"
+    fi
 else
-    print_success "markdownlint-cli already installed"
+    print_warning "npm not found, skipping markdownlint-cli installation"
 fi
 
 # Install Python packages for development
@@ -142,10 +159,11 @@ print_status "Installing PowerShell modules..."
 if [ -f "$WORKSPACE_ROOT/scripts/Install-Requirements.ps1" ]; then
     if command -v pwsh &> /dev/null; then
         print_status "Running Install-Requirements.ps1 script..."
-        pwsh -NoProfile -ExecutionPolicy Bypass -File "$WORKSPACE_ROOT/scripts/Install-Requirements.ps1" -IncludeOptional || {
-            print_warning "Install-Requirements.ps1 completed with warnings"
-        }
-        print_success "PowerShell modules installed via centralized script"
+        if pwsh -NoProfile -ExecutionPolicy Bypass -File "$WORKSPACE_ROOT/scripts/Install-Requirements.ps1" -IncludeOptional; then
+            print_success "PowerShell modules installed via centralized script"
+        else
+            print_warning "Install-Requirements.ps1 completed with warnings/errors"
+        fi
     else
         print_warning "PowerShell not found, skipping module installation"
     fi
@@ -172,14 +190,17 @@ print_status "Configuring pre-commit hooks..."
 if [ -f "$WORKSPACE_ROOT/scripts/Setup-PreCommit.ps1" ]; then
     if command -v pwsh &> /dev/null; then
         print_status "Running Setup-PreCommit.ps1 script..."
-        pwsh -NoProfile -ExecutionPolicy Bypass -File "$WORKSPACE_ROOT/scripts/Setup-PreCommit.ps1" -SkipInstall -SkipTest || print_warning "Setup-PreCommit.ps1 completed with warnings"
-        print_success "Pre-commit hooks configured via PowerShell script"
+        if pwsh -NoProfile -ExecutionPolicy Bypass -File "$WORKSPACE_ROOT/scripts/Setup-PreCommit.ps1" -SkipInstall -SkipTest; then
+            print_success "Pre-commit hooks configured via PowerShell script"
+        else
+            print_warning "Setup-PreCommit.ps1 completed with warnings/errors"
+        fi
     else
         print_warning "PowerShell not found, using fallback configuration"
         # Fallback: basic pre-commit setup
         if command -v pre-commit &> /dev/null && [ -f "$WORKSPACE_ROOT/.pre-commit-config.yaml" ]; then
-            pre-commit install --install-hooks || print_warning "Failed to install pre-commit hooks"
-            pre-commit install --hook-type commit-msg || print_warning "Failed to install commit-msg hook"
+            pre-commit install --install-hooks 2>/dev/null || print_warning "Failed to install pre-commit hooks"
+            pre-commit install --hook-type commit-msg 2>/dev/null || print_warning "Failed to install commit-msg hook"
             print_success "Pre-commit hooks configured (basic setup)"
         else
             print_warning "pre-commit not available or config not found"
@@ -213,15 +234,22 @@ mkdir -p "$WORKSPACE_ROOT/reports"
 print_status "Environment Information:"
 echo "----------------------------------------"
 echo "PowerShell: $(pwsh -Version 2>/dev/null || echo 'Not installed')"
-echo "Terraform: $(terraform version -json 2>/dev/null | jq -r '.terraform_version' || echo 'Not installed')"
-echo "Azure CLI: $(az version --output json 2>/dev/null | jq -r '."azure-cli"' || echo 'Not installed')"
-echo "Git: $(git --version)"
-echo "Python: $(python3 --version)"
+echo "Terraform: $(terraform version -json 2>/dev/null | jq -r '.terraform_version' 2>/dev/null || echo 'Not installed')"
+echo "Azure CLI: $(az version --output json 2>/dev/null | jq -r '."azure-cli"' 2>/dev/null || echo 'Not installed')"
+echo "Git: $(git --version 2>/dev/null || echo 'Not installed')"
+echo "Python: $(python3 --version 2>/dev/null || echo 'Not installed')"
 echo "Pre-commit: $(pre-commit --version 2>/dev/null || echo 'Not installed')"
 echo "TFLint: $(tflint --version 2>/dev/null | head -n1 || echo 'Not installed')"
 echo "terraform-docs: $(terraform-docs --version 2>/dev/null || echo 'Not installed')"
 echo "Actionlint: $(actionlint --version 2>/dev/null || echo 'Not installed')"
 echo "Markdownlint: $(markdownlint --version 2>/dev/null || echo 'Not installed')"
+echo ""
+echo "PowerShell Modules:"
+if command -v pwsh &> /dev/null; then
+    pwsh -NoProfile -Command "Get-Module -ListAvailable | Where-Object { @('Pester', 'PSScriptAnalyzer', 'Az.Accounts', 'Az.Resources', 'Az.PolicyInsights', 'Az.Storage') -contains \$_.Name } | ForEach-Object { Write-Host \"  \$(\$_.Name) \$(\$_.Version)\" }" 2>/dev/null || echo "  Failed to list modules"  # pragma: allowlist secret
+else
+    echo "  PowerShell not available"
+fi
 echo "----------------------------------------"
 
 print_success "✨ Azure Policy Development Container setup complete!"
@@ -233,3 +261,6 @@ echo "  3. Run tests: ./scripts/Invoke-PolicyTests.ps1"
 echo "  4. Run pre-commit: pre-commit run --all-files"
 echo ""
 print_status "Happy coding! 🎉"
+
+# Exit successfully
+exit 0
