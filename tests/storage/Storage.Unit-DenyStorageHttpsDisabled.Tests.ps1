@@ -317,7 +317,7 @@ Describe 'Policy Compliance Scenarios' -Tag @('Unit', 'Fast', 'Scenarios') {
             # Simulate a non-compliant storage account (HTTPS disabled)
             $nonCompliantResource = @{
                 type       = 'Microsoft.Storage/storageAccounts'
-                name       = 'noncomplientsa001'
+                name       = 'noncompliantsa001'
                 properties = @{
                     supportsHttpsTrafficOnly = $false
                 }
@@ -374,6 +374,7 @@ Describe 'Policy Compliance Scenarios' -Tag @('Unit', 'Fast', 'Scenarios') {
             $storageTypes | Should -Contain 'Premium_LRS'
 
             # Should have multiple types configured
+            # Azure currently supports at least 6 storage account types (Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_LRS, Premium_ZRS)
             $storageTypes.Count | Should -BeGreaterThan 5
         }
     }

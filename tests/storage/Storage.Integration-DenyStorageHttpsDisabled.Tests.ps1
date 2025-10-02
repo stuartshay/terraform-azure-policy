@@ -121,6 +121,7 @@ Describe 'Policy Definition Validation' -Tag @('Unit', 'Fast', 'PolicyDefinition
             $typesParam = $script:PolicyDefinitionJson.properties.parameters.storageAccountTypes
             $typesParam | Should -Not -BeNullOrEmpty
             $typesParam.type | Should -Be 'Array'
+            # Azure currently supports at least 6 storage account types; update this value if more are added in the future
             $typesParam.allowedValues.Count | Should -BeGreaterThan 5
         }
 
@@ -494,6 +495,7 @@ Describe 'Security Validation' -Tag @('Security', 'Fast') {
 
         It 'Should apply to multiple storage account types' {
             $typesParam = $script:PolicyDefinitionJson.properties.parameters.storageAccountTypes
+            # At least 6 storage account types are expected for comprehensive policy coverage
             $typesParam.defaultValue.Count | Should -BeGreaterThan 5
         }
     }
