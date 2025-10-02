@@ -1,0 +1,43 @@
+{
+   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+   "hostRequirements": {
+      "cpus": 2,
+      "memory": "8gb",
+      "storage": "32gb"
+   },
+   "updateContentCommand": "bash .devcontainer/setup.sh",
+   "portsAttributes": {
+      "8080": {
+         "label": "Web Server",
+         "onAutoForward": "notify"
+      },
+      "5000": {
+         "label": "API Server",
+         "onAutoForward": "silent"
+      }
+   },
+   "secrets": {
+      "ARM_SUBSCRIPTION_ID": {
+         "description": "Azure Subscription ID for policy deployment"
+      },
+      "ARM_TENANT_ID": {
+         "description": "Azure Tenant ID"
+      },
+      "ARM_CLIENT_ID": {
+         "description": "(Optional) Service Principal Client ID",
+         "required": false
+      },
+      "ARM_CLIENT_SECRET": {
+         "description": "(Optional) Service Principal Client Secret",
+         "required": false
+      }
+   },
+   "customizations": {
+      "codespaces": {
+         "openFiles": [
+            "README.md",
+            ".devcontainer/README.md"
+         ]
+      }
+   }
+}

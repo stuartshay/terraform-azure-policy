@@ -23,6 +23,11 @@ testResults.xml
 .vscode/launch.json
 .vscode/tasks.json.user
 
+# Devcontainer
+.devcontainer/.tmp/
+.devcontainer/build.log
+.devcontainer/.env
+
 # Logs
 *.log
 logs/

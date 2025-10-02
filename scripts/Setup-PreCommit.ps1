@@ -17,6 +17,9 @@
 .EXAMPLE
     ./scripts/Setup-PreCommit.ps1 -SkipInstall
     Configures pre-commit hooks without installing pre-commit itself
+.EXAMPLE
+    ./scripts/Setup-PreCommit.ps1 -SkipInstall -SkipTest
+    Configures hooks without installing pre-commit and without testing (used by devcontainer setup)
 #>
 
 [CmdletBinding()]
@@ -25,7 +28,10 @@ param(
     [switch]$SkipInstall,
 
     [Parameter()]
-    [switch]$Force
+    [switch]$Force,
+
+    [Parameter()]
+    [switch]$SkipTest
 )
 
 # Set error action preference
@@ -48,13 +54,11 @@ try {
 
         if ($majorVersion -lt 3 -or ($majorVersion -eq 3 -and $minorVersion -lt 8)) {
             Write-Warning "Python 3.8+ is recommended for pre-commit. Found: $pythonVersion"
-        }
-        else {
+        } else {
             Write-Host "✓ Python version: $pythonVersion" -ForegroundColor Green
         }
     }
-}
-catch {
+} catch {
     Write-Error 'Python is not installed or not in PATH. Please install Python 3.8+ first.'
 }
 
@@ -66,16 +70,14 @@ if (-not $SkipInstall) {
         # Try pip install first
         python -m pip install pre-commit --upgrade
         Write-Host '✓ pre-commit installed successfully' -ForegroundColor Green
-    }
-    catch {
+    } catch {
         Write-Warning 'Failed to install pre-commit via pip. Trying alternative methods...'
 
         # Try with user flag
         try {
             python -m pip install --user pre-commit --upgrade
             Write-Host '✓ pre-commit installed successfully (user install)' -ForegroundColor Green
-        }
-        catch {
+        } catch {
             Write-Error 'Failed to install pre-commit. Please install manually: pip install pre-commit'
         }
     }
@@ -86,8 +88,7 @@ Write-Host 'Verifying pre-commit installation...' -ForegroundColor Yellow
 try {
     $preCommitVersion = pre-commit --version
     Write-Host "✓ pre-commit version: $preCommitVersion" -ForegroundColor Green
-}
-catch {
+} catch {
     Write-Error 'pre-commit is not installed or not in PATH. Please install it first.'
 }
 
@@ -103,13 +104,11 @@ Write-Host 'Installing pre-commit hooks...' -ForegroundColor Yellow
 try {
     if ($Force) {
         pre-commit install --overwrite
-    }
-    else {
+    } else {
         pre-commit install
     }
     Write-Host '✓ Pre-commit hooks installed successfully' -ForegroundColor Green
-}
-catch {
+} catch {
     Write-Error "Failed to install pre-commit hooks: $_"
 }
 
@@ -118,13 +117,11 @@ Write-Host 'Installing commit-msg hook...' -ForegroundColor Yellow
 try {
     if ($Force) {
         pre-commit install --hook-type commit-msg --overwrite
-    }
-    else {
+    } else {
         pre-commit install --hook-type commit-msg
     }
     Write-Host '✓ Commit-msg hook installed successfully' -ForegroundColor Green
-}
-catch {
+} catch {
     Write-Warning 'Failed to install commit-msg hook. Commitizen hook may not work properly.'
 }
 
@@ -136,8 +133,7 @@ $requiredModules = @('PSScriptAnalyzer', 'Pester')
 foreach ($module in $requiredModules) {
     if (Get-Module -ListAvailable -Name $module) {
         Write-Host "✓ $module module found" -ForegroundColor Green
-    }
-    else {
+    } else {
         Write-Warning "$module module not found. Some hooks may be skipped."
         Write-Host "  Install with: Install-Module -Name $module" -ForegroundColor Gray
     }
@@ -149,21 +145,25 @@ try {
     if ($terraformVersion -match 'v(\d+\.\d+\.\d+)') {
         Write-Host "✓ Terraform version: $($matches[1])" -ForegroundColor Green
     }
-}
-catch {
+} catch {
     Write-Warning 'Terraform not found. Terraform hooks will be skipped.'
     Write-Host '  Install from: https://www.terraform.io/downloads.html' -ForegroundColor Gray
 }
 
 # Run a test of the hooks
-Write-Host 'Testing pre-commit hooks...' -ForegroundColor Yellow
-try {
-    pre-commit run --all-files --verbose
-    Write-Host '✓ Pre-commit hooks test completed' -ForegroundColor Green
-}
-catch {
-    Write-Warning 'Pre-commit hooks test had some issues. Check the output above.'
-    Write-Host 'You can fix issues and run: pre-commit run --all-files' -ForegroundColor Gray
+# The $SkipTest parameter can be set to skip running pre-commit hook tests,
+# for example during automated devcontainer setup or CI/CD pipelines.
+if (-not $SkipTest) {
+    Write-Host 'Testing pre-commit hooks...' -ForegroundColor Yellow
+    try {
+        pre-commit run --all-files --verbose
+        Write-Host '✓ Pre-commit hooks test completed' -ForegroundColor Green
+    } catch {
+        Write-Warning 'Pre-commit hooks test had some issues. Check the output above.'
+        Write-Host 'You can fix issues and run: pre-commit run --all-files' -ForegroundColor Gray
+    }
+} else {
+    Write-Host '⊘ Skipping pre-commit hooks test' -ForegroundColor Gray
 }
 
 # Create initial secrets baseline if it doesn't exist
@@ -172,8 +172,7 @@ if (-not (Test-Path '.secrets.baseline')) {
     try {
         detect-secrets scan --baseline .secrets.baseline
         Write-Host '✓ Initial secrets baseline created' -ForegroundColor Green
-    }
-    catch {
+    } catch {
         Write-Warning 'Could not create secrets baseline. detect-secrets may not be installed.'
     }
 }

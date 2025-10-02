@@ -21,6 +21,11 @@
             Description   = 'Azure policy compliance and insights'
         },
         @{
+            ModuleName    = 'Az.Storage'
+            ModuleVersion = '6.0.0'
+            Description   = 'Azure storage account management (required for integration tests)'
+        },
+        @{
             ModuleName    = 'PSScriptAnalyzer'
             ModuleVersion = '1.21.0'
             Description   = 'PowerShell code analysis and linting'

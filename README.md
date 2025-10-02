@@ -6,6 +6,21 @@ A comprehensive Azure Policy framework using PowerShell, Terraform, and Pester f
 
 ## 🚀 **Quick Start**
 
+### **Option 1: Dev Container (Recommended)**
+
+```bash
+# Open in VS Code and reopen in container
+code .
+# Command Palette: "Dev Containers: Reopen in Container"
+
+# Or use GitHub Codespaces
+# Click "Code" → "Codespaces" → "Create codespace"
+```
+
+See [Dev Container Documentation](.devcontainer/README.md) for details.
+
+### **Option 2: Local Setup**
+
 ### **1. Setup Pre-commit Hooks** (Recommended)
 
 ```bash
@@ -66,6 +81,7 @@ Each policy includes detailed documentation showing the corresponding Checkov ru
 
 ## 📚 **Documentation**
 
+- **[Dev Container Setup](.devcontainer/README.md)** - 🐳 Local & GitHub Codespaces development
 - **[Deployment Guide](docs/Deployment-Guide.md)** - 🚀 Versioned package deployment to Azure
 - **[Pre-commit Guide](docs/PreCommit-Guide.md)** - Code quality and validation hooks
 - **[Test Panel Guide](docs/TestPanel-Guide.md)** - VS Code Test Panel integration
