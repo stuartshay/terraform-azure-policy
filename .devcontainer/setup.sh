@@ -86,7 +86,7 @@ fi
 # Install terraform-docs
 print_status "Installing terraform-docs..."
 if ! command -v terraform-docs &> /dev/null; then
-    TERRAFORM_DOCS_VERSION="v0.19.0"
+    TERRAFORM_DOCS_VERSION="${TERRAFORM_DOCS_VERSION:-v0.19.0}"
     curl -Lo /tmp/terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
     tar -xzf /tmp/terraform-docs.tar.gz -C /tmp terraform-docs
     sudo mv /tmp/terraform-docs /usr/local/bin/
