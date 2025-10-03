@@ -171,6 +171,7 @@ The authentication script is CI/CD ready:
 
 ## Next Steps (Optional)
 
+<!-- markdownlint-disable MD029 -->
 1. **Add to devcontainer.json** for automatic authentication:
 
    ```json
@@ -184,6 +185,7 @@ The authentication script is CI/CD ready:
 3. **Set up secret rotation schedule** (recommended: every 90 days)
 
 4. **Create separate Service Principals** for dev/staging/prod
+<!-- markdownlint-enable MD029 -->
 
 ## Files Modified
 
