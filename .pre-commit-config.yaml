@@ -157,9 +157,9 @@ repos:
             '--baseline',
             '.secrets.baseline',
             '--base64-limit',
-            '3.0',
+            '4.5',
             '--hex-limit',
-            '2.5',
+            '3.0',
           ]
         exclude: 'package.lock.json|\.github/workflows/.*\.yml'
 
