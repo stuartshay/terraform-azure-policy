@@ -106,7 +106,7 @@ try {
     Write-Host "`n📋 Connection Details:" -ForegroundColor Cyan
     Write-Host "   Subscription: $($context.Subscription.Name)" -ForegroundColor White
     Write-Host "   Subscription ID: $($context.Subscription.Id)" -ForegroundColor White
-    Write-Host "   Tenant: $($context.Tenant.Id)" -ForegroundColor White  # pragma: allowlist secret
+    Write-Host "   Tenant: $($context.Tenant.Id)" -ForegroundColor White
     Write-Host "   Account: $($context.Account.Id)" -ForegroundColor White
     Write-Host "   Environment: $($context.Environment.Name)" -ForegroundColor White
 
