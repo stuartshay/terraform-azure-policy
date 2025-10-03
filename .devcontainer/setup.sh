@@ -124,6 +124,14 @@ print_status "Verifying Terraform installation..."
 if command -v terraform &> /dev/null; then
     terraform version
     print_success "Terraform is installed"
+
+    # Attempt automatic Terraform CLI configuration
+    print_status "Configuring Terraform CLI credentials..."
+    if [ -f "$WORKSPACE_ROOT/.devcontainer/terraform-cli-login.sh" ]; then
+        bash "$WORKSPACE_ROOT/.devcontainer/terraform-cli-login.sh" || print_warning "Terraform CLI configuration not completed (this is optional)"
+    else
+        print_warning "Terraform CLI login script not found at $WORKSPACE_ROOT/.devcontainer/terraform-cli-login.sh"
+    fi
 else
     print_warning "Terraform is not installed"
 fi
@@ -157,6 +165,14 @@ print_status "Verifying Azure CLI installation..."
 if command -v az &> /dev/null; then
     az version
     print_success "Azure CLI is installed"
+
+    # Attempt automatic Azure CLI login using service principal
+    print_status "Attempting Azure CLI authentication..."
+    if [ -f "$WORKSPACE_ROOT/.devcontainer/azure-cli-login.sh" ]; then
+        bash "$WORKSPACE_ROOT/.devcontainer/azure-cli-login.sh" || print_warning "Azure CLI authentication not completed (this is optional)"
+    else
+        print_warning "Azure CLI login script not found at $WORKSPACE_ROOT/.devcontainer/azure-cli-login.sh"
+    fi
 else
     print_warning "Azure CLI is not installed"
 fi
@@ -275,8 +291,14 @@ echo "----------------------------------------"
 print_success "✨ Azure Policy Development Container setup complete!"
 echo ""
 print_status "Next steps:"
-echo "  1. Authenticate with Azure: az login"
-echo "  2. Set subscription: az account set --subscription <subscription-id>"
+if command -v az &> /dev/null && az account show &> /dev/null; then
+    print_success "✅ Azure CLI is authenticated and ready!"
+    echo "  Current subscription: $(az account show --query 'name' -o tsv 2>/dev/null || echo 'Unknown')"
+else
+    echo "  1. Authenticate with Azure: az login"
+    echo "     Or set ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID for automatic login"
+    echo "  2. Set subscription: az account set --subscription <subscription-id>"
+fi
 echo "  3. Run tests: ./scripts/Invoke-PolicyTests.ps1"
 echo "  4. Run pre-commit: pre-commit run --all-files"
 echo ""

@@ -88,7 +88,13 @@
     "containerEnv": {
         "TF_IN_AUTOMATION": "1",
         "TF_INPUT": "0",
-        "DEBIAN_FRONTEND": "noninteractive"
+        "DEBIAN_FRONTEND": "noninteractive",
+        "ARM_CLIENT_ID": "${localEnv:ARM_CLIENT_ID}",
+        "ARM_CLIENT_SECRET": "${localEnv:ARM_CLIENT_SECRET}",
+        "ARM_TENANT_ID": "${localEnv:ARM_TENANT_ID}",
+        "ARM_SUBSCRIPTION_ID": "${localEnv:ARM_SUBSCRIPTION_ID}",
+        "TF_API_TOKEN": "${localEnv:TF_API_TOKEN}",
+        "TF_CLOUD_ORGANIZATION": "${localEnv:TF_CLOUD_ORGANIZATION}"
     },
     "runArgs": [
         "--name=azure-policy-devcontainer"

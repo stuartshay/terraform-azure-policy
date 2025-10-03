@@ -86,7 +86,7 @@ The PowerShell profile automatically runs authentication when:
 
 ### Environment Variables Required
 
-```
+```text
 ARM_CLIENT_ID       → Service Principal Application ID
 ARM_CLIENT_SECRET   → Service Principal Secret
 ARM_TENANT_ID       → Azure AD Tenant ID
@@ -178,7 +178,6 @@ The authentication script is CI/CD ready:
      "postStartCommand": "pwsh -Command './scripts/Connect-AzureServicePrincipal.ps1'"
    }
    ```
-<!-- pragma: allowlist secret -->
 
 2. **Configure CI/CD workflows** to use the authentication script
 

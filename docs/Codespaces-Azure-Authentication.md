@@ -131,7 +131,7 @@ Add this to `.devcontainer/devcontainer.json` or `.devcontainer/devcontainer.cod
 
 If you see:
 
-```
+```text
 ❌ Missing required environment variables:
    - ARM_CLIENT_ID
 ```
@@ -154,7 +154,7 @@ If you see `AADSTS` errors:
 
 If you see:
 
-```
+```text
 ✅ Already connected to Azure
 Use -Force parameter to re-authenticate
 ```
