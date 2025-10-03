@@ -39,7 +39,7 @@ if (-not $Force) {
     if ($azContext) {
         Write-Host "`n✅ Already connected to Azure" -ForegroundColor Green
         Write-Host "   Subscription: $($azContext.Subscription.Name) ($($azContext.Subscription.Id))" -ForegroundColor Cyan
-        Write-Host "   Tenant: $($azContext.Tenant.Id)" -ForegroundColor Cyan  # pragma: allowlist secret
+        Write-Host "   Tenant: $($azContext.Tenant.Id)" -ForegroundColor Cyan
         Write-Host "   Account: $($azContext.Account.Id)" -ForegroundColor Cyan
         Write-Host "`nUse -Force parameter to re-authenticate" -ForegroundColor Yellow
         return
