@@ -15,6 +15,13 @@
             "tflint": "latest",
             "terragrunt": "latest"
         },
+        "ghcr.io/joshuanianji/devcontainer-features/terraform-cli-persistence:1": {},
+        "ghcr.io/dhoeric/features/terraform-docs:1": {
+            "version": "latest"
+        },
+        "ghcr.io/dhoeric/features/tfsec:1": {
+            "version": "latest"
+        },
         "ghcr.io/devcontainers/features/powershell:1": {
             "version": "latest"
         },
@@ -29,6 +36,22 @@
         "ghcr.io/devcontainers/features/github-cli:1": {
             "version": "latest"
         },
+        "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/pre-commit:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/shellcheck:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/markdownlint-cli2:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/checkov:1": {
+            "version": "latest"
+        },
+
         "ghcr.io/devcontainers/features/node:1": {
             "version": "lts",
             "nodeGypDependencies": true
