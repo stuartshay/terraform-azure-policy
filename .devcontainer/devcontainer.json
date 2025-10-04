@@ -51,7 +51,9 @@
         "ghcr.io/devcontainers-extra/features/checkov:1": {
             "version": "latest"
         },
-
+        "ghcr.io/devcontainers-extra/features/terrascan:1": {
+            "version": "latest"
+        },
         "ghcr.io/devcontainers/features/node:1": {
             "version": "lts",
             "nodeGypDependencies": true
