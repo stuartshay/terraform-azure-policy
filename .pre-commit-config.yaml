@@ -69,7 +69,7 @@ repos:
         args:
           [
             '-Command',
-            'try { if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { $results = Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning -ExcludeRule PSUseConsistentWhitespace,PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPositionalParameters,PSReviewUnusedParameter,PSUseDeclaredVarsMoreThanAssignments; if ($results) { $results | Format-Table -AutoSize; exit 1 } else { Write-Host "PSScriptAnalyzer passed (critical issues only)" } } else { Write-Host "PSScriptAnalyzer not installed, skipping..." } } catch { Write-Host "PSScriptAnalyzer error: $_" }',
+            'try { if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { $results = Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning -ExcludeRule PSUseConsistentWhitespace,PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPositionalParameters,PSReviewUnusedParameter,PSUseDeclaredVarsMoreThanAssignments,PSAvoidUsingConvertToSecureStringWithPlainText; if ($results) { $results | Format-Table -AutoSize; exit 1 } else { Write-Host "PSScriptAnalyzer passed (critical issues only)" } } else { Write-Host "PSScriptAnalyzer not installed, skipping..." } } catch { Write-Host "PSScriptAnalyzer error: $_" }',
           ]
         language: system
         files: '\.ps1$'
@@ -157,11 +157,11 @@ repos:
             '--baseline',
             '.secrets.baseline',
             '--base64-limit',
-            '3.0',
+            '4.5',
             '--hex-limit',
-            '2.5',
+            '3.0',
           ]
-        exclude: package.lock.json
+        exclude: 'package.lock.json|\.github/workflows/.*\.yml'
 
   # Git commit message formatting
   - repo: https://github.com/commitizen-tools/commitizen

@@ -30,6 +30,14 @@
       "ARM_CLIENT_SECRET": {
          "description": "(Optional) Service Principal Client Secret",
          "required": false
+      },
+      "TF_API_TOKEN": {
+         "description": "(Optional) Terraform Cloud/Enterprise API Token",
+         "required": false
+      },
+      "TF_CLOUD_ORGANIZATION": {
+         "description": "(Optional) Terraform Cloud Organization name",
+         "required": false
       }
    },
    "customizations": {
