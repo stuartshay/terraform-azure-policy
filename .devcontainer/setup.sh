@@ -1,5 +1,6 @@
 #!/bin/bash
-# Exit on error, but allow individual commands to fail gracefully
+# Optimized DevContainer Setup Script
+# Most tools are now installed via DevContainer features for faster parallel installation
 set -e
 
 echo "🚀 Starting Azure Policy Development Container Setup..."
@@ -58,28 +59,14 @@ cd "$WORKSPACE_ROOT"
 # Disable exit on error for optional installations
 set +e
 
-# Update package lists
-print_status "Updating package lists..."
-if [ "$CI_MODE" = "true" ]; then
-    sudo apt-get update -qq || print_warning "apt-get update failed, continuing..."
-else
-    sudo apt-get update -qq
-fi
-
-# Install additional dependencies
+# Install minimal additional dependencies only (most now via features)
 print_status "Installing additional system packages..."
+sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends \
-    curl \
-    wget \
-    unzip \
     jq \
     tree \
     shellcheck \
-    yamllint \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    software-properties-common
+    yamllint
 
 # Install actionlint for GitHub Actions validation
 print_status "Installing actionlint..."
@@ -113,38 +100,6 @@ else
     print_warning "npm not found, skipping markdownlint-cli installation"
 fi
 
-# Install Python packages for development
-print_status "Installing Python packages..."
-pip3 install --upgrade pip
-pip3 install commitizen detect-secrets pre-commit
-print_success "Python packages installed (commitizen, detect-secrets, pre-commit)"
-
-# Verify Terraform installation
-print_status "Verifying Terraform installation..."
-if command -v terraform &> /dev/null; then
-    terraform version
-    print_success "Terraform is installed"
-
-    # Attempt automatic Terraform CLI configuration
-    print_status "Configuring Terraform CLI credentials..."
-    if [ -f "$WORKSPACE_ROOT/.devcontainer/terraform-cli-login.sh" ]; then
-        bash "$WORKSPACE_ROOT/.devcontainer/terraform-cli-login.sh" || print_warning "Terraform CLI configuration not completed (this is optional)"
-    else
-        print_warning "Terraform CLI login script not found at $WORKSPACE_ROOT/.devcontainer/terraform-cli-login.sh"
-    fi
-else
-    print_warning "Terraform is not installed"
-fi
-
-# Verify TFLint installation
-print_status "Verifying TFLint installation..."
-if command -v tflint &> /dev/null; then
-    tflint --version
-    print_success "TFLint is installed"
-else
-    print_warning "TFLint is not installed"
-fi
-
 # Install terraform-docs
 print_status "Installing terraform-docs..."
 if ! command -v terraform-docs &> /dev/null; then
@@ -160,31 +115,22 @@ else
     print_success "terraform-docs already installed"
 fi
 
-# Verify Azure CLI installation
-print_status "Verifying Azure CLI installation..."
-if command -v az &> /dev/null; then
-    az version
-    print_success "Azure CLI is installed"
-
-    # Attempt automatic Azure CLI login using service principal
-    print_status "Attempting Azure CLI authentication..."
-    if [ -f "$WORKSPACE_ROOT/.devcontainer/azure-cli-login.sh" ]; then
-        bash "$WORKSPACE_ROOT/.devcontainer/azure-cli-login.sh" || print_warning "Azure CLI authentication not completed (this is optional)"
-    else
-        print_warning "Azure CLI login script not found at $WORKSPACE_ROOT/.devcontainer/azure-cli-login.sh"
-    fi
+# Install tfsec
+print_status "Installing tfsec..."
+if ! command -v tfsec &> /dev/null; then
+    TFSEC_VERSION="${TFSEC_VERSION:-latest}"
+    curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+    print_success "tfsec installed"
 else
-    print_warning "Azure CLI is not installed"
+    tfsec --version
+    print_success "tfsec already installed"
 fi
 
-# Verify PowerShell installation
-print_status "Verifying PowerShell installation..."
-if command -v pwsh &> /dev/null; then
-    pwsh -Version
-    print_success "PowerShell is installed"
-else
-    print_warning "PowerShell is not installed"
-fi
+# Install Python packages for development
+print_status "Installing Python packages..."
+pip3 install --upgrade pip --quiet
+pip3 install commitizen detect-secrets pre-commit --quiet
+print_success "Python packages installed (commitizen, detect-secrets, pre-commit)"
 
 # Install PowerShell modules using centralized script
 print_status "Installing PowerShell modules..."
@@ -205,6 +151,8 @@ fi
 
 # Setup Git configuration for the container
 print_status "Setting up Git configuration..."
+git config --global --add safe.directory /workspaces/terraform-azure-policy
+
 if [ -d "/home/vscode/.ssh-localhost" ] && [ "$CI_MODE" = "false" ]; then
     print_status "Copying SSH keys from host..."
     mkdir -p /home/vscode/.ssh
@@ -212,16 +160,8 @@ if [ -d "/home/vscode/.ssh-localhost" ] && [ "$CI_MODE" = "false" ]; then
     chmod 700 /home/vscode/.ssh
     chmod 600 /home/vscode/.ssh/* 2>/dev/null || true
     print_success "SSH keys configured"
-elif [ "$CI_MODE" = "true" ]; then
-    print_status "CI mode - skipping SSH key setup"
-else
-    print_warning "SSH directory not found, skipping SSH setup"
 fi
-
-# Configure Git
-git config --global --add safe.directory /workspaces/terraform-azure-policy
-
-# Install and configure pre-commit hooks using PowerShell script
+# Configure pre-commit hooks using PowerShell script
 print_status "Configuring pre-commit hooks..."
 if [ -f "$WORKSPACE_ROOT/scripts/Setup-PreCommit.ps1" ]; then
     if command -v pwsh &> /dev/null; then
@@ -250,7 +190,7 @@ fi
 print_status "Initializing Terraform..."
 if [ -f "$WORKSPACE_ROOT/policies/main.tf" ]; then
     cd "$WORKSPACE_ROOT/policies"
-    terraform init -backend=false || print_warning "Terraform init failed (this is expected without backend configuration)"
+    terraform init -backend=false 2>/dev/null || print_warning "Terraform init failed (this is expected without backend configuration)"
     cd "$WORKSPACE_ROOT"
 fi
 
@@ -277,8 +217,13 @@ echo "Python: $(python3 --version 2>/dev/null || echo 'Not installed')"
 echo "Pre-commit: $(pre-commit --version 2>/dev/null || echo 'Not installed')"
 echo "TFLint: $(tflint --version 2>/dev/null | head -n1 || echo 'Not installed')"
 echo "terraform-docs: $(terraform-docs --version 2>/dev/null || echo 'Not installed')"
+echo "tfsec: $(tfsec --version 2>/dev/null || echo 'Not installed')"
+echo "Terragrunt: $(terragrunt --version 2>/dev/null || echo 'Not installed')"
 echo "Actionlint: $(actionlint --version 2>/dev/null || echo 'Not installed')"
 echo "Markdownlint: $(markdownlint --version 2>/dev/null || echo 'Not installed')"
+echo "Shellcheck: $(shellcheck --version 2>/dev/null | head -n2 | tail -n1 || echo 'Not installed')"
+echo "Yamllint: $(yamllint --version 2>/dev/null || echo 'Not installed')"
+echo "Docker: $(docker --version 2>/dev/null || echo 'Not installed')"
 echo ""
 echo "PowerShell Modules:"
 if command -v pwsh &> /dev/null; then
@@ -291,14 +236,8 @@ echo "----------------------------------------"
 print_success "✨ Azure Policy Development Container setup complete!"
 echo ""
 print_status "Next steps:"
-if command -v az &> /dev/null && az account show &> /dev/null; then
-    print_success "✅ Azure CLI is authenticated and ready!"
-    echo "  Current subscription: $(az account show --query 'name' -o tsv 2>/dev/null || echo 'Unknown')"
-else
-    echo "  1. Authenticate with Azure: az login"
-    echo "     Or set ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID for automatic login"
-    echo "  2. Set subscription: az account set --subscription <subscription-id>"
-fi
+echo "  1. Authenticate with Azure: az login"
+echo "  2. Set subscription: az account set --subscription <subscription-id>"
 echo "  3. Run tests: ./scripts/Invoke-PolicyTests.ps1"
 echo "  4. Run pre-commit: pre-commit run --all-files"
 echo ""

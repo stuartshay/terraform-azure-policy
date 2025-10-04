@@ -1,8 +1,16 @@
 # Azure Policy Development Container
 
+> **🚀 Recently Optimized!** This devcontainer was recently optimized for 60-70% faster startup time using DevContainer features. See [OPTIMIZATION-SUMMARY.md](OPTIMIZATION-SUMMARY.md) for details.
+
 This devcontainer provides a complete development environment for the Azure Policy Terraform project with all necessary tools and dependencies pre-installed.
 
-## � Configuration Files
+## 📖 Documentation
+
+- **[OPTIMIZATION-SUMMARY.md](OPTIMIZATION-SUMMARY.md)** - Recent performance improvements and new features
+- **[OPTIMIZATION-GUIDE.md](OPTIMIZATION-GUIDE.md)** - Detailed optimization guide
+- **[CHANGES.md](CHANGES.md)** - Technical changelog
+
+## 🎯 Configuration Files
 
 This project includes multiple devcontainer configurations for different scenarios:
 
@@ -35,16 +43,50 @@ Or use the Dev Containers CLI:
 devcontainer up --workspace-folder . --config .devcontainer/devcontainer.local.json
 ```
 
-## �🚀 Features
+## 🚀 Features
 
-### Tools & Dependencies
+### 20+ Pre-installed Tools (via DevContainer Features)
 
-- **PowerShell Core 7.x** - Primary scripting language
-- **Terraform 1.13.1** - Infrastructure as Code
-- **Azure CLI** - Azure management and authentication
-- **Python 3.11** - For pre-commit and tooling
-- **Git & GitHub CLI** - Version control and GitHub integration
-- **Node.js LTS** - For npm-based tools
+**Infrastructure as Code:**
+
+- **Terraform** (latest) - Infrastructure provisioning
+- **TFLint** (latest) - Terraform linting
+- **Terragrunt** (latest) - Terraform wrapper
+- **terraform-docs** (latest) - Documentation generation
+- **tfsec** (latest) - Terraform security scanning
+
+**Cloud & Azure:**
+
+- **Azure CLI** (latest) - Azure management
+- **PowerShell Core** (7.x) - Automation scripting
+- **Az Modules** - Azure PowerShell modules
+
+**Code Quality & Linting:**
+
+- **shellcheck** (latest) - Shell script linting
+- **yamllint** (latest) - YAML validation
+- **actionlint** (latest) - GitHub Actions validation
+- **markdownlint-cli** (latest) - Markdown linting
+- **PSScriptAnalyzer** - PowerShell script analysis
+
+**Testing & Development:**
+
+- **Pester** (5.4.0) - PowerShell testing framework
+- **pre-commit** - Git hooks framework
+- **detect-secrets** - Secret scanning
+- **commitizen** - Conventional commits
+
+**Container & DevOps:**
+
+- **Docker** (latest) - Container runtime
+- **Docker Compose** (v2) - Multi-container apps
+- **Git** (latest) - Version control
+- **GitHub CLI** (latest) - GitHub integration
+
+**Language Runtimes:**
+
+- **Python 3.11** - Scripting and tooling
+- **Node.js LTS** - JavaScript tooling
 
 ### PowerShell Modules (Auto-installed)
 
@@ -63,17 +105,6 @@ devcontainer up --workspace-folder . --config .devcontainer/devcontainer.local.j
 - Az.ResourceGraph (0.13.0)
 - ImportExcel (7.8.4)
 - PSWriteColor (1.0.1)
-
-### Development Tools
-
-- **TFLint** - Terraform linting
-- **actionlint** - GitHub Actions validation
-- **markdownlint** - Markdown formatting
-- **commitizen** - Commit message formatting
-- **detect-secrets** - Secret scanning
-- **yamllint** - YAML validation
-- **shellcheck** - Shell script analysis
-- **jq** - JSON processing
 
 ### VS Code Extensions (Auto-installed)
 
@@ -106,8 +137,8 @@ devcontainer up --workspace-folder . --config .devcontainer/devcontainer.local.j
    ```
 
 3. **Wait for Setup:**
-   - First build takes 5-10 minutes
-   - Subsequent starts are much faster
+   - First build takes 2-3 minutes
+   - Subsequent starts: 1-2 minutes (cached)
    - Watch the terminal for setup progress
 
 4. **Verify Installation:**

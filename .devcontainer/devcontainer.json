@@ -2,14 +2,18 @@
     "name": "Azure Policy Development",
     "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "dockerDashComposeVersion": "v2"
+        },
         "ghcr.io/devcontainers/features/azure-cli:1": {
             "version": "latest",
             "extensions": "account,resource-graph"
         },
         "ghcr.io/devcontainers/features/terraform:1": {
-            "version": "1.13.1",
+            "version": "latest",
             "tflint": "latest",
-            "terragrunt": "none"
+            "terragrunt": "latest"
         },
         "ghcr.io/devcontainers/features/powershell:1": {
             "version": "latest"
