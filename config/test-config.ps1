@@ -164,8 +164,9 @@ function Initialize-PolicyTestEnvironment {
                 # Attempt to import a saved context
                 $savedContexts = Get-AzContext -ListAvailable -ErrorAction SilentlyContinue
                 if ($savedContexts -and $savedContexts.Count -gt 0) {
-                    # Use the first available context
-                    $result.Context = Select-AzContext -Name $savedContexts[0].Name -ErrorAction SilentlyContinue
+                    # Use the first available context - suppress PSScriptAnalyzer warning as parameters are optional
+                    $null = Select-AzContext -InputObject $savedContexts[0] -ErrorAction SilentlyContinue
+                    $result.Context = Get-AzContext -ErrorAction SilentlyContinue
                     if ($result.Context) {
                         Write-Host "Using saved Azure context: $($result.Context.Name)" -ForegroundColor Cyan
                     }
