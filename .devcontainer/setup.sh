@@ -68,22 +68,6 @@ sudo apt-get install -y --no-install-recommends \
     shellcheck \
     yamllint
 
-# Install actionlint for GitHub Actions validation
-print_status "Installing actionlint..."
-if ! command -v actionlint &> /dev/null; then
-    if bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin 2>/dev/null; then
-        print_success "actionlint installed"
-    else
-        if sudo bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest /usr/local/bin 2>/dev/null; then
-            print_success "actionlint installed with sudo"
-        else
-            print_warning "Failed to install actionlint - will be skipped in validation"
-        fi
-    fi
-else
-    print_success "actionlint already installed"
-fi
-
 # Install markdownlint-cli
 print_status "Installing markdownlint-cli..."
 if command -v npm &> /dev/null; then
