@@ -1,5 +1,5 @@
 {
-   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+   "name": "Azure Policy Development (Codespaces)",
    "hostRequirements": {
       "cpus": 2,
       "memory": "8gb",
