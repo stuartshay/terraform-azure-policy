@@ -10,11 +10,23 @@
             "version": "latest",
             "extensions": "account,resource-graph"
         },
+
+        "ghcr.io/devcontainers-extra/features/aztfexport:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/infracost:1": {
+            "version": "latest"
+        },
+
         "ghcr.io/devcontainers/features/terraform:1": {
             "version": "latest",
             "tflint": "latest",
             "terragrunt": "latest"
         },
+        "ghcr.io/devcontainers-extra/features/terrascan:1": {
+            "version": "latest"
+        },
+
         "ghcr.io/joshuanianji/devcontainer-features/terraform-cli-persistence:1": {},
         "ghcr.io/dhoeric/features/terraform-docs:1": {
             "version": "latest"
@@ -51,9 +63,7 @@
         "ghcr.io/devcontainers-extra/features/checkov:1": {
             "version": "latest"
         },
-        "ghcr.io/devcontainers-extra/features/terrascan:1": {
-            "version": "latest"
-        },
+
         "ghcr.io/devcontainers/features/node:1": {
             "version": "lts",
             "nodeGypDependencies": true
