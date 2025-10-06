@@ -102,6 +102,9 @@
                 "powershell.powerShellDefaultVersion": "PowerShell Core",
                 "powershell.scriptAnalysis.enable": true,
                 "powershell.codeFormatting.preset": "OTBS",
+                "powershell.integratedConsole.suppressStartupBanner": true,
+                "powershell.integratedConsole.startInBackground": false,
+                "terminal.integrated.commandsToSkipShell": [],
                 "terraform.languageServer.enable": true,
                 "terraform.experimentalFeatures.validateOnSave": true,
                 "files.associations": {
