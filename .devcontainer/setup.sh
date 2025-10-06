@@ -180,11 +180,18 @@ fi
 
 # Setup PowerShell profile
 print_status "Setting up PowerShell profile..."
-PROFILE_DIR="/home/vscode/.config/powershell"
+# Detect current user dynamically instead of hardcoding vscode
+CURRENT_USER="${USER:-$(whoami)}"
+PROFILE_DIR="$HOME/.config/powershell"
 mkdir -p "$PROFILE_DIR"
+
 if [ -f "$WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1" ]; then
-    cp "$WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1" "$PROFILE_DIR/Microsoft.PowerShell_profile.ps1"
-    print_success "PowerShell profile configured"
+    # Create symbolic link to project profile so it stays in sync
+    ln -sf "$WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1" "$PROFILE_DIR/Microsoft.PowerShell_profile.ps1"
+    print_success "PowerShell profile configured for user: $CURRENT_USER"
+    print_status "Profile linked from: $WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1"
+else
+    print_warning "Project PowerShell profile not found at: $WORKSPACE_ROOT/PowerShell/Microsoft.PowerShell_profile.ps1"
 fi
 
 # Create reports directory
