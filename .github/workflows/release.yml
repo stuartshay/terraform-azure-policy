@@ -103,7 +103,7 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          cat << EOF > RELEASE_NOTES.md  # pragma: allowlist secret
+          cat << EOF > RELEASE_NOTES.md
           # Azure Policy Package v${{ steps.version.outputs.version }}
 
           ## 🔒 Checkov-Derived Security Policies
