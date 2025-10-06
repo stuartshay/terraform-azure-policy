@@ -30,7 +30,7 @@ jobs:
         run: |
           # shellcheck disable=SC2086,SC2129
           echo "## 📦 Available Package Releases" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY  # pragma: allowlist secret
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           # Get releases using GitHub API
           curl -s "https://api.github.com/repos/${{ github.repository }}/releases" | \
