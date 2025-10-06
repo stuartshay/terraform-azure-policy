@@ -88,10 +88,10 @@ echo ""
 echo "Test the deployment with:"
 echo ""
 echo "gh workflow run deploy.yml \\"
-echo "  -f version=\"1.0.0\" \\"  # pragma: allowlist secret
-echo "  -f resource_group=\"rg-azure-policy-test\" \\"  # pragma: allowlist secret
-echo "  -f subscription_id=\"$SUBSCRIPTION_ID\" \\"  # pragma: allowlist secret
-echo "  -f environment=\"development\" \\"  # pragma: allowlist secret
+echo "  -f version=\"1.0.0\" \\"
+echo "  -f resource_group=\"rg-azure-policy-test\" \\"
+echo "  -f subscription_id=\"$SUBSCRIPTION_ID\" \\"
+echo "  -f environment=\"development\" \\"
 echo "  -f policy_effect=\"Audit\" \\"
 echo "  -f dry_run=\"true\""
 echo ""
