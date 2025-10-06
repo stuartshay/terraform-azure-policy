@@ -140,11 +140,11 @@ Contains **ONLY Codespaces-specific settings**:
 
 ## Benefits of This Approach
 
-✅ **No Duplication**: Features and settings defined once in base configuration  
-✅ **Easy Maintenance**: Update features/extensions in one place  
-✅ **Consistency**: Same tooling across local, CI, and cloud environments  
-✅ **Clarity**: Override files clearly show environment-specific differences  
-✅ **Flexibility**: Easy to add environment-specific settings without affecting others  
+✅ **No Duplication**: Features and settings defined once in base configuration
+✅ **Easy Maintenance**: Update features/extensions in one place
+✅ **Consistency**: Same tooling across local, CI, and cloud environments
+✅ **Clarity**: Override files clearly show environment-specific differences
+✅ **Flexibility**: Easy to add environment-specific settings without affecting others
 
 ## Example Scenarios
 

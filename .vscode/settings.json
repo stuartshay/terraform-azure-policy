@@ -26,14 +26,8 @@
     "files.defaultLanguage": "powershell",
     "terminal.integrated.profiles.linux": {
         "pwsh": {
-            "source": "PowerShell",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-Command",
-                "if (Test-Path './PowerShell/Microsoft.PowerShell_profile.ps1') { . './PowerShell/Microsoft.PowerShell_profile.ps1' }"
-            ]
+            "path": "/opt/microsoft/powershell/7/pwsh",
+            "icon": "terminal-powershell"
         }
     },
     "terminal.integrated.defaultProfile.linux": "pwsh",
@@ -92,7 +86,6 @@
         "redhat.vscode-yaml",
         "ms-vscode.vscode-json"
     ],
-    // Pester Test Extension Configuration
     "pester.useLegacyCodeLens": false,
     "pester.outputVerbosity": "Detailed",
     "pester.debugOutputVerbosity": "Detailed",
@@ -112,7 +105,6 @@
     "pester.testArgs": [
         "-CI"
     ],
-    // Test Panel Configuration
     "testExplorer.useNativeTesting": true,
     "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
     "testing.openTesting": "neverOpen",
