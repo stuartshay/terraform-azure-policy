@@ -70,7 +70,7 @@ For a complete validation workflow that includes environment variables, Azure au
 
 This comprehensive script:
 
-- ✅ Validates all environment variables (ARM_*and TF_*)
+- ✅ Validates all environment variables (ARM_* and TF_*)
 - ✅ Tests Azure authentication and connectivity
 - ✅ Runs storage policy tests to verify end-to-end functionality
 - ✅ Provides clear success/failure feedback
