@@ -7,7 +7,7 @@
     1. All required environment variables are set (ARM_* and TF_*)
     2. Azure connectivity using Service Principal authentication
     3. Azure resource access and permissions
-    
+
     This script is designed to validate the GitHub Copilot environment
     configuration before running other scripts in the repository.
 .PARAMETER SkipAzureConnectivityTest
@@ -16,11 +16,11 @@
     Show detailed output during validation
 .EXAMPLE
     ./scripts/Test-EnvironmentConfiguration.ps1
-    
+
     Validates all environment variables and tests Azure connectivity
 .EXAMPLE
     ./scripts/Test-EnvironmentConfiguration.ps1 -SkipAzureConnectivityTest
-    
+
     Only validates environment variables without testing Azure connectivity
 .NOTES
     Required Environment Variables:
@@ -121,7 +121,7 @@ if (-not $hasTerraformVars) {
 # 3. Test Azure Connectivity (if not skipped)
 if (-not $SkipAzureConnectivityTest) {
     Write-SectionHeader "Testing Azure Connectivity"
-    
+
     if ($missingAzureVars.Count -gt 0) {
         Set-ValidationFailed "Cannot test Azure connectivity - missing required variables"
         Write-Host "`n   Missing variables:" -ForegroundColor Red
@@ -131,7 +131,7 @@ if (-not $SkipAzureConnectivityTest) {
     } else {
         # Check if Az PowerShell module is available
         $azModule = Get-Module -ListAvailable -Name Az.Accounts -ErrorAction SilentlyContinue
-        
+
         if (-not $azModule) {
             Add-ValidationWarning "Azure PowerShell modules not installed"
             Write-Host "`n   💡 To install Azure PowerShell modules:" -ForegroundColor Yellow
@@ -139,19 +139,19 @@ if (-not $SkipAzureConnectivityTest) {
             Write-Host "`n   ℹ️  Skipping Azure connectivity test" -ForegroundColor Gray
         } else {
             Write-Host "   🔐 Authenticating to Azure..." -ForegroundColor Cyan
-            
+
             try {
                 # Import Az.Accounts module
                 Import-Module Az.Accounts -ErrorAction Stop
-                
+
                 # Check if already connected
                 $azContext = Get-AzContext -ErrorAction SilentlyContinue
-                
+
                 if (-not $azContext) {
                     # Authenticate using Service Principal
                     $securePassword = ConvertTo-SecureString $env:ARM_CLIENT_SECRET -AsPlainText -Force
                     $credential = New-Object System.Management.Automation.PSCredential($env:ARM_CLIENT_ID, $securePassword)
-                    
+
                     $null = Connect-AzAccount -ServicePrincipal `
                         -Credential $credential `
                         -Tenant $env:ARM_TENANT_ID `
@@ -159,19 +159,19 @@ if (-not $SkipAzureConnectivityTest) {
                         -ErrorAction Stop `
                         -WarningAction SilentlyContinue
                 }
-                
+
                 $context = Get-AzContext
                 Write-Host "   ✅ Successfully connected to Azure" -ForegroundColor Green
                 Write-Host "      Subscription: $($context.Subscription.Name)" -ForegroundColor White
                 Write-Host "      Tenant: $($context.Tenant.Id)" -ForegroundColor White
                 Write-Host "      Account: $($context.Account.Id)" -ForegroundColor White
-                
+
                 # Test permissions
                 Write-Host "`n   🔍 Testing Azure permissions..." -ForegroundColor Cyan
                 try {
                     $rgCount = (Get-AzResourceGroup -ErrorAction Stop).Count
                     Write-Host "   ✅ Can access $rgCount resource group(s)" -ForegroundColor Green
-                    
+
                     # Check for testing resource group
                     $testRgName = 'rg-azure-policy-testing'
                     $testRg = Get-AzResourceGroup -Name $testRgName -ErrorAction SilentlyContinue
@@ -183,10 +183,10 @@ if (-not $SkipAzureConnectivityTest) {
                 } catch {
                     Add-ValidationWarning "Limited permissions or no resource groups accessible: $($_.Exception.Message)"
                 }
-                
+
             } catch {
                 Set-ValidationFailed "Failed to authenticate to Azure: $($_.Exception.Message)"
-                
+
                 if ($_.Exception.Message -like '*AADSTS*') {
                     Write-Host "`n   💡 Troubleshooting tips:" -ForegroundColor Yellow
                     Write-Host "      1. Verify Service Principal credentials are correct" -ForegroundColor Yellow
@@ -206,35 +206,35 @@ Write-SectionHeader "Validation Summary"
 
 if ($script:ValidationPassed) {
     Write-Host "   ✅ Environment configuration is valid!" -ForegroundColor Green
-    
+
     if ($script:Warnings.Count -gt 0) {
         Write-Host "`n   ⚠️  Warnings ($($script:Warnings.Count)):" -ForegroundColor Yellow
         foreach ($warning in $script:Warnings) {
             Write-Host "      - $warning" -ForegroundColor Yellow
         }
     }
-    
+
     Write-Host "`n   📝 Next steps:" -ForegroundColor Cyan
     Write-Host "      - Run storage tests: ./scripts/Run-StorageTest.ps1" -ForegroundColor White
     Write-Host "      - Test policy compliance: ./scripts/Test-PolicyCompliance.ps1" -ForegroundColor White
     Write-Host "      - Deploy policies: ./scripts/Deploy-PolicyDefinitions.ps1" -ForegroundColor White
-    
+
     exit 0
 } else {
     Write-Host "   ❌ Environment configuration validation failed!" -ForegroundColor Red
-    
+
     Write-Host "`n   📋 Required actions:" -ForegroundColor Yellow
     Write-Host "      1. Set missing environment variables in GitHub Codespaces/Actions secrets" -ForegroundColor Yellow
     Write-Host "      2. For Codespaces: https://github.com/settings/codespaces" -ForegroundColor Yellow
     Write-Host "      3. For Repository: https://github.com/<owner>/<repo>/settings/secrets/actions" -ForegroundColor Yellow
     Write-Host "      4. For Environments: https://github.com/<owner>/<repo>/settings/environments" -ForegroundColor Yellow
-    
+
     if ($script:Warnings.Count -gt 0) {
         Write-Host "`n   ⚠️  Warnings ($($script:Warnings.Count)):" -ForegroundColor Yellow
         foreach ($warning in $script:Warnings) {
             Write-Host "      - $warning" -ForegroundColor Yellow
         }
     }
-    
+
     exit 1
 }

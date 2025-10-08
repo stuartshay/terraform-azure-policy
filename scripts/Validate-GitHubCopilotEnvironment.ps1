@@ -7,7 +7,7 @@
     1. Validates all required environment variables
     2. Tests Azure authentication and connectivity
     3. Runs storage policy tests to verify end-to-end functionality
-    
+
     This is the recommended script to validate the GitHub Copilot environment
     configuration as specified in the environment setup guide.
 .PARAMETER SkipStorageTest
@@ -16,15 +16,15 @@
     Skip Azure authentication test (only validate environment variables)
 .EXAMPLE
     ./scripts/Validate-GitHubCopilotEnvironment.ps1
-    
+
     Complete validation including environment variables, Azure auth, and storage tests
 .EXAMPLE
     ./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipStorageTest
-    
+
     Validate environment variables and Azure auth only
 .EXAMPLE
     ./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipAzureAuth
-    
+
     Only validate environment variables
 .NOTES
     This script is designed for GitHub Copilot environments (Codespaces, Actions, etc.)
@@ -73,23 +73,23 @@ if (-not $SkipStorageTest -and -not $SkipAzureAuth) {
     Write-Host "Step 2: Testing Azure Connectivity with Storage Tests" -ForegroundColor Cyan
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
     Write-Host ""
-    
+
     $storageTestPath = Join-Path $PSScriptRoot "Run-StorageTest.ps1"
-    
+
     if (Test-Path $storageTestPath) {
         Write-Host "🚀 Running storage policy tests to verify Azure connectivity..." -ForegroundColor Cyan
         Write-Host ""
-        
+
         & $storageTestPath
-        
+
         $storageTestExitCode = $LASTEXITCODE
-        
+
         if ($storageTestExitCode -ne 0) {
             Write-Host "`n❌ Storage tests failed!" -ForegroundColor Red
             Write-Host "   This may indicate connectivity or permission issues." -ForegroundColor Yellow
             exit 1
         }
-        
+
         Write-Host "`n✅ Storage tests completed successfully!" -ForegroundColor Green
     } else {
         Write-Host "⚠️  Storage test script not found: $storageTestPath" -ForegroundColor Yellow
