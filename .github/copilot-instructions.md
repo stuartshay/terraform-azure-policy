@@ -33,6 +33,7 @@ git commit -m "type: description"
 ```
 
 **Never skip pre-commit checks unless absolutely necessary.** The hooks enforce:
+
 - Code formatting and syntax validation
 - Security scanning (secrets detection)
 - Test execution
@@ -84,7 +85,7 @@ See [GitHub Copilot Environment Validation Guide](../docs/GitHub-Copilot-Environ
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-```
+```powershell
 type(scope): brief description
 
 [optional body]
@@ -95,7 +96,7 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `perf`
 
 ## 🏗️ Repository Structure
 
-```
+```text
 .
 ├── .devcontainer/        # Dev container configuration
 ├── .github/              # GitHub Actions workflows and configs
@@ -116,26 +117,30 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `perf`
 ### Development Workflow
 
 1. **Setup environment**:
+
    ```powershell
    ./scripts/Install-Requirements.ps1 -IncludeOptional
    ./scripts/Setup-PreCommit.ps1
    ```
 
 2. **Validate changes**:
+
    ```powershell
    ./scripts/Validate-PolicyDefinitions.ps1 -PolicyPath ./policies
    ```
 
 3. **Run tests**:
+
    ```powershell
    # Quick validation
    ./scripts/Invoke-PolicyTests.ps1 -Tag 'Quick'
-   
+
    # Full test suite
    ./scripts/Invoke-PolicyTests.ps1 -TestPath ./tests
    ```
 
 4. **Pre-commit validation** (REQUIRED):
+
    ```bash
    pre-commit run --all-files
    ```
