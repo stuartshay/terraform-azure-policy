@@ -154,8 +154,8 @@ terraform {
 }
 
 variable "tf_cloud_organization" {
-  type    = string
-  default = env("TF_CLOUD_ORGANIZATION")
+  type = string
+  # Set this variable via the environment using TF_VAR_tf_cloud_organization
 }
 ```
 
