@@ -27,6 +27,58 @@ This directory contains PowerShell scripts for managing Azure Policy definitions
 
 **Documentation:** See [Codespaces Azure Authentication Guide](../docs/Codespaces-Azure-Authentication.md)
 
+### Validate-GitHubCopilotEnvironment.ps1
+
+**Purpose:** Complete validation workflow for GitHub Copilot environment - validates environment variables, tests Azure authentication, and runs storage tests.
+
+**Usage:**
+
+```powershell
+# Complete validation (environment + auth + storage tests)
+./scripts/Validate-GitHubCopilotEnvironment.ps1
+
+# Skip storage tests
+./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipStorageTest
+
+# Only validate environment variables
+./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipAzureAuth
+```
+
+**Validation Steps:**
+
+1. Validates all environment variables (ARM_*and TF_*)
+2. Tests Azure authentication and connectivity
+3. Runs storage policy tests to verify end-to-end functionality
+
+**Recommended:** Use this as the primary validation script for GitHub Copilot environments.
+
+### Test-EnvironmentConfiguration.ps1
+
+**Purpose:** Validate GitHub Copilot environment configuration and test Azure connectivity.
+
+**Usage:**
+
+```powershell
+# Full validation (environment variables + Azure connectivity)
+./scripts/Test-EnvironmentConfiguration.ps1
+
+# Only validate environment variables (skip Azure connectivity test)
+./scripts/Test-EnvironmentConfiguration.ps1 -SkipAzureConnectivityTest
+```
+
+**Validates:**
+
+- Azure environment variables: `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`
+- Terraform Cloud variables: `TF_API_TOKEN`, `TF_CLOUD_ORGANIZATION` (optional)
+- Azure authentication and connectivity
+- Azure resource group access and permissions
+
+**Use Cases:**
+
+- Validate GitHub Codespaces/Actions environment setup
+- Troubleshoot authentication issues
+- Verify environment configuration before running tests
+
 ---
 
 ## Policy Management
