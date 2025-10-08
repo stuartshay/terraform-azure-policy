@@ -21,21 +21,43 @@ See [Dev Container Documentation](.devcontainer/README.md) for details.
 
 ### **Option 2: Local Setup**
 
-### **1. Setup Pre-commit Hooks** (Recommended)
+### **1. Validate Environment Configuration**
+
+Before running tests or deploying policies, validate your GitHub Copilot environment is correctly configured:
+
+```powershell
+# Validate environment variables and Azure connectivity
+./scripts/Test-EnvironmentConfiguration.ps1
+
+# Only validate environment variables (skip Azure connectivity test)
+./scripts/Test-EnvironmentConfiguration.ps1 -SkipAzureConnectivityTest
+```
+
+**Required Environment Variables:**
+- `ARM_CLIENT_ID` - Azure Service Principal Client ID
+- `ARM_CLIENT_SECRET` - Azure Service Principal Secret
+- `ARM_TENANT_ID` - Azure AD Tenant ID
+- `ARM_SUBSCRIPTION_ID` - Azure Subscription ID
+- `TF_API_TOKEN` - Terraform Cloud API Token (optional)
+- `TF_CLOUD_ORGANIZATION` - Terraform Cloud Organization (optional)
+
+See [GitHub Copilot Environment Validation Guide](docs/GitHub-Copilot-Environment-Validation.md) for detailed setup instructions.
+
+### **2. Setup Pre-commit Hooks** (Recommended)
 
 ```bash
 # Install and configure pre-commit hooks
 ./scripts/Setup-PreCommit.ps1
 ```
 
-### **2. Install Requirements**
+### **3. Install Requirements**
 
 ```powershell
 # Install PowerShell modules and dependencies
 ./scripts/Install-Requirements.ps1 -IncludeOptional
 ```
 
-### **3. Run Tests**
+### **4. Run Tests**
 
 ```bash
 # Quick policy validation (no Azure auth required)
@@ -45,7 +67,7 @@ pre-commit run pester-tests-quick --all-files
 ./scripts/Invoke-PolicyTests.ps1 -TestPath "tests/storage"
 ```
 
-### **4. Create & Deploy Versioned Package**
+### **5. Create & Deploy Versioned Package**
 
 ```bash
 # Create a new release
@@ -82,6 +104,7 @@ Each policy includes detailed documentation showing the corresponding Checkov ru
 ## 📚 **Documentation**
 
 - **[Dev Container Setup](.devcontainer/README.md)** - 🐳 Local & GitHub Codespaces development
+- **[GitHub Copilot Environment Validation](docs/GitHub-Copilot-Environment-Validation.md)** - ✅ Environment configuration & validation guide
 - **[Deployment Guide](docs/Deployment-Guide.md)** - 🚀 Versioned package deployment to Azure
 - **[Pre-commit Guide](docs/PreCommit-Guide.md)** - Code quality and validation hooks
 - **[Test Panel Guide](docs/TestPanel-Guide.md)** - VS Code Test Panel integration
