@@ -90,6 +90,13 @@ try {
     # PSScriptAnalyzer: The secret is already exposed in the environment variable - this is the standard pattern for CI/CD service principal auth
     # Security: Environment variables are validated and sourced from trusted GitHub Secrets/Codespaces Secrets only
     # Additional validation: Ensure the environment variable is actually set before use (already validated above)
+    # Extra validation: Ensure the secret is not empty, not a placeholder, and meets a minimum length
+    if ([string]::IsNullOrWhiteSpace($env:ARM_CLIENT_SECRET) -or
+        $env:ARM_CLIENT_SECRET -match '^(changeme|dummy|placeholder|password)$' -or
+        $env:ARM_CLIENT_SECRET.Length -lt 8) {
+        Write-Host "`n❌ ARM_CLIENT_SECRET environment variable is invalid or not securely set. Aborting authentication." -ForegroundColor Red
+        exit 1
+    }
     $securePassword = ConvertTo-SecureString $env:ARM_CLIENT_SECRET -AsPlainText -Force  # pragma: allowlist secret
     $credential = New-Object System.Management.Automation.PSCredential($env:ARM_CLIENT_ID, $securePassword)
 
