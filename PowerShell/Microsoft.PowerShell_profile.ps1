@@ -180,7 +180,11 @@ if ($env:CODESPACES -eq 'true' -and $env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECR
         Write-Host '🔐 Auto-authenticating to Azure...' -ForegroundColor Cyan
         $authScript = Join-Path $ProjectRoot 'scripts/Connect-AzureServicePrincipal.ps1'
         if (Test-Path $authScript) {
-            & $authScript
+            try {
+                & $authScript
+            } catch {
+                Write-Warning "Failed to execute authentication script: $authScript - $($_.Exception.Message)"
+            }
         }
     }
 }
