@@ -143,12 +143,12 @@ function Initialize-AzurePolicyProject {
     if (Test-Path $ConfigPath) {
         try {
             $Config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
-            $env:ARM_SUBSCRIPTION_ID = $Config.subcription_id
-            $env:ARM_MANAGEMENT_GROUP_ID = $Config.mangement_group_id
+            $env:ARM_SUBSCRIPTION_ID = $Config.subscription_id
+            $env:ARM_MANAGEMENT_GROUP_ID = $Config.management_group_id
 
             Write-Host "Loaded configuration from: $ConfigPath" -ForegroundColor Green
-            Write-Host "Subscription ID: $($Config.subcription_id)" -ForegroundColor White
-            Write-Host "Management Group ID: $($Config.mangement_group_id)" -ForegroundColor White
+            Write-Host "Subscription ID: $($Config.subscription_id)" -ForegroundColor White
+            Write-Host "Management Group ID: $($Config.management_group_id)" -ForegroundColor White
         } catch {
             Write-Warning "Failed to load configuration: $($_.Exception.Message)"
         }
@@ -184,7 +184,10 @@ if ($env:CODESPACES -eq 'true' -and $env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECR
                 & $authScript
             } catch {
                 Write-Warning "Failed to execute authentication script: $authScript - $($_.Exception.Message)"
+                Write-Warning "You can authenticate manually by running: ./scripts/Connect-AzureServicePrincipal.ps1"
             }
+        } else {
+            Write-Warning "Authentication script not found at: $authScript"
         }
     }
 }

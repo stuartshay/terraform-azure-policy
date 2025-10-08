@@ -88,6 +88,8 @@ try {
     # Convert client secret to secure string
     # Note: Using -AsPlainText is acceptable here as the secret comes from secure environment variables (GitHub Secrets/Codespaces Secrets)
     # PSScriptAnalyzer: The secret is already exposed in the environment variable - this is the standard pattern for CI/CD service principal auth
+    # Security: Environment variables are validated and sourced from trusted GitHub Secrets/Codespaces Secrets only
+    # Additional validation: Ensure the environment variable is actually set before use (already validated above)
     $securePassword = ConvertTo-SecureString $env:ARM_CLIENT_SECRET -AsPlainText -Force  # pragma: allowlist secret
     $credential = New-Object System.Management.Automation.PSCredential($env:ARM_CLIENT_ID, $securePassword)
 

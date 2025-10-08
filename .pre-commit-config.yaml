@@ -67,8 +67,10 @@ repos:
         entry: pwsh
         args:
           [
-            '-Command',
-            'try { if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { $results = Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning -ExcludeRule PSUseConsistentWhitespace,PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPositionalParameters,PSReviewUnusedParameter,PSUseDeclaredVarsMoreThanAssignments,PSAvoidUsingConvertToSecureStringWithPlainText; if ($results) { $results | Format-Table -AutoSize; exit 1 } else { Write-Host "PSScriptAnalyzer passed (critical issues only)" } } else { Write-Host "PSScriptAnalyzer not installed, skipping..." } } catch { Write-Host "PSScriptAnalyzer error: $_" }',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-File',
+            './scripts/Invoke-PSScriptAnalyzer.ps1',
           ]
         language: system
         files: '\.ps1$'

@@ -154,8 +154,14 @@ terraform {
 }
 
 variable "tf_cloud_organization" {
-  type = string
-  # Set this variable via the environment using TF_VAR_tf_cloud_organization
+  type        = string
+  description = "Terraform Cloud organization name"
+  # Set via environment variable: export TF_VAR_tf_cloud_organization="my-org"
+}
+
+variable "environment" {
+  type        = string
+  description = "Environment name (e.g., dev, staging, prod)"
 }
 ```
 
