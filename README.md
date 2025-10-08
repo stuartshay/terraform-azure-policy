@@ -26,11 +26,14 @@ See [Dev Container Documentation](.devcontainer/README.md) for details.
 Before running tests or deploying policies, validate your GitHub Copilot environment is correctly configured:
 
 ```powershell
-# Validate environment variables and Azure connectivity
-./scripts/Test-EnvironmentConfiguration.ps1
+# Complete validation: environment variables + Azure connectivity + storage tests
+./scripts/Validate-GitHubCopilotEnvironment.ps1
+
+# Validate environment variables and Azure auth only (skip storage tests)
+./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipStorageTest
 
 # Only validate environment variables (skip Azure connectivity test)
-./scripts/Test-EnvironmentConfiguration.ps1 -SkipAzureConnectivityTest
+./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipAzureAuth
 ```
 
 **Required Environment Variables:**

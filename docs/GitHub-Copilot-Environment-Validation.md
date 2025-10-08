@@ -60,7 +60,54 @@ These variables enable Terraform Cloud integration:
 
 ## Validation Process
 
-### Step 1: Validate Environment Configuration
+### Quick Validation (Recommended)
+
+For a complete validation workflow that includes environment variables, Azure authentication, and connectivity testing:
+
+```powershell
+./scripts/Validate-GitHubCopilotEnvironment.ps1
+```
+
+This comprehensive script:
+- ✅ Validates all environment variables (ARM_* and TF_*)
+- ✅ Tests Azure authentication and connectivity
+- ✅ Runs storage policy tests to verify end-to-end functionality
+- ✅ Provides clear success/failure feedback
+
+**Expected Output:**
+
+```
+╔═══════════════════════════════════════════════════════════╗
+║  GitHub Copilot Environment Validation & Testing         ║
+╚═══════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Validating Environment Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+... environment validation output ...
+
+✅ Environment validation completed successfully!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 2: Testing Azure Connectivity with Storage Tests
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 Running storage policy tests to verify Azure connectivity...
+... storage test output ...
+
+✅ Storage tests completed successfully!
+
+╔═══════════════════════════════════════════════════════════╗
+║           ✅ Validation & Testing Complete!               ║
+╚═══════════════════════════════════════════════════════════╝
+
+🎉 Your GitHub Copilot environment is correctly configured!
+```
+
+### Detailed Validation
+
+#### Step 1: Validate Environment Configuration
 
 Run the environment validation script to check all required variables:
 
@@ -187,7 +234,23 @@ Install required modules:
 
 ## Complete Validation Workflow
 
-Follow this complete workflow to validate and test the environment:
+### Option 1: Comprehensive Validation (Recommended)
+
+Use the all-in-one validation script that performs all checks automatically:
+
+```powershell
+# Complete validation workflow
+./scripts/Validate-GitHubCopilotEnvironment.ps1
+```
+
+This single command:
+1. ✅ Validates all environment variables
+2. ✅ Tests Azure authentication
+3. ✅ Runs storage tests to verify connectivity
+
+### Option 2: Manual Step-by-Step Validation
+
+For more control over each validation step:
 
 ```powershell
 # 1. Validate environment configuration
@@ -209,7 +272,10 @@ Follow this complete workflow to validate and test the environment:
 
 | Command | Purpose |
 |---------|---------|
-| `./scripts/Test-EnvironmentConfiguration.ps1` | Full environment validation + Azure connectivity test |
+| `./scripts/Validate-GitHubCopilotEnvironment.ps1` | **Recommended:** Complete validation workflow (env vars + auth + storage tests) |
+| `./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipStorageTest` | Validate environment + Azure auth only |
+| `./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipAzureAuth` | Validate environment variables only |
+| `./scripts/Test-EnvironmentConfiguration.ps1` | Detailed environment validation + Azure connectivity test |
 | `./scripts/Test-EnvironmentConfiguration.ps1 -SkipAzureConnectivityTest` | Validate environment variables only |
 | `./scripts/Connect-AzureServicePrincipal.ps1` | Authenticate to Azure using Service Principal |
 | `./scripts/Run-StorageTest.ps1` | Test Azure connectivity with storage policy tests |

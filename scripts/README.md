@@ -27,6 +27,31 @@ This directory contains PowerShell scripts for managing Azure Policy definitions
 
 **Documentation:** See [Codespaces Azure Authentication Guide](../docs/Codespaces-Azure-Authentication.md)
 
+### Validate-GitHubCopilotEnvironment.ps1
+
+**Purpose:** Complete validation workflow for GitHub Copilot environment - validates environment variables, tests Azure authentication, and runs storage tests.
+
+**Usage:**
+
+```powershell
+# Complete validation (environment + auth + storage tests)
+./scripts/Validate-GitHubCopilotEnvironment.ps1
+
+# Skip storage tests
+./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipStorageTest
+
+# Only validate environment variables
+./scripts/Validate-GitHubCopilotEnvironment.ps1 -SkipAzureAuth
+```
+
+**Validation Steps:**
+
+1. Validates all environment variables (ARM_* and TF_*)
+2. Tests Azure authentication and connectivity
+3. Runs storage policy tests to verify end-to-end functionality
+
+**Recommended:** Use this as the primary validation script for GitHub Copilot environments.
+
 ### Test-EnvironmentConfiguration.ps1
 
 **Purpose:** Validate GitHub Copilot environment configuration and test Azure connectivity.
