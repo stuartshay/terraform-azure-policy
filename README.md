@@ -37,6 +37,7 @@ Before running tests or deploying policies, validate your GitHub Copilot environ
 ```
 
 **Required Environment Variables:**
+
 - `ARM_CLIENT_ID` - Azure Service Principal Client ID
 - `ARM_CLIENT_SECRET` - Azure Service Principal Secret
 - `ARM_TENANT_ID` - Azure AD Tenant ID

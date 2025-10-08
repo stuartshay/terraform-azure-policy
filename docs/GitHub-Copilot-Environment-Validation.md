@@ -69,14 +69,15 @@ For a complete validation workflow that includes environment variables, Azure au
 ```
 
 This comprehensive script:
-- ✅ Validates all environment variables (ARM_* and TF_*)
+
+- ✅ Validates all environment variables (ARM_*and TF_*)
 - ✅ Tests Azure authentication and connectivity
 - ✅ Runs storage policy tests to verify end-to-end functionality
 - ✅ Provides clear success/failure feedback
 
 **Expected Output:**
 
-```
+```text
 ╔═══════════════════════════════════════════════════════════╗
 ║  GitHub Copilot Environment Validation & Testing         ║
 ╚═══════════════════════════════════════════════════════════╝
@@ -116,6 +117,7 @@ Run the environment validation script to check all required variables:
 ```
 
 This script will:
+
 - ✅ Check all Azure environment variables (`ARM_*`)
 - ✅ Check Terraform Cloud variables (`TF_*`) - optional
 - ✅ Authenticate to Azure using Service Principal
@@ -124,7 +126,7 @@ This script will:
 
 **Expected Output:**
 
-```
+```text
 ╔════════════════════════════════════════════════════════╗
 ║  GitHub Copilot Environment Configuration Validator   ║
 ╚════════════════════════════════════════════════════════╝
@@ -184,6 +186,7 @@ Once environment validation passes, test Azure connectivity by running the stora
 ```
 
 This script will:
+
 - ✅ Verify Azure connection
 - ✅ Check/create the testing resource group (`rg-azure-policy-testing`)
 - ✅ Run integration tests for storage account policies
@@ -196,6 +199,7 @@ This script will:
 **Problem:** Variables are not set or missing.
 
 **Solution:**
+
 1. Verify variables are added to GitHub Codespaces/Actions secrets
 2. Ensure correct variable names (case-sensitive)
 3. For Codespaces: Rebuild the Codespace after adding secrets
@@ -206,6 +210,7 @@ This script will:
 **Problem:** Azure authentication fails with AADSTS errors.
 
 **Solution:**
+
 1. Verify Service Principal credentials are correct
 2. Check that Service Principal has not expired
 3. Ensure Service Principal has access to the subscription
@@ -216,6 +221,7 @@ This script will:
 **Problem:** Cannot access resource groups or resources.
 
 **Solution:**
+
 1. Verify Service Principal has appropriate RBAC roles
 2. Check subscription access
 3. Ensure resource group exists or can be created
@@ -244,6 +250,7 @@ Use the all-in-one validation script that performs all checks automatically:
 ```
 
 This single command:
+
 1. ✅ Validates all environment variables
 2. ✅ Tests Azure authentication
 3. ✅ Runs storage tests to verify connectivity
@@ -314,15 +321,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     environment: copilot  # Uses environment secrets
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup PowerShell
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      
+
       - name: Validate Environment Configuration
         run: |
           pwsh -File ./scripts/Test-EnvironmentConfiguration.ps1
@@ -333,7 +340,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
           TF_CLOUD_ORGANIZATION: ${{ secrets.TF_CLOUD_ORGANIZATION }}
-      
+
       - name: Run Storage Tests
         run: |
           pwsh -File ./scripts/Run-StorageTest.ps1

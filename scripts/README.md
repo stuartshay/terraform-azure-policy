@@ -46,7 +46,7 @@ This directory contains PowerShell scripts for managing Azure Policy definitions
 
 **Validation Steps:**
 
-1. Validates all environment variables (ARM_* and TF_*)
+1. Validates all environment variables (ARM_*and TF_*)
 2. Tests Azure authentication and connectivity
 3. Runs storage policy tests to verify end-to-end functionality
 
