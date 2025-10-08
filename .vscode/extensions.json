@@ -1,32 +1,22 @@
 {
     "recommendations": [
-        // PowerShell Development
         "ms-vscode.powershell",
         "pspester.pester-test",
-        // Terraform & Infrastructure as Code
         "hashicorp.terraform",
         "hashicorp.hcl",
-        // Azure Tools
         "ms-vscode.azure-account",
         "ms-azuretools.vscode-azureresourcegroups",
         "ms-azuretools.vscode-azurefunctions",
-        // YAML & JSON Support
         "redhat.vscode-yaml",
         "ms-vscode.vscode-json-languageservice",
-        // Markdown Support
         "davidanson.vscode-markdownlint",
         "yzhang.markdown-all-in-one",
-        // Git & Version Control
         "github.vscode-pull-request-github",
         "eamodio.gitlens",
-        // Code Quality & Security
         "github.copilot",
         "ms-python.python",
         "editorconfig.editorconfig",
-        // Testing & Coverage
         "ryanluker.vscode-coverage-gutters",
-        // Utilities
-        "gruntfuggly.todo-tree",
         "wayou.vscode-todo-highlight",
         "streetsidesoftware.code-spell-checker"
     ],

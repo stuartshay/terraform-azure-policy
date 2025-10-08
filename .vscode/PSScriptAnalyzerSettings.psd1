@@ -15,7 +15,8 @@
     # Rules to exclude (customize based on project needs)
     ExcludeRules        = @(
         'PSAvoidUsingWriteHost',      # We use Write-Host for colored console output
-        'PSUseShouldProcessForStateChangingFunctions'  # Some utility functions don't need ShouldProcess
+        'PSUseShouldProcessForStateChangingFunctions',  # Some utility functions don't need ShouldProcess
+        'PSAvoidUsingConvertToSecureStringWithPlainText'  # CI/CD scripts use environment variables for service principal auth
     )
 
     # Custom rule configurations

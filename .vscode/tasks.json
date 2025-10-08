@@ -325,9 +325,9 @@
                 "${workspaceFolder}/tests",
                 "-ResourceGroup",
                 "rg-azure-policy-testing",
-                "-CodeCoverage", // pragma: allowlist secret
+                "-CodeCoverage",
                 "$true",
-                "-CoverageTarget", // pragma: allowlist secret
+                "-CoverageTarget",
                 "80"
             ],
             "group": "test",
@@ -352,9 +352,9 @@
                 "${workspaceFolder}/scripts/Invoke-PolicyTests-WithCoverage.ps1",
                 "-TestPath",
                 "tests/**/*Unit*.Tests.ps1,tests/network",
-                "-CodeCoverage", // pragma: allowlist secret
+                "-CodeCoverage",
                 "$true",
-                "-CoverageTarget", // pragma: allowlist secret
+                "-CoverageTarget",
                 "75"
             ],
             "group": "test",
@@ -381,10 +381,10 @@
                 "${workspaceFolder}/tests",
                 "-ResourceGroup",
                 "rg-azure-policy-testing",
-                "-CodeCoverage", // pragma: allowlist secret
+                "-CodeCoverage",
                 "$true",
-                "-GenerateHtmlReport", // pragma: allowlist secret
-                "-CoverageTarget", // pragma: allowlist secret
+                "-GenerateHtmlReport",
+                "-CoverageTarget",
                 "80"
             ],
             "group": "test",

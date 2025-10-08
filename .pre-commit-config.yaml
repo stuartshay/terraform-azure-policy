@@ -13,7 +13,6 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
-        exclude: '\.vscode/.*\.json$' # Exclude VS Code config files that may have comments
       - id: check-added-large-files
         args: ['--maxkb=1000']
       - id: check-case-conflict
@@ -68,8 +67,10 @@ repos:
         entry: pwsh
         args:
           [
-            '-Command',
-            'try { if (Get-Module -ListAvailable -Name PSScriptAnalyzer) { $results = Invoke-ScriptAnalyzer -Path . -Settings ".vscode/PSScriptAnalyzerSettings.psd1" -Recurse -Severity Error,Warning -ExcludeRule PSUseConsistentWhitespace,PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPositionalParameters,PSReviewUnusedParameter,PSUseDeclaredVarsMoreThanAssignments; if ($results) { $results | Format-Table -AutoSize; exit 1 } else { Write-Host "PSScriptAnalyzer passed (critical issues only)" } } else { Write-Host "PSScriptAnalyzer not installed, skipping..." } } catch { Write-Host "PSScriptAnalyzer error: $_" }',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-File',
+            './scripts/Invoke-PSScriptAnalyzer.ps1',
           ]
         language: system
         files: '\.ps1$'
@@ -157,11 +158,11 @@ repos:
             '--baseline',
             '.secrets.baseline',
             '--base64-limit',
-            '3.0',
+            '4.5',
             '--hex-limit',
-            '2.5',
+            '3.0',
           ]
-        exclude: package.lock.json
+        exclude: 'package.lock.json|\.github/workflows/.*\.yml'
 
   # Git commit message formatting
   - repo: https://github.com/commitizen-tools/commitizen

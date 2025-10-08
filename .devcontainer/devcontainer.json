@@ -2,14 +2,34 @@
     "name": "Azure Policy Development",
     "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "dockerDashComposeVersion": "v2"
+        },
         "ghcr.io/devcontainers/features/azure-cli:1": {
             "version": "latest",
             "extensions": "account,resource-graph"
         },
+        "ghcr.io/devcontainers-extra/features/aztfexport:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/infracost:1": {
+            "version": "latest"
+        },
         "ghcr.io/devcontainers/features/terraform:1": {
-            "version": "1.13.1",
+            "version": "latest",
             "tflint": "latest",
-            "terragrunt": "none"
+            "terragrunt": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/terrascan:1": {
+            "version": "latest"
+        },
+        "ghcr.io/joshuanianji/devcontainer-features/terraform-cli-persistence:1": {},
+        "ghcr.io/dhoeric/features/terraform-docs:1": {
+            "version": "latest"
+        },
+        "ghcr.io/dhoeric/features/tfsec:1": {
+            "version": "latest"
         },
         "ghcr.io/devcontainers/features/powershell:1": {
             "version": "latest"
@@ -23,6 +43,21 @@
             "ppa": true
         },
         "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/pre-commit:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/shellcheck:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/markdownlint-cli2:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-extra/features/checkov:1": {
             "version": "latest"
         },
         "ghcr.io/devcontainers/features/node:1": {
@@ -63,6 +98,11 @@
                 "powershell.powerShellDefaultVersion": "PowerShell Core",
                 "powershell.scriptAnalysis.enable": true,
                 "powershell.codeFormatting.preset": "OTBS",
+                "powershell.integratedConsole.suppressStartupBanner": false,
+                "powershell.integratedConsole.showOnStartup": false,
+                "powershell.integratedConsole.focusConsoleOnExecute": false,
+                "powershell.startAsLoginShell.linux": true,
+                "terminal.integrated.automationProfile.linux": null,
                 "terraform.languageServer.enable": true,
                 "terraform.experimentalFeatures.validateOnSave": true,
                 "files.associations": {
@@ -88,7 +128,13 @@
     "containerEnv": {
         "TF_IN_AUTOMATION": "1",
         "TF_INPUT": "0",
-        "DEBIAN_FRONTEND": "noninteractive"
+        "DEBIAN_FRONTEND": "noninteractive",
+        "ARM_CLIENT_ID": "${localEnv:ARM_CLIENT_ID}",
+        "ARM_CLIENT_SECRET": "${localEnv:ARM_CLIENT_SECRET}",
+        "ARM_TENANT_ID": "${localEnv:ARM_TENANT_ID}",
+        "ARM_SUBSCRIPTION_ID": "${localEnv:ARM_SUBSCRIPTION_ID}",
+        "TF_API_TOKEN": "${localEnv:TF_API_TOKEN}",
+        "TF_CLOUD_ORGANIZATION": "${localEnv:TF_CLOUD_ORGANIZATION}"
     },
     "runArgs": [
         "--name=azure-policy-devcontainer"

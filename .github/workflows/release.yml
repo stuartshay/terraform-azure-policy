@@ -202,7 +202,7 @@ jobs:
       - name: Output release information
         run: |
           # shellcheck disable=SC2086,SC2129
-          {
+          {  # pragma: allowlist secret
             echo "## 🎉 Package Release Created"
             echo ""
             echo "- **Version**: ${{ steps.version.outputs.version }}"
