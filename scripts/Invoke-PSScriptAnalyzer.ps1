@@ -13,7 +13,7 @@ try {
     if (Get-Module -ListAvailable -Name PSScriptAnalyzer) {
         $results = Invoke-ScriptAnalyzer `
             -Path . `
-            -Settings ".vscode/PSScriptAnalyzerSettings.psd1" `
+            -Settings '.vscode/PSScriptAnalyzerSettings.psd1' `
             -Recurse `
             -Severity Error, Warning `
             -ExcludeRule PSUseConsistentWhitespace, PSUseBOMForUnicodeEncodedFile, PSAvoidUsingPositionalParameters, PSReviewUnusedParameter, PSUseDeclaredVarsMoreThanAssignments, PSAvoidUsingConvertToSecureStringWithPlainText, PSProvideCommentHelp
@@ -21,12 +21,15 @@ try {
         if ($results) {
             $results | Format-Table -AutoSize
             exit 1
-        } else {
-            Write-Host "PSScriptAnalyzer passed (critical issues only)" -ForegroundColor Green
         }
-    } else {
-        Write-Host "PSScriptAnalyzer not installed, skipping..." -ForegroundColor Yellow
+        else {
+            Write-Host 'PSScriptAnalyzer passed (critical issues only)' -ForegroundColor Green
+        }
     }
-} catch {
+    else {
+        Write-Host 'PSScriptAnalyzer not installed, skipping...' -ForegroundColor Yellow
+    }
+}
+catch {
     Write-Host "PSScriptAnalyzer error: $_" -ForegroundColor Red
 }
