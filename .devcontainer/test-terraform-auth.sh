@@ -174,14 +174,16 @@ if [ -f "$TF_CREDENTIALS_FILE" ]; then
     echo ""
     if [ -n "$TF_CLOUD_ORGANIZATION" ]; then
         echo "Example usage:"
-        echo '  terraform {
+        cat <<EOF
+  terraform {
     cloud {
-      organization = "'"$TF_CLOUD_ORGANIZATION"'"
+      organization = "$TF_CLOUD_ORGANIZATION"
       workspaces {
         name = "my-workspace"
       }
     }
-  }'
+  }
+EOF
     fi
 else
     echo "⚠️  Terraform CLI not fully configured"
