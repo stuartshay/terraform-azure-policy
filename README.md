@@ -109,6 +109,7 @@ Each policy includes detailed documentation showing the corresponding Checkov ru
 
 - **[Dev Container Setup](.devcontainer/README.md)** - 🐳 Local & GitHub Codespaces development
 - **[GitHub Copilot Environment Validation](docs/GitHub-Copilot-Environment-Validation.md)** - ✅ Environment configuration & validation guide
+- **[GitHub Actions Setup Guide](docs/GitHub-Actions-Setup-Guide.md)** - 🔧 CI/CD setup steps & troubleshooting
 - **[Deployment Guide](docs/Deployment-Guide.md)** - 🚀 Versioned package deployment to Azure
 - **[Pre-commit Guide](docs/PreCommit-Guide.md)** - Code quality and validation hooks
 - **[Test Panel Guide](docs/TestPanel-Guide.md)** - VS Code Test Panel integration

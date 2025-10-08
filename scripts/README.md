@@ -212,6 +212,47 @@ This directory contains PowerShell scripts for managing Azure Policy definitions
 
 ## Setup & Maintenance
 
+### Install-ModulesForCI.ps1
+
+**Purpose:** Install PowerShell modules for CI/CD environments with retry logic and error handling to handle firewall restrictions and network issues.
+
+**Usage:**
+
+```powershell
+# Install default modules (Pester, PSScriptAnalyzer, Az.Accounts, Az.Resources)
+./scripts/Install-ModulesForCI.ps1
+
+# Install specific modules
+./scripts/Install-ModulesForCI.ps1 -RequiredModules @('Pester', 'PSScriptAnalyzer')
+
+# Install with custom retry settings
+./scripts/Install-ModulesForCI.ps1 -RequiredModules @('Pester') -MaxRetries 5 -RetryDelaySeconds 10
+```
+
+**Features:**
+
+- ✅ Automatic retry logic for failed installations (default: 3 attempts)
+- ✅ PowerShell Gallery connectivity validation
+- ✅ TLS 1.2 configuration for secure connections
+- ✅ Module import verification
+- ✅ Detailed logging and error reporting
+- ✅ Handles firewall restrictions and network timeouts
+
+**Parameters:**
+
+- `-RequiredModules` - Array of module names to install (default: Pester, PSScriptAnalyzer, Az.Accounts, Az.Resources)
+- `-MaxRetries` - Maximum retry attempts per module (default: 3)
+- `-RetryDelaySeconds` - Delay between retries (default: 5 seconds)
+
+**Use Cases:**
+
+- GitHub Actions workflows (CI/CD)
+- Environments with firewall restrictions
+- Intermittent network connectivity scenarios
+- Automated deployment pipelines
+
+See [GitHub Actions Setup Guide](../docs/GitHub-Actions-Setup-Guide.md) for detailed usage in workflows.
+
 ### Install-Requirements.ps1
 
 **Purpose:** Install required PowerShell modules and dependencies.
