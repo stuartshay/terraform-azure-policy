@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -125,30 +125,30 @@ jobs:
       - name: Network diagnostics for package sources
         run: |
           echo "Testing network connectivity to package sources..."
-          
+
           # Test PowerShell Gallery
           echo "Testing PowerShell Gallery (www.powershellgallery.com)..."
           curl -I https://www.powershellgallery.com --max-time 10 || echo "⚠ PowerShell Gallery not accessible"
-          
+
           # Test PowerShell Gallery API
           echo "Testing PowerShell Gallery API..."
           curl -I https://www.powershellgallery.com/api/v2 --max-time 10 || echo "⚠ PowerShell Gallery API not accessible"
-          
+
           # Test DNS resolution
           echo "Testing DNS resolution..."
           nslookup www.powershellgallery.com || echo "⚠ DNS resolution failed"
-          
+
           # Test with different endpoints
           echo "Testing alternative endpoints..."
           curl -I https://psg-prod-eastus.azureedge.net --max-time 10 || echo "⚠ PSGallery CDN not accessible"
-          
+
           echo "Network diagnostics completed"
 
       - name: Validate PowerShell Gallery connectivity
         run: |
           pwsh -Command "
             Write-Host 'Testing PowerShell Gallery connectivity...'
-            
+
             try {
                 # Test connection to PowerShell Gallery
                 \$response = Invoke-WebRequest -Uri 'https://www.powershellgallery.com' -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
@@ -158,7 +158,7 @@ jobs:
                 Write-Warning 'PowerShell Gallery connectivity check failed: '\$_.Exception.Message
                 Write-Host 'Will attempt to install modules with retry logic...'
             }
-            
+
             # Test repository registration
             try {
                 \$psGallery = Get-PSRepository -Name PSGallery -ErrorAction Stop
