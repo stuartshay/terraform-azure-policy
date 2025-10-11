@@ -1,0 +1,23 @@
+# Example terraform.tfvars for deploying deny-function-app-aad-only policy
+# Copy this file to terraform.tfvars and customize for your environment
+
+# Environment Configuration
+environment = "sandbox"
+owner       = "Policy-Team"
+
+# Policy Assignment Configuration
+create_assignment   = true
+assignment_scope_id = "/subscriptions/09e01a7d-07d4-43ee-80c7-8b2c0d7ec41f/resourceGroups/rg-azure-policy-testing"
+assignment_location = "East US"
+
+# Policy Effect (Audit for testing, Deny for production)
+policy_effect = "Audit"
+
+# Exemptions
+exempted_function_apps     = []
+exempted_resource_groups   = []
+
+# Custom Assignment Names (optional - will use defaults if not specified)
+# policy_assignment_name         = "deny-function-app-aad-only-assignment"
+# policy_assignment_display_name = "Deny Function App Without AAD-Only Authentication Assignment"
+# policy_assignment_description  = "This assignment enforces the policy to deny Function Apps that do not have Azure AD-only authentication enabled."

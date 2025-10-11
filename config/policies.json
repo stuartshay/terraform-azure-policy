@@ -107,6 +107,19 @@
                     "exemptedSuffix": "exemp",
                     "runtime": "PowerShell"
                 }
+            },
+            "deny-function-app-aad-only": {
+                "name": "deny-function-app-aad-only",
+                "displayName": "Functions | DENY: Azure AD-only auth, no basic publishing creds, FTP/FTPS disabled",
+                "category": "Function App",
+                "policyPath": "policies/function-app/deny-function-app-aad-only/rule.json",
+                "resourcePrefix": "testpolicyfnaad",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "runtime": "PowerShell"
+                }
             }
         },
         "network": {

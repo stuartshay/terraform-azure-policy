@@ -39,10 +39,10 @@ Before installing PowerShell modules, workflows run network diagnostics to ident
   run: |
     echo "Testing PowerShell Gallery (www.powershellgallery.com)..."
     curl -I https://www.powershellgallery.com --max-time 10 || echo "⚠ PowerShell Gallery not accessible"
-    
+
     echo "Testing PowerShell Gallery API..."
     curl -I https://www.powershellgallery.com/api/v2 --max-time 10 || echo "⚠ PowerShell Gallery API not accessible"
-    
+
     echo "Testing DNS resolution..."
     nslookup www.powershellgallery.com || echo "⚠ DNS resolution failed"
 ```
@@ -113,7 +113,7 @@ This script provides robust module installation with the following features:
 
 ### Output Example
 
-```
+```text
 ═══════════════════════════════════════════════════════
   PowerShell Module Installation for CI/CD
 ═══════════════════════════════════════════════════════
@@ -166,6 +166,7 @@ Testing module imports...
 ### Issue: PowerShell Gallery Unreachable
 
 **Symptoms:**
+
 - `curl -I https://www.powershellgallery.com` fails
 - Network diagnostics show connectivity issues
 
@@ -177,6 +178,7 @@ Testing module imports...
    - `https://psg-prod-eastus.azureedge.net` (CDN endpoint)
 
 2. **Retry with longer delays**: Increase retry delays in the workflow:
+
    ```yaml
    - name: Install PowerShell modules
      run: |
@@ -186,6 +188,7 @@ Testing module imports...
    ```
 
 3. **Use alternative installation method**: Install from local cache or pre-downloaded packages:
+
    ```yaml
    - name: Cache PowerShell modules
      uses: actions/cache@v4
@@ -197,6 +200,7 @@ Testing module imports...
 ### Issue: Module Installation Timeouts
 
 **Symptoms:**
+
 - Installation hangs or times out
 - Network diagnostics pass but module installation fails
 
@@ -209,12 +213,14 @@ Testing module imports...
 ### Issue: TLS/SSL Errors
 
 **Symptoms:**
+
 - SSL handshake failures
 - Certificate validation errors
 
 **Solutions:**
 
 1. **Ensure TLS 1.2 is enabled**: The script automatically configures this:
+
    ```powershell
    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
    ```
@@ -224,12 +230,14 @@ Testing module imports...
 ### Issue: Repository Not Trusted
 
 **Symptoms:**
+
 - Prompts for untrusted repository confirmation
 - Installation fails in non-interactive mode
 
 **Solutions:**
 
 The script automatically sets PSGallery as trusted:
+
 ```powershell
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 ```
