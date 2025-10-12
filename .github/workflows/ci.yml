@@ -202,59 +202,8 @@ jobs:
           "
 
       - name: Run unit tests with code coverage
-        run: | # pragma: allowlist secret
-          pwsh -ExecutionPolicy Bypass -Command "
-            # Run unit tests (tests with Unit in filename) that don't require Azure authentication
-            Import-Module Pester
-
-            # Find all unit test files
-            \$unitTests = Get-ChildItem -Path 'tests' -Filter '*Unit*.Tests.ps1' -Recurse | Select-Object -ExpandProperty FullName
-
-            \$config = [PesterConfiguration]@{ # pragma: allowlist secret
-              Run = @{
-                Path = @(\$unitTests + @('tests/network'))
-                PassThru = \$true
-              }
-              Output = @{
-                Verbosity = 'Detailed'
-              }
-              TestResult = @{
-                Enabled = \$true
-                OutputFormat = 'JUnitXml'
-                OutputPath = 'reports/TestResults.xml'
-              }
-              CodeCoverage = @{
-                Enabled = \$true
-                OutputFormat = 'JaCoCo'
-                OutputPath = 'reports/coverage.xml'
-                Path = @(
-                  'scripts/*.ps1',
-                  'PowerShell/*.ps1'
-                )
-                ExcludeTests = \$true
-                CoveragePercentTarget = 70.0
-              }
-            }
-
-            \$results = Invoke-Pester -Configuration \$config
-
-            Write-Host 'Test Results:'
-            Write-Host \"  Total: \$( \$results.TotalCount )\"
-            Write-Host \"  Passed: \$( \$results.PassedCount )\"
-            Write-Host \"  Failed: \$( \$results.FailedCount )\"
-
-            if (\$results.CodeCoverage) {
-              Write-Host 'Coverage Results:'
-              Write-Host \"  Percentage: \$( [math]::Round(\$results.CodeCoverage.CoveragePercent, 2) )%\"
-              Write-Host \"  Commands Analyzed: \$( \$results.CodeCoverage.CommandsAnalyzedCount )\"
-              Write-Host \"  Commands Executed: \$( \$results.CodeCoverage.CommandsExecutedCount )\"
-            }
-
-            if (\$results.FailedCount -gt 0) {
-              Write-Error 'One or more tests failed'
-              exit 1
-            }
-          "
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./scripts/Run-UnitTests.ps1
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
