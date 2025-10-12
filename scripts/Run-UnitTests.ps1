@@ -16,12 +16,6 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Create reports directory if it doesn't exist
-if (-not (Test-Path 'reports')) {
-    New-Item -ItemType Directory -Path 'reports' -Force | Out-Null
-    Write-Host '✓ Created reports directory' -ForegroundColor Green
-}
-
 # Import Pester module
 Import-Module Pester -Force
 
@@ -42,8 +36,8 @@ if (-not $unitTests -or $unitTests.Count -eq 0) {
   </testcase>
 </testsuite>
 '@
-    $emptyXml | Set-Content -Path 'reports/TestResults.xml' -Force
-    Write-Host '✓ Created placeholder test results' -ForegroundColor Yellow
+    $emptyXml | Set-Content -Path 'testResults.xml' -Force
+    Write-Host '✓ Created placeholder test results in root folder' -ForegroundColor Yellow
     exit 0
 }
 
@@ -62,12 +56,12 @@ $config = [PesterConfiguration]@{
     TestResult   = @{
         Enabled      = $true
         OutputFormat = 'JUnitXml'
-        OutputPath   = 'reports/TestResults.xml'
+        OutputPath   = 'testResults.xml'
     }
     CodeCoverage = @{
         Enabled              = $true
         OutputFormat         = 'JaCoCo'
-        OutputPath           = 'reports/coverage.xml'
+        OutputPath           = 'coverage.xml'
         Path                 = @(
             'scripts/*.ps1',
             'PowerShell/*.ps1'

@@ -211,15 +211,15 @@ jobs:
         with:
           name: test-results
           path: |
-            reports/TestResults.xml
-            reports/coverage.xml
+            testResults.xml
+            coverage.xml
 
       - name: Publish test results
         uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Test Results
-          path: reports/TestResults.xml
+          path: testResults.xml
           reporter: java-junit
 
       - name: Run pre-commit
