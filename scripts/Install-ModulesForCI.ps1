@@ -107,7 +107,7 @@ function Install-ModuleWithRetry {
     while (-not $success -and $attempt -lt $MaxAttempts) {
         $attempt++
         try {
-            Write-Host "  Attempt $attempt of $MaxAttempts: Installing $ModuleName..." -ForegroundColor Cyan
+            Write-Host "  Attempt $attempt of ${MaxAttempts}: Installing $ModuleName..." -ForegroundColor Cyan
 
             $installParams = @{
                 Name               = $ModuleName
@@ -133,7 +133,7 @@ function Install-ModuleWithRetry {
                 return $true
             }
             else {
-                throw "Module installation verification failed"
+                throw 'Module installation verification failed'
             }
         }
         catch {
@@ -144,7 +144,7 @@ function Install-ModuleWithRetry {
                 Start-Sleep -Seconds $DelaySeconds
             }
             else {
-                Write-Error "    ✗ Failed to install $ModuleName after $MaxAttempts attempts"
+                Write-Error "    ✗ Failed to install $ModuleName after ${MaxAttempts} attempts"
                 return $false
             }
         }
@@ -244,7 +244,7 @@ try {
     Write-Host ''
 
     if ($failedModules.Count -gt 0) {
-        Write-Warning "Failed to install the following modules:"
+        Write-Warning 'Failed to install the following modules:'
         foreach ($module in $failedModules) {
             Write-Host "  - $module" -ForegroundColor Red
         }
