@@ -1,0 +1,290 @@
+name: Storage Bundle Change Detection
+
+on:
+  pull_request:
+    paths:
+      - 'policies/storage/**/rule.json'
+      - 'policies/storage/**/main.tf'
+      - 'policies/storage/**/variables.tf'
+      - 'policies/storage/version.json'
+      - 'policies/storage/bundle.metadata.json'
+  push:
+    branches:
+      - main
+    paths:
+      - 'policies/storage/**/rule.json'
+      - 'policies/storage/**/main.tf'
+
+env:
+  BUNDLE_PATH: policies/storage
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_policies: ${{ steps.detect.outputs.changed_policies }}
+      suggested_bump: ${{ steps.analyze.outputs.suggested_bump }}
+      current_version: ${{ steps.version.outputs.current }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed policies
+        id: detect
+        run: |
+          # Get list of changed files
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          # Find changed policy files
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA | grep "^policies/storage/" || true)
+
+          # Extract policy names from changed files
+          CHANGED_POLICIES=()
+          for file in $CHANGED_FILES; do
+            if [[ $file =~ policies/storage/([^/]+)/ ]]; then
+              policy="${BASH_REMATCH[1]}"
+              if [[ ! " ${CHANGED_POLICIES[@]} " =~ " ${policy} " ]] && [[ "$policy" != "version.json" ]] && [[ "$policy" != "bundle.metadata.json" ]]; then
+                CHANGED_POLICIES+=("$policy")
+              fi
+            fi
+          done
+
+          # Output results
+          if [ ${#CHANGED_POLICIES[@]} -eq 0 ]; then
+            echo "changed_policies=none" >> $GITHUB_OUTPUT
+            echo "No policy changes detected"
+          else
+            POLICIES_JSON=$(printf '%s\n' "${CHANGED_POLICIES[@]}" | jq -R -s -c 'split("\n")[:-1]')
+            echo "changed_policies=$POLICIES_JSON" >> $GITHUB_OUTPUT
+            echo "📝 Changed policies:"
+            printf '  - %s\n' "${CHANGED_POLICIES[@]}"
+          fi
+
+      - name: Analyze changes for version bump
+        id: analyze
+        if: steps.detect.outputs.changed_policies != 'none'
+        run: |
+          CHANGED_POLICIES='${{ steps.detect.outputs.changed_policies }}'
+
+          # Check if any rule.json files changed
+          RULE_CHANGES=$(git diff --name-only ${{ github.event.before || github.event.pull_request.base.sha }} ${{ github.sha || github.event.pull_request.head.sha }} | grep "rule.json" || true)
+
+          # Analyze the type of changes
+          SUGGESTED_BUMP="patch"
+
+          if [ -n "$RULE_CHANGES" ]; then
+            # Check if policy rules changed (could be breaking)
+            echo "📋 Policy rule changes detected"
+
+            # Check for potentially breaking changes
+            for file in $RULE_CHANGES; do
+              DIFF=$(git diff ${{ github.event.before || github.event.pull_request.base.sha }} ${{ github.sha || github.event.pull_request.head.sha }} -- "$file")
+
+              # Check for changes to policyRule structure
+              if echo "$DIFF" | grep -q '"policyRule"'; then
+                echo "⚠️  Policy rule logic changed in $file - may require MAJOR version bump"
+                SUGGESTED_BUMP="major"
+                break
+              fi
+
+              # Check for parameter changes
+              if echo "$DIFF" | grep -q '"parameters"'; then
+                echo "📌 Policy parameters changed in $file - may require MINOR version bump"
+                [ "$SUGGESTED_BUMP" != "major" ] && SUGGESTED_BUMP="minor"
+              fi
+            done
+          fi
+
+          echo "suggested_bump=$SUGGESTED_BUMP" >> $GITHUB_OUTPUT
+          echo "💡 Suggested version bump: $SUGGESTED_BUMP"
+
+      - name: Get current version
+        id: version
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' ${{ env.BUNDLE_PATH }}/version.json)
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Current version: $CURRENT_VERSION"
+
+  validate-policies:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.changed_policies != 'none'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Validate JSON files
+        run: |
+          echo "🔍 Validating policy JSON files..."
+
+          CHANGED_POLICIES='${{ needs.detect-changes.outputs.changed_policies }}'
+
+          # Validate each changed policy's rule.json
+          echo "$CHANGED_POLICIES" | jq -r '.[]' | while read policy; do
+            RULE_FILE="${{ env.BUNDLE_PATH }}/$policy/rule.json"
+
+            if [ -f "$RULE_FILE" ]; then
+              echo "Validating $RULE_FILE"
+
+              # Check if valid JSON
+              if ! jq empty "$RULE_FILE" 2>/dev/null; then
+                echo "❌ Invalid JSON in $RULE_FILE"
+                exit 1
+              fi
+
+              # Check required fields
+              if ! jq -e '.name' "$RULE_FILE" >/dev/null; then
+                echo "❌ Missing 'name' field in $RULE_FILE"
+                exit 1
+              fi
+
+              if ! jq -e '.properties.policyRule' "$RULE_FILE" >/dev/null; then
+                echo "❌ Missing 'properties.policyRule' field in $RULE_FILE"
+                exit 1
+              fi
+
+              echo "✅ $RULE_FILE is valid"
+            fi
+          done
+
+      - name: Check version metadata consistency
+        run: |
+          # Verify all policies have version metadata
+          CHANGED_POLICIES='${{ needs.detect-changes.outputs.changed_policies }}'
+
+          echo "$CHANGED_POLICIES" | jq -r '.[]' | while read policy; do
+            RULE_FILE="${{ env.BUNDLE_PATH }}/$policy/rule.json"
+
+            if [ -f "$RULE_FILE" ]; then
+              VERSION=$(jq -r '.properties.metadata.version // "missing"' "$RULE_FILE")
+
+              if [ "$VERSION" == "missing" ]; then
+                echo "⚠️  Warning: $policy is missing version metadata"
+              else
+                echo "✅ $policy has version: $VERSION"
+              fi
+            fi
+          done
+
+  comment-pr:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, validate-policies]
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.changed_policies != 'none'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changedPolicies = JSON.parse('${{ needs.detect-changes.outputs.changed_policies }}');
+            const suggestedBump = '${{ needs.detect-changes.outputs.suggested_bump }}';
+            const currentVersion = '${{ needs.detect-changes.outputs.current_version }}';
+
+            // Calculate suggested new version
+            const [major, minor, patch] = currentVersion.split('.').map(Number);
+            let newVersion;
+            switch(suggestedBump) {
+              case 'major':
+                newVersion = `${major + 1}.0.0`;
+                break;
+              case 'minor':
+                newVersion = `${major}.${minor + 1}.0`;
+                break;
+              case 'patch':
+                newVersion = `${major}.${minor}.${patch + 1}`;
+                break;
+            }
+
+            const comment = `## 📦 Storage Policy Bundle Changes Detected
+
+            ### Changed Policies
+            ${changedPolicies.map(p => `- \`${p}\``).join('\n')}
+
+            ### Version Information
+            - **Current Version:** \`${currentVersion}\`
+            - **Suggested Bump:** \`${suggestedBump}\`
+            - **Suggested New Version:** \`${newVersion}\`
+
+            ### Next Steps
+
+            After this PR is merged, create a new release:
+
+            1. Go to **Actions** → **Release Storage Policy Bundle**
+            2. Click **Run workflow**
+            3. Select version bump: \`${suggestedBump}\`
+            4. Provide release notes describing these changes
+            5. Click **Run workflow**
+
+            Or use the GitHub CLI:
+            \`\`\`bash
+            gh workflow run storage-bundle-release.yml \\
+              -f version_bump=${suggestedBump} \\
+              -f release_notes="Your release notes here"
+            \`\`\`
+
+            ### Change Analysis
+
+            ${suggestedBump === 'major' ? '⚠️ **MAJOR** bump suggested due to policy rule changes that may affect existing deployments.' : ''}
+            ${suggestedBump === 'minor' ? '📌 **MINOR** bump suggested due to parameter or feature changes.' : ''}
+            ${suggestedBump === 'patch' ? '🔧 **PATCH** bump suggested for bug fixes or minor updates.' : ''}
+
+            ---
+
+            <details>
+            <summary>Version Bump Guide</summary>
+
+            - **MAJOR** (${major + 1}.0.0): Breaking changes to policy rules
+            - **MINOR** (${major}.${minor + 1}.0): New policies or non-breaking enhancements
+            - **PATCH** (${major}.${minor}.${patch + 1}): Bug fixes or documentation updates
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  update-pr-status:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, validate-policies]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Update check status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changedPolicies = '${{ needs.detect-changes.outputs.changed_policies }}';
+            const validationResult = '${{ needs.validate-policies.result }}';
+
+            let conclusion, title, summary;
+
+            if (changedPolicies === 'none') {
+              conclusion = 'success';
+              title = 'No storage policy changes detected';
+              summary = 'This PR does not modify any storage policies.';
+            } else if (validationResult === 'success') {
+              conclusion = 'success';
+              title = 'Storage policy changes validated';
+              summary = `Changed policies: ${changedPolicies}\n\nSuggested version bump: ${{ needs.detect-changes.outputs.suggested_bump }}`;
+            } else {
+              conclusion = 'failure';
+              title = 'Storage policy validation failed';
+              summary = 'Please check the validation errors in the workflow logs.';
+            }
+
+            core.notice(`${title}: ${summary}`);

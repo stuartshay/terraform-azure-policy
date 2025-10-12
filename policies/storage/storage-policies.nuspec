@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <!-- Package Identity -->
+    <id>AzurePolicy.Storage.SecurityBundle</id>
+    <version>1.0.0</version>
+    <title>Azure Storage Security Policies Bundle</title>
+    <authors>Azure Policy Testing Project</authors>
+    <owners>Azure Policy Testing Project</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/stuartshay/terraform-azure-policy</projectUrl>
+    <icon>images/icon.png</icon>
+    <readme>docs/README.md</readme>
+
+    <!-- Package Description -->
+    <description>
+      Comprehensive security policy bundle for Azure Storage accounts, enforcing best practices for data protection, access control, and compliance.
+
+      This bundle contains 5 Azure Policy definitions derived from Checkov security rules and Azure Security Benchmark:
+      - Deny Storage Account Public Access (CKV_AZURE_190)
+      - Deny Storage Blob Logging Disabled (CKV2_AZURE_21)
+      - Deny Storage Account Without HTTPS-Only Traffic
+      - Deny Storage Account Soft Delete Disabled
+      - Deny Storage Account Blob Versioning Disabled
+
+      Compatible with Terraform Cloud and can be deployed via Terraform or PowerShell scripts.
+    </description>
+    <summary>Azure Storage security policy bundle with 5 comprehensive policies for data protection and compliance</summary>
+    <releaseNotes>
+      Version 1.0.0 - Initial Release
+      - Added 5 comprehensive storage security policies
+      - Terraform module support
+      - Individual policy toggle capability
+      - Compliance mapping for Checkov, Azure Security Benchmark, NIST, PCI-DSS
+      - Full documentation and testing suite
+    </releaseNotes>
+    <copyright>Copyright 2025 Azure Policy Testing Project</copyright>
+
+    <!-- Package Tags -->
+    <tags>azure azure-policy storage security compliance terraform checkov data-protection governance infrastructure-as-code iac azurerm cloud-security</tags>
+
+    <!-- Dependencies -->
+    <dependencies>
+      <group targetFramework="net6.0">
+        <!-- No runtime dependencies - pure configuration package -->
+      </group>
+    </dependencies>
+
+    <!-- Package Metadata -->
+    <repository type="git" url="https://github.com/stuartshay/terraform-azure-policy" branch="main" commit="dae9e5d15e922eee4226813c3df97c334ffe7d53" /> <!-- pragma: allowlist secret -->
+
+    <packageTypes>
+      <packageType name="Dependency" />
+    </packageTypes>
+
+    <contentFiles>
+      <files include="**/*" buildAction="Content" />
+    </contentFiles>
+  </metadata>
+
+  <!-- Package Files -->
+  <files>
+    <!-- Documentation -->
+    <file src="BUNDLE-README.md" target="docs/README.md" />
+    <file src="CHANGELOG.md" target="docs/CHANGELOG.md" />
+    <file src="bundle.metadata.json" target="metadata/bundle.metadata.json" />
+    <file src="version.json" target="metadata/version.json" />
+
+    <!-- Policy Definitions -->
+    <file src="deny-storage-account-public-access/rule.json" target="content/policies/deny-storage-account-public-access/rule.json" />
+    <file src="deny-storage-account-public-access/main.tf" target="content/policies/deny-storage-account-public-access/main.tf" />
+    <file src="deny-storage-account-public-access/variables.tf" target="content/policies/deny-storage-account-public-access/variables.tf" />
+    <file src="deny-storage-account-public-access/outputs.tf" target="content/policies/deny-storage-account-public-access/outputs.tf" />
+    <file src="deny-storage-account-public-access/README.md" target="content/policies/deny-storage-account-public-access/README.md" />
+
+    <file src="deny-storage-blob-logging-disabled/rule.json" target="content/policies/deny-storage-blob-logging-disabled/rule.json" />
+    <file src="deny-storage-blob-logging-disabled/**/*.tf" target="content/policies/deny-storage-blob-logging-disabled/" />
+    <file src="deny-storage-blob-logging-disabled/README.md" target="content/policies/deny-storage-blob-logging-disabled/README.md" />
+
+    <file src="deny-storage-https-disabled/rule.json" target="content/policies/deny-storage-https-disabled/rule.json" />
+    <file src="deny-storage-https-disabled/**/*.tf" target="content/policies/deny-storage-https-disabled/" />
+    <file src="deny-storage-https-disabled/README.md" target="content/policies/deny-storage-https-disabled/README.md" />
+
+    <file src="deny-storage-softdelete/rule.json" target="content/policies/deny-storage-softdelete/rule.json" />
+    <file src="deny-storage-softdelete/**/*.tf" target="content/policies/deny-storage-softdelete/" />
+    <file src="deny-storage-softdelete/README.md" target="content/policies/deny-storage-softdelete/README.md" />
+
+    <file src="deny-storage-version/rule.json" target="content/policies/deny-storage-version/rule.json" />
+    <file src="deny-storage-version/**/*.tf" target="content/policies/deny-storage-version/" />
+    <file src="deny-storage-version/README.md" target="content/policies/deny-storage-version/README.md" />
+
+    <!-- Terraform Module Files -->
+    <file src="../../modules/azure-policy/main.tf" target="content/terraform/modules/azure-policy/main.tf" />
+    <file src="../../modules/azure-policy/variables.tf" target="content/terraform/modules/azure-policy/variables.tf" />
+    <file src="../../modules/azure-policy/outputs.tf" target="content/terraform/modules/azure-policy/outputs.tf" />
+    <file src="../../modules/azure-policy/version.tf" target="content/terraform/modules/azure-policy/version.tf" />
+
+    <!-- Installation Tools -->
+    <file src="../../scripts/Install-Requirements.ps1" target="tools/Install-Requirements.ps1" />
+    <file src="extract-package.ps1" target="tools/install.ps1" />
+
+    <!-- License -->
+    <file src="../../LICENSE" target="LICENSE.txt" />
+  </files>
+</package>

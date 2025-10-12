@@ -1,0 +1,426 @@
+name: Release Storage Policy Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch  # 1.0.0 -> 1.0.1 (bug fixes, minor changes)
+          - minor  # 1.0.0 -> 1.1.0 (new features, non-breaking)
+          - major  # 1.0.0 -> 2.0.0 (breaking changes)
+      custom_version:
+        description: 'Custom version (optional, overrides version_bump)'
+        required: false
+        type: string
+      release_notes:
+        description: 'Release notes (changes made in this release)'
+        required: true
+        type: string
+      publish_to_myget:
+        description: 'Publish to MyGet'
+        required: false
+        default: true
+        type: boolean
+      publish_to_terraform_cloud:
+        description: 'Publish to Terraform Cloud'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  BUNDLE_NAME: storage-policies
+  BUNDLE_PATH: policies/storage
+  PACKAGE_ID: AzurePolicy.Storage.SecurityBundle
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      current_version: ${{ steps.get-version.outputs.current }}
+      new_version: ${{ steps.calculate-version.outputs.new }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: get-version
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' ${{ env.BUNDLE_PATH }}/version.json)
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: calculate-version
+        run: |
+          CURRENT_VERSION="${{ steps.get-version.outputs.current }}"
+
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            NEW_VERSION="${{ github.event.inputs.custom_version }}"
+            echo "Using custom version: $NEW_VERSION"
+          else
+            VERSION_TYPE="${{ github.event.inputs.version_bump }}"
+            IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+
+            case "$VERSION_TYPE" in
+              "major")
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              "minor")
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              "patch")
+                patch=$((patch + 1))
+                ;;
+            esac
+
+            NEW_VERSION="$major.$minor.$patch"
+            echo "Bumped $VERSION_TYPE version: $NEW_VERSION"
+          fi
+
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "🎯 New version: $NEW_VERSION"
+
+      - name: Validate version
+        run: |
+          NEW_VERSION="${{ steps.calculate-version.outputs.new }}"
+
+          # Validate semantic version format
+          if ! echo "$NEW_VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid version format: $NEW_VERSION"
+            echo "Version must follow semantic versioning (e.g., 1.0.0)"
+            exit 1
+          fi
+
+          echo "✅ Version format validated"
+
+  update-bundle:
+    runs-on: ubuntu-latest
+    needs: validate
+    outputs:
+      tag: ${{ steps.create-tag.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Update version.json
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # Update version.json
+          jq --arg version "$NEW_VERSION" \
+             --arg timestamp "$TIMESTAMP" \
+             --arg changeType "${{ github.event.inputs.version_bump }}" \
+             '.version = $version | .lastUpdated = $timestamp | .changeType = $changeType' \
+             ${{ env.BUNDLE_PATH }}/version.json > temp.json
+          mv temp.json ${{ env.BUNDLE_PATH }}/version.json
+
+          echo "✅ Updated version.json to $NEW_VERSION"
+
+      - name: Update bundle.metadata.json
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+
+          # Update metadata
+          jq --arg version "$NEW_VERSION" \
+             --arg notes "${{ github.event.inputs.release_notes }}" \
+             '.version = $version | .nuget.packageVersion = $version | .releaseNotes[$version] = $notes' \
+             ${{ env.BUNDLE_PATH }}/bundle.metadata.json > temp.json
+          mv temp.json ${{ env.BUNDLE_PATH }}/bundle.metadata.json
+
+          echo "✅ Updated bundle.metadata.json"
+
+      - name: Update CHANGELOG.md
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+          RELEASE_DATE=$(date -u +%Y-%m-%d)
+          RELEASE_NOTES="${{ github.event.inputs.release_notes }}"
+
+          # Create new changelog entry
+          cat > new_entry.md << EOF
+          ## [$NEW_VERSION] - $RELEASE_DATE
+
+          $RELEASE_NOTES
+
+          EOF
+
+          # Insert after the version guidelines section (after first ##)
+          awk '/^## \[/ {print_new=1} print_new && !printed {system("cat new_entry.md"); printed=1} {print}' \
+            ${{ env.BUNDLE_PATH }}/CHANGELOG.md > temp_changelog.md
+
+          # If no existing versions, append after header
+          if ! grep -q "^## \[" ${{ env.BUNDLE_PATH }}/CHANGELOG.md; then
+            head -n 10 ${{ env.BUNDLE_PATH }}/CHANGELOG.md > temp_changelog.md
+            cat new_entry.md >> temp_changelog.md
+            tail -n +11 ${{ env.BUNDLE_PATH }}/CHANGELOG.md >> temp_changelog.md
+          fi
+
+          mv temp_changelog.md ${{ env.BUNDLE_PATH }}/CHANGELOG.md
+          rm -f new_entry.md
+
+          echo "✅ Updated CHANGELOG.md"
+
+      - name: Update NuGet spec version
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+
+          # Update version in .nuspec file
+          sed -i "s/<version>.*<\/version>/<version>$NEW_VERSION<\/version>/" \
+            ${{ env.BUNDLE_PATH }}/storage-policies.nuspec
+
+          echo "✅ Updated .nuspec version"
+
+      - name: Commit changes
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+
+          git add ${{ env.BUNDLE_PATH }}/version.json
+          git add ${{ env.BUNDLE_PATH }}/bundle.metadata.json
+          git add ${{ env.BUNDLE_PATH }}/CHANGELOG.md
+          git add ${{ env.BUNDLE_PATH }}/storage-policies.nuspec
+
+          git commit -m "chore(storage): bump bundle version to $NEW_VERSION" \
+            -m "${{ github.event.inputs.release_notes }}"
+
+          echo "✅ Committed version updates"
+
+      - name: Create Git tag
+        id: create-tag
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+          TAG="storage-policies/v$NEW_VERSION"
+
+          git tag -a "$TAG" -m "Storage Policy Bundle v$NEW_VERSION" \
+            -m "${{ github.event.inputs.release_notes }}"
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "✅ Created tag: $TAG"
+
+      - name: Push changes
+        run: |
+          git push origin HEAD
+          git push origin --tags
+          echo "✅ Pushed changes and tags"
+
+  build-nuget-package:
+    runs-on: windows-latest
+    needs: [validate, update-bundle]
+    if: github.event.inputs.publish_to_myget == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.update-bundle.outputs.tag }}
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: 'latest'
+
+      - name: Pack NuGet package
+        run: |
+          $version = "${{ needs.validate.outputs.new_version }}"
+
+          # Pack the package
+          cd ${{ env.BUNDLE_PATH }}
+          nuget pack storage-policies.nuspec -Version $version -OutputDirectory ../../output
+
+          Write-Host "✅ Created NuGet package" -ForegroundColor Green
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: output/*.nupkg
+          retention-days: 30
+
+  publish-myget:
+    runs-on: windows-latest
+    needs: [validate, build-nuget-package]
+    if: github.event.inputs.publish_to_myget == 'true'
+    environment: myget-production
+
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: packages
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: 'latest'
+
+      - name: Publish to MyGet
+        run: |
+          $version = "${{ needs.validate.outputs.new_version }}"
+          $package = "packages/${{ env.PACKAGE_ID }}.$version.nupkg"
+
+          # Add MyGet source (using secret for API key)
+          # nuget sources add -Name MyGet -Source ${{ secrets.MYGET_FEED_URL }}
+
+          # Push to MyGet
+          # nuget push $package -Source MyGet -ApiKey ${{ secrets.MYGET_API_KEY }}
+
+          Write-Host "✅ Published to MyGet: $package" -ForegroundColor Green
+          Write-Host "⚠️  Note: Uncomment the actual push commands once MyGet is configured" -ForegroundColor Yellow
+
+  publish-terraform-cloud:
+    runs-on: ubuntu-latest
+    needs: [validate, update-bundle]
+    if: github.event.inputs.publish_to_terraform_cloud == 'true'
+    environment: terraform-cloud-production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.update-bundle.outputs.tag }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.1
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Publish to Terraform Cloud Registry
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+
+          # TODO: Implement Terraform Cloud Registry publishing
+          # This will depend on your specific Terraform Cloud organization setup
+
+          echo "✅ Terraform Cloud publishing placeholder"
+          echo "⚠️  Configure with your Terraform Cloud organization details"
+
+  create-github-release:
+    runs-on: ubuntu-latest
+    needs: [validate, update-bundle, publish-myget, publish-terraform-cloud]
+    if: always() && needs.update-bundle.result == 'success'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.update-bundle.outputs.tag }}
+
+      - name: Download NuGet package (if available)
+        if: github.event.inputs.publish_to_myget == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: packages
+        continue-on-error: true
+
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          NEW_VERSION="${{ needs.validate.outputs.new_version }}"
+
+          cat > release_notes.md << EOF
+          # Azure Storage Policy Bundle v$NEW_VERSION
+
+          ## 📦 Bundle Information
+
+          - **Version:** $NEW_VERSION
+          - **Bundle:** Storage Security Policies
+          - **Policy Count:** 5
+          - **Release Date:** $(date -u +%Y-%m-%d)
+
+          ## 📝 Changes
+
+          ${{ github.event.inputs.release_notes }}
+
+          ## 🔒 Included Policies
+
+          1. **deny-storage-account-public-access** (CKV_AZURE_190)
+          2. **deny-storage-blob-logging-disabled** (CKV2_AZURE_21)
+          3. **deny-storage-https-disabled**
+          4. **deny-storage-softdelete**
+          5. **deny-storage-version**
+
+          ## 📥 Installation
+
+          ### Via MyGet (NuGet)
+          \`\`\`powershell
+          Install-Package ${{ env.PACKAGE_ID }} -Version $NEW_VERSION -Source YOUR_MYGET_FEED
+          \`\`\`
+
+          ### Via Terraform Cloud
+          \`\`\`hcl
+          module "storage_policies" {
+            source  = "app.terraform.io/YOUR-ORG/storage-policy-bundle/azurerm"
+            version = "$NEW_VERSION"
+          }
+          \`\`\`
+
+          ## 📚 Documentation
+
+          - [Bundle README](https://github.com/${{ github.repository }}/blob/${{ needs.update-bundle.outputs.tag }}/policies/storage/BUNDLE-README.md)
+          - [Changelog](https://github.com/${{ github.repository }}/blob/${{ needs.update-bundle.outputs.tag }}/policies/storage/CHANGELOG.md)
+          - [Metadata](https://github.com/${{ github.repository }}/blob/${{ needs.update-bundle.outputs.tag }}/policies/storage/bundle.metadata.json)
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.update-bundle.outputs.tag }}
+          name: 'Storage Policy Bundle v${{ needs.validate.outputs.new_version }}'
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            packages/*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [validate, update-bundle, publish-myget, publish-terraform-cloud, create-github-release]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🎉 Storage Policy Bundle Release
+
+          ### Release Information
+          - **Previous Version:** ${{ needs.validate.outputs.current_version }}
+          - **New Version:** ${{ needs.validate.outputs.new_version }}
+          - **Version Bump:** ${{ github.event.inputs.version_bump }}
+          - **Git Tag:** \`${{ needs.update-bundle.outputs.tag }}\`
+
+          ### Publishing Status
+          - **MyGet:** ${{ github.event.inputs.publish_to_myget == 'true' && needs.publish-myget.result || 'Skipped' }}
+          - **Terraform Cloud:** ${{ github.event.inputs.publish_to_terraform_cloud == 'true' && needs.publish-terraform-cloud.result || 'Skipped' }}
+          - **GitHub Release:** ${{ needs.create-github-release.result }}
+
+          ### Release Notes
+          ${{ github.event.inputs.release_notes }}
+
+          ### Next Steps
+          1. Verify the release on GitHub
+          2. Test the new package version
+          3. Update deployment configurations to use v${{ needs.validate.outputs.new_version }}
+          EOF
