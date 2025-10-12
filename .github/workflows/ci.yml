@@ -174,7 +174,7 @@ jobs:
       - name: Install PowerShell modules for testing
         run: |
           # Use the centralized installation script with retry logic
-          pwsh -ExecutionPolicy Bypass -File ./scripts/Install-ModulesForCI.ps1 -RequiredModules @('Pester', 'PSScriptAnalyzer') -MaxRetries 3 -RetryDelaySeconds 10
+          pwsh -ExecutionPolicy Bypass -File ./scripts/Install-ModulesForCI.ps1 -RequiredModules 'Pester','PSScriptAnalyzer' -MaxRetries 3 -RetryDelaySeconds 10
 
       - name: Verify PowerShell modules
         run: | # pragma: allowlist secret
