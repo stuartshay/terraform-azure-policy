@@ -37,6 +37,12 @@ param(
 # Configure TLS for secure connections
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+# Handle comma-separated module names from bash/command-line
+# When called from bash with 'Module1','Module2', PowerShell may receive it as a single string
+if ($RequiredModules.Count -eq 1 -and $RequiredModules[0] -match ',') {
+    $RequiredModules = $RequiredModules[0] -split ',' | ForEach-Object { $_.Trim() }
+}
+
 Write-Host '═══════════════════════════════════════════════════════' -ForegroundColor Cyan
 Write-Host '  PowerShell Module Installation for CI/CD' -ForegroundColor Cyan
 Write-Host '═══════════════════════════════════════════════════════' -ForegroundColor Cyan
