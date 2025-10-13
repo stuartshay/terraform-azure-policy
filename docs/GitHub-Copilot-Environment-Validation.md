@@ -323,7 +323,7 @@ jobs:
     environment: copilot  # Uses environment secrets
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PowerShell
         uses: actions/setup-node@v3

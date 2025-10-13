@@ -37,6 +37,12 @@ param(
 # Configure TLS for secure connections
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+# Handle comma-separated module names from bash/command-line
+# When called from bash with 'Module1','Module2', PowerShell may receive it as a single string
+if ($RequiredModules.Count -eq 1 -and $RequiredModules[0] -match ',') {
+    $RequiredModules = $RequiredModules[0] -split ',' | ForEach-Object { $_.Trim() }
+}
+
 Write-Host '═══════════════════════════════════════════════════════' -ForegroundColor Cyan
 Write-Host '  PowerShell Module Installation for CI/CD' -ForegroundColor Cyan
 Write-Host '═══════════════════════════════════════════════════════' -ForegroundColor Cyan
@@ -45,7 +51,7 @@ Write-Host ''
 # Function to test PowerShell Gallery connectivity
 function Test-PSGalleryConnectivity {
     Write-Host 'Testing PowerShell Gallery connectivity...' -ForegroundColor Yellow
-    
+
     try {
         $response = Invoke-WebRequest -Uri 'https://www.powershellgallery.com' -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         Write-Host "  ✓ PowerShell Gallery is accessible (Status: $($response.StatusCode))" -ForegroundColor Green
@@ -60,19 +66,19 @@ function Test-PSGalleryConnectivity {
 # Function to configure PSGallery repository
 function Initialize-PSGalleryRepository {
     Write-Host 'Configuring PSGallery repository...' -ForegroundColor Yellow
-    
+
     try {
         # Ensure PSGallery is registered
         $psGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
-        
+
         if (-not $psGallery) {
             Write-Host '  Registering PSGallery repository...' -ForegroundColor Cyan
             Register-PSRepository -Default -ErrorAction Stop
         }
-        
+
         # Set as trusted
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-        
+
         $psGallery = Get-PSRepository -Name PSGallery
         Write-Host '  ✓ PSGallery repository configured' -ForegroundColor Green
         Write-Host "    Source Location: $($psGallery.SourceLocation)" -ForegroundColor Gray
@@ -90,13 +96,13 @@ function Install-ModuleWithRetry {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ModuleName,
-        
+
         [Parameter(Mandatory = $false)]
         [string]$MinimumVersion,
-        
+
         [Parameter(Mandatory = $false)]
         [int]$MaxAttempts = 3,
-        
+
         [Parameter(Mandatory = $false)]
         [int]$DelaySeconds = 5
     )
@@ -107,8 +113,8 @@ function Install-ModuleWithRetry {
     while (-not $success -and $attempt -lt $MaxAttempts) {
         $attempt++
         try {
-            Write-Host "  Attempt $attempt of $MaxAttempts: Installing $ModuleName..." -ForegroundColor Cyan
-            
+            Write-Host "  Attempt $attempt of ${MaxAttempts}: Installing $ModuleName..." -ForegroundColor Cyan
+
             $installParams = @{
                 Name               = $ModuleName
                 Force              = $true
@@ -117,39 +123,39 @@ function Install-ModuleWithRetry {
                 SkipPublisherCheck = $true
                 ErrorAction        = 'Stop'
             }
-            
+
             if ($MinimumVersion) {
                 $installParams['MinimumVersion'] = $MinimumVersion
             }
-            
+
             Install-Module @installParams
-            
+
             # Verify installation
             $installed = Get-Module -ListAvailable -Name $ModuleName | Select-Object -First 1
-            
+
             if ($installed) {
                 $success = $true
                 Write-Host "    ✓ Successfully installed $ModuleName (Version: $($installed.Version))" -ForegroundColor Green
                 return $true
             }
             else {
-                throw "Module installation verification failed"
+                throw 'Module installation verification failed'
             }
         }
         catch {
             Write-Warning "    Failed to install $ModuleName on attempt ${attempt}: $($_.Exception.Message)"
-            
+
             if ($attempt -lt $MaxAttempts) {
                 Write-Host "    Waiting $DelaySeconds seconds before retry..." -ForegroundColor Yellow
                 Start-Sleep -Seconds $DelaySeconds
             }
             else {
-                Write-Error "    ✗ Failed to install $ModuleName after $MaxAttempts attempts"
+                Write-Error "    ✗ Failed to install $ModuleName after ${MaxAttempts} attempts"
                 return $false
             }
         }
     }
-    
+
     return $success
 }
 
@@ -182,10 +188,10 @@ try {
 
     foreach ($moduleName in $RequiredModules) {
         Write-Host "Processing: $moduleName" -ForegroundColor White
-        
+
         # Check if already installed
         $existing = Get-Module -ListAvailable -Name $moduleName | Select-Object -First 1
-        
+
         if ($existing) {
             Write-Host "  ✓ Already installed (Version: $($existing.Version))" -ForegroundColor Green
             $results += [PSCustomObject]@{
@@ -201,9 +207,9 @@ try {
             if ($moduleName -eq 'Pester') {
                 $minVersion = '5.4.0'
             }
-            
+
             $installed = Install-ModuleWithRetry -ModuleName $moduleName -MinimumVersion $minVersion -MaxAttempts $MaxRetries -DelaySeconds $RetryDelaySeconds
-            
+
             if ($installed) {
                 $installedModule = Get-Module -ListAvailable -Name $moduleName | Select-Object -First 1
                 $results += [PSCustomObject]@{
@@ -223,7 +229,7 @@ try {
                 }
             }
         }
-        
+
         Write-Host ''
     }
 
@@ -244,7 +250,7 @@ try {
     Write-Host ''
 
     if ($failedModules.Count -gt 0) {
-        Write-Warning "Failed to install the following modules:"
+        Write-Warning 'Failed to install the following modules:'
         foreach ($module in $failedModules) {
             Write-Host "  - $module" -ForegroundColor Red
         }
@@ -260,7 +266,7 @@ try {
     else {
         Write-Host '✓ All modules installed successfully!' -ForegroundColor Green
         Write-Host ''
-        
+
         # Display loaded modules for verification
         Write-Host 'Testing module imports...' -ForegroundColor Yellow
         foreach ($moduleName in $RequiredModules) {
@@ -272,7 +278,7 @@ try {
                 Write-Warning "  ⚠ Failed to import $moduleName : $($_.Exception.Message)"
             }
         }
-        
+
         Write-Host ''
         exit 0
     }

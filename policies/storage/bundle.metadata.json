@@ -1,0 +1,107 @@
+{
+  "bundleId": "azure-storage-policies",
+  "displayName": "Azure Storage Security Policies Bundle",
+  "version": "1.0.0",
+  "description": "Comprehensive security policy bundle for Azure Storage accounts, enforcing best practices for data protection, access control, and compliance",
+  "category": "Storage",
+  "policyCount": 5,
+  "publisher": "Azure Policy Testing Project",
+  "terraform": {
+    "moduleId": "storage-policy-bundle",
+    "minTerraformVersion": "1.13.0",
+    "azurermProviderVersion": ">= 4.45.0"
+  },
+  "nuget": {
+    "packageId": "AzurePolicy.Storage.SecurityBundle",
+    "packageVersion": "1.0.0"
+  },
+  "policies": {
+    "deny-storage-account-public-access": {
+      "displayName": "Deny Storage Account Public Access",
+      "description": "Prevents storage accounts from allowing public blob access or public container access",
+      "checkovId": "CKV_AZURE_190",
+      "compliance": {
+        "frameworks": ["Checkov", "Azure Security Benchmark"]
+      },
+      "defaultEffect": "Deny",
+      "supportedEffects": ["Audit", "Deny", "Disabled"],
+      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
+      "parameters": ["effect"],
+      "severity": "High",
+      "category": "Data Protection"
+    },
+    "deny-storage-blob-logging-disabled": {
+      "displayName": "Deny Storage Blob Logging Disabled",
+      "description": "Ensures blob service logging is enabled for audit trails and security monitoring",
+      "checkovId": "CKV2_AZURE_21",
+      "compliance": {
+        "frameworks": ["Checkov", "Azure Security Benchmark", "NIST"]
+      },
+      "defaultEffect": "Audit",
+      "supportedEffects": ["Audit", "Deny", "Disabled"],
+      "resourceTypes": ["Microsoft.Storage/storageAccounts/blobServices"],
+      "parameters": ["effect"],
+      "severity": "Medium",
+      "category": "Logging & Monitoring"
+    },
+    "deny-storage-https-disabled": {
+      "displayName": "Deny Storage Account Without HTTPS-Only Traffic",
+      "description": "Enforces HTTPS-only traffic for secure transport encryption",
+      "checkovId": null,
+      "compliance": {
+        "frameworks": ["Azure Security Benchmark", "PCI-DSS"]
+      },
+      "defaultEffect": "Deny",
+      "supportedEffects": ["Audit", "Deny", "Disabled"],
+      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
+      "parameters": ["effect", "exemptedStorageAccounts", "storageAccountTypes"],
+      "severity": "High",
+      "category": "Network Security"
+    },
+    "deny-storage-softdelete": {
+      "displayName": "Deny Storage Account Soft Delete Disabled",
+      "description": "Requires soft delete for blobs and containers for data protection and recovery",
+      "checkovId": null,
+      "compliance": {
+        "frameworks": ["Azure Security Benchmark", "Data Protection"]
+      },
+      "defaultEffect": "Deny",
+      "supportedEffects": ["Audit", "Deny", "Disabled"],
+      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
+      "parameters": ["effect", "minimumRetentionDays"],
+      "severity": "Medium",
+      "category": "Data Protection"
+    },
+    "deny-storage-version": {
+      "displayName": "Deny Storage Account Blob Versioning Disabled",
+      "description": "Ensures blob versioning is enabled for data protection and compliance",
+      "checkovId": null,
+      "compliance": {
+        "frameworks": ["Azure Security Benchmark", "Data Protection"]
+      },
+      "defaultEffect": "Deny",
+      "supportedEffects": ["Audit", "Deny", "Disabled"],
+      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
+      "parameters": ["effect", "exemptedStorageAccounts", "storageAccountTypes"],
+      "severity": "Medium",
+      "category": "Data Protection"
+    }
+  },
+  "deployment": {
+    "supportsToggle": true,
+    "granularity": "policy-level",
+    "description": "Each policy can be individually enabled or disabled during deployment"
+  },
+  "tags": [
+    "azure-policy",
+    "storage",
+    "security",
+    "compliance",
+    "data-protection",
+    "checkov",
+    "terraform"
+  ],
+  "releaseNotes": {
+    "1.0.0": "Initial release with 5 comprehensive storage security policies"
+  }
+}

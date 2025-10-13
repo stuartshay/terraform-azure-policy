@@ -1,0 +1,133 @@
+{
+  "name": "deny-function-app-aad-only",
+  "properties": {
+    "description": "Denies changes on Azure Function Apps that would weaken auth or publishing security: requires Easy Auth v2 with Azure AD, disables FTP/FTPS endpoints, and disables shared publishing credentials (FTP & SCM).",
+    "displayName": "Functions | DENY: Azure AD-only auth, no basic publishing creds, FTP/FTPS disabled",
+    "metadata": {
+      "category": "App Service",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Enable or disable the execution of the policy",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "equals": "Microsoft.Web/sites/config",
+                "field": "type"
+              },
+              {
+                "equals": "authsettingsV2",
+                "field": "name"
+              },
+              {
+                "anyOf": [
+                  {
+                    "field": "Microsoft.Web/sites/config/globalValidation.requireAuthentication",
+                    "notEquals": true
+                  },
+                  {
+                    "field": "Microsoft.Web/sites/config/globalValidation.unauthenticatedClientAction",
+                    "notIn": [
+                      "RedirectToLoginPage",
+                      "Return401"
+                    ]
+                  },
+                  {
+                    "field": "Microsoft.Web/sites/config/identityProviders.azureActiveDirectory.enabled",
+                    "notEquals": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "equals": "Microsoft.Web/sites/config",
+                "field": "type"
+              },
+              {
+                "equals": "web",
+                "field": "name"
+              },
+              {
+                "field": "Microsoft.Web/sites/config/ftpsState",
+                "notEquals": "Disabled"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "equals": "Microsoft.Web/sites/slots/config",
+                "field": "type"
+              },
+              {
+                "equals": "web",
+                "field": "name"
+              },
+              {
+                "field": "Microsoft.Web/sites/slots/config/ftpsState",
+                "notEquals": "Disabled"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "equals": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+                "field": "type"
+              },
+              {
+                "equals": "ftp",
+                "field": "name"
+              },
+              {
+                "field": "Microsoft.Web/sites/basicPublishingCredentialsPolicies/allow",
+                "notEquals": false
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "equals": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+                "field": "type"
+              },
+              {
+                "equals": "scm",
+                "field": "name"
+              },
+              {
+                "field": "Microsoft.Web/sites/basicPublishingCredentialsPolicies/allow",
+                "notEquals": false
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

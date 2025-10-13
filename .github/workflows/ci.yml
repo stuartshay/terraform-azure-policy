@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -125,30 +125,30 @@ jobs:
       - name: Network diagnostics for package sources
         run: |
           echo "Testing network connectivity to package sources..."
-          
+
           # Test PowerShell Gallery
           echo "Testing PowerShell Gallery (www.powershellgallery.com)..."
           curl -I https://www.powershellgallery.com --max-time 10 || echo "⚠ PowerShell Gallery not accessible"
-          
+
           # Test PowerShell Gallery API
           echo "Testing PowerShell Gallery API..."
           curl -I https://www.powershellgallery.com/api/v2 --max-time 10 || echo "⚠ PowerShell Gallery API not accessible"
-          
+
           # Test DNS resolution
           echo "Testing DNS resolution..."
           nslookup www.powershellgallery.com || echo "⚠ DNS resolution failed"
-          
+
           # Test with different endpoints
           echo "Testing alternative endpoints..."
           curl -I https://psg-prod-eastus.azureedge.net --max-time 10 || echo "⚠ PSGallery CDN not accessible"
-          
+
           echo "Network diagnostics completed"
 
       - name: Validate PowerShell Gallery connectivity
         run: |
           pwsh -Command "
             Write-Host 'Testing PowerShell Gallery connectivity...'
-            
+
             try {
                 # Test connection to PowerShell Gallery
                 \$response = Invoke-WebRequest -Uri 'https://www.powershellgallery.com' -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
@@ -158,7 +158,7 @@ jobs:
                 Write-Warning 'PowerShell Gallery connectivity check failed: '\$_.Exception.Message
                 Write-Host 'Will attempt to install modules with retry logic...'
             }
-            
+
             # Test repository registration
             try {
                 \$psGallery = Get-PSRepository -Name PSGallery -ErrorAction Stop
@@ -174,7 +174,7 @@ jobs:
       - name: Install PowerShell modules for testing
         run: |
           # Use the centralized installation script with retry logic
-          pwsh -ExecutionPolicy Bypass -File ./scripts/Install-ModulesForCI.ps1 -RequiredModules @('Pester', 'PSScriptAnalyzer') -MaxRetries 3 -RetryDelaySeconds 10
+          pwsh -ExecutionPolicy Bypass -File ./scripts/Install-ModulesForCI.ps1 -RequiredModules 'Pester','PSScriptAnalyzer' -MaxRetries 3 -RetryDelaySeconds 10
 
       - name: Verify PowerShell modules
         run: | # pragma: allowlist secret
@@ -202,59 +202,8 @@ jobs:
           "
 
       - name: Run unit tests with code coverage
-        run: | # pragma: allowlist secret
-          pwsh -ExecutionPolicy Bypass -Command "
-            # Run unit tests (tests with Unit in filename) that don't require Azure authentication
-            Import-Module Pester
-
-            # Find all unit test files
-            \$unitTests = Get-ChildItem -Path 'tests' -Filter '*Unit*.Tests.ps1' -Recurse | Select-Object -ExpandProperty FullName
-
-            \$config = [PesterConfiguration]@{ # pragma: allowlist secret
-              Run = @{
-                Path = @(\$unitTests + @('tests/network'))
-                PassThru = \$true
-              }
-              Output = @{
-                Verbosity = 'Detailed'
-              }
-              TestResult = @{
-                Enabled = \$true
-                OutputFormat = 'JUnitXml'
-                OutputPath = 'reports/TestResults.xml'
-              }
-              CodeCoverage = @{
-                Enabled = \$true
-                OutputFormat = 'JaCoCo'
-                OutputPath = 'reports/coverage.xml'
-                Path = @(
-                  'scripts/*.ps1',
-                  'PowerShell/*.ps1'
-                )
-                ExcludeTests = \$true
-                CoveragePercentTarget = 70.0
-              }
-            }
-
-            \$results = Invoke-Pester -Configuration \$config
-
-            Write-Host 'Test Results:'
-            Write-Host \"  Total: \$( \$results.TotalCount )\"
-            Write-Host \"  Passed: \$( \$results.PassedCount )\"
-            Write-Host \"  Failed: \$( \$results.FailedCount )\"
-
-            if (\$results.CodeCoverage) {
-              Write-Host 'Coverage Results:'
-              Write-Host \"  Percentage: \$( [math]::Round(\$results.CodeCoverage.CoveragePercent, 2) )%\"
-              Write-Host \"  Commands Analyzed: \$( \$results.CodeCoverage.CommandsAnalyzedCount )\"
-              Write-Host \"  Commands Executed: \$( \$results.CodeCoverage.CommandsExecutedCount )\"
-            }
-
-            if (\$results.FailedCount -gt 0) {
-              Write-Error 'One or more tests failed'
-              exit 1
-            }
-          "
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./scripts/Run-UnitTests.ps1
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -262,15 +211,15 @@ jobs:
         with:
           name: test-results
           path: |
-            reports/TestResults.xml
-            reports/coverage.xml
+            testResults.xml
+            coverage.xml
 
       - name: Publish test results
         uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Test Results
-          path: reports/TestResults.xml
+          path: testResults.xml
           reporter: java-junit
 
       - name: Run pre-commit

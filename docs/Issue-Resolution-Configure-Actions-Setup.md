@@ -4,7 +4,7 @@
 
 ## Problem Statement
 
-In PR #18, it was identified that firewall rules blocked some packages (particularly from www.powershellgallery.com) from being restored during GitHub Actions execution. This caused workflow failures when trying to install PowerShell modules required for testing and validation.
+In PR #18, it was identified that firewall rules blocked some packages (particularly from <www.powershellgallery.com>) from being restored during GitHub Actions execution. This caused workflow failures when trying to install PowerShell modules required for testing and validation.
 
 ## Solution Overview
 
@@ -26,15 +26,16 @@ Implemented a comprehensive GitHub Actions setup configuration with:
   run: |
     echo "Testing PowerShell Gallery (www.powershellgallery.com)..."
     curl -I https://www.powershellgallery.com --max-time 10 || echo "⚠ PowerShell Gallery not accessible"
-    
+
     echo "Testing PowerShell Gallery API..."
     curl -I https://www.powershellgallery.com/api/v2 --max-time 10 || echo "⚠ PowerShell Gallery API not accessible"
-    
+
     echo "Testing DNS resolution..."
     nslookup www.powershellgallery.com || echo "⚠ DNS resolution failed"
 ```
 
 **Benefits:**
+
 - Early detection of network connectivity issues
 - Identifies specific endpoints that are blocked
 - Helps diagnose DNS vs firewall vs service availability issues
@@ -56,6 +57,7 @@ Implemented a comprehensive GitHub Actions setup configuration with:
 ```
 
 **Benefits:**
+
 - Validates PowerShell can access the gallery
 - Provides status code for successful connections
 - Non-blocking (continues even if validation fails)
@@ -63,6 +65,7 @@ Implemented a comprehensive GitHub Actions setup configuration with:
 #### Updated Module Installation with Centralized Script
 
 **Before:**
+
 ```yaml
 - name: Install PowerShell modules for testing
   run: |
@@ -73,6 +76,7 @@ Implemented a comprehensive GitHub Actions setup configuration with:
 ```
 
 **After:**
+
 ```yaml
 - name: Install PowerShell modules for testing
   run: |
@@ -83,6 +87,7 @@ Implemented a comprehensive GitHub Actions setup configuration with:
 ```
 
 **Benefits:**
+
 - Centralized installation logic
 - Built-in retry mechanism
 - Configurable retry attempts and delays
@@ -121,6 +126,7 @@ function Install-ModuleWithRetry {
 ```
 
 **Benefits:**
+
 - Automatically retries failed installations
 - Configurable retry count and delay
 - Handles transient network failures
@@ -132,6 +138,7 @@ function Install-ModuleWithRetry {
 ```
 
 **Benefits:**
+
 - Ensures secure connections to PowerShell Gallery
 - Prevents TLS/SSL handshake failures
 
@@ -151,6 +158,7 @@ function Test-PSGalleryConnectivity {
 ```
 
 **Benefits:**
+
 - Pre-validates connectivity before installation
 - Provides early warning of network issues
 - Continues with installation even if test fails (best effort)
@@ -170,6 +178,7 @@ foreach ($moduleName in $RequiredModules) {
 ```
 
 **Benefits:**
+
 - Verifies modules are not only installed but also functional
 - Catches corrupt or incomplete installations
 - Provides immediate feedback on module availability
@@ -179,6 +188,7 @@ foreach ($moduleName in $RequiredModules) {
 #### Created `docs/GitHub-Actions-Setup-Guide.md`
 
 **Contents:**
+
 - Overview of setup steps and their purpose
 - Detailed explanation of each workflow step
 - `Install-ModulesForCI.ps1` usage and parameters
@@ -260,6 +270,7 @@ actionlint .github/workflows/ci.yml
 ### Script Validation
 
 PowerShell script verified:
+
 - Syntax validation passed
 - Help documentation accessible
 - File structure and permissions correct

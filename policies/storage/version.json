@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "bundle": "storage-policies",
+  "displayName": "Azure Storage Security Policies Bundle",
+  "policies": [
+    "deny-storage-account-public-access",
+    "deny-storage-blob-logging-disabled",
+    "deny-storage-https-disabled",
+    "deny-storage-softdelete",
+    "deny-storage-version"
+  ],
+  "lastUpdated": "2025-10-11T16:52:00Z",
+  "changeType": "initial"
+}

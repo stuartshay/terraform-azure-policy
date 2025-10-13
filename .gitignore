@@ -6,6 +6,7 @@
 *.tfplan
 *.tfstate.backup
 .terraform/
+.terraform.d
 terraform.tfvars
 !terraform.tfvars.example
 
@@ -17,6 +18,7 @@ PSGetModuleInfo.xml
 
 # Test results
 testResults.xml
+coverage.xml
 
 # VS Code settings (keep project settings but ignore user-specific ones)
 .vscode/settings.json.user
