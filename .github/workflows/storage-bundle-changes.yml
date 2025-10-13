@@ -185,7 +185,7 @@ jobs:
 
     steps:
       - name: Post PR comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const changedPolicies = JSON.parse('${{ needs.detect-changes.outputs.changed_policies }}');
@@ -265,7 +265,7 @@ jobs:
 
     steps:
       - name: Update check status
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const changedPolicies = '${{ needs.detect-changes.outputs.changed_policies }}';
