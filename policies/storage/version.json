@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "bundle": "storage-policies",
   "displayName": "Azure Storage Security Policies Bundle",
   "policies": [
@@ -9,6 +9,6 @@
     "deny-storage-softdelete",
     "deny-storage-version"
   ],
-  "lastUpdated": "2025-10-11T16:52:00Z",
-  "changeType": "initial"
+  "lastUpdated": "2025-10-13T04:58:17Z",
+  "changeType": "patch"
 }

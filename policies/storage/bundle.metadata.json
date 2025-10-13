@@ -1,7 +1,7 @@
 {
   "bundleId": "azure-storage-policies",
   "displayName": "Azure Storage Security Policies Bundle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Comprehensive security policy bundle for Azure Storage accounts, enforcing best practices for data protection, access control, and compliance",
   "category": "Storage",
   "policyCount": 5,
@@ -13,7 +13,7 @@
   },
   "nuget": {
     "packageId": "AzurePolicy.Storage.SecurityBundle",
-    "packageVersion": "1.0.0"
+    "packageVersion": "1.0.1"
   },
   "policies": {
     "deny-storage-account-public-access": {
@@ -21,12 +21,23 @@
       "description": "Prevents storage accounts from allowing public blob access or public container access",
       "checkovId": "CKV_AZURE_190",
       "compliance": {
-        "frameworks": ["Checkov", "Azure Security Benchmark"]
+        "frameworks": [
+          "Checkov",
+          "Azure Security Benchmark"
+        ]
       },
       "defaultEffect": "Deny",
-      "supportedEffects": ["Audit", "Deny", "Disabled"],
-      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
-      "parameters": ["effect"],
+      "supportedEffects": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ],
+      "resourceTypes": [
+        "Microsoft.Storage/storageAccounts"
+      ],
+      "parameters": [
+        "effect"
+      ],
       "severity": "High",
       "category": "Data Protection"
     },
@@ -35,12 +46,24 @@
       "description": "Ensures blob service logging is enabled for audit trails and security monitoring",
       "checkovId": "CKV2_AZURE_21",
       "compliance": {
-        "frameworks": ["Checkov", "Azure Security Benchmark", "NIST"]
+        "frameworks": [
+          "Checkov",
+          "Azure Security Benchmark",
+          "NIST"
+        ]
       },
       "defaultEffect": "Audit",
-      "supportedEffects": ["Audit", "Deny", "Disabled"],
-      "resourceTypes": ["Microsoft.Storage/storageAccounts/blobServices"],
-      "parameters": ["effect"],
+      "supportedEffects": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ],
+      "resourceTypes": [
+        "Microsoft.Storage/storageAccounts/blobServices"
+      ],
+      "parameters": [
+        "effect"
+      ],
       "severity": "Medium",
       "category": "Logging & Monitoring"
     },
@@ -49,12 +72,25 @@
       "description": "Enforces HTTPS-only traffic for secure transport encryption",
       "checkovId": null,
       "compliance": {
-        "frameworks": ["Azure Security Benchmark", "PCI-DSS"]
+        "frameworks": [
+          "Azure Security Benchmark",
+          "PCI-DSS"
+        ]
       },
       "defaultEffect": "Deny",
-      "supportedEffects": ["Audit", "Deny", "Disabled"],
-      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
-      "parameters": ["effect", "exemptedStorageAccounts", "storageAccountTypes"],
+      "supportedEffects": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ],
+      "resourceTypes": [
+        "Microsoft.Storage/storageAccounts"
+      ],
+      "parameters": [
+        "effect",
+        "exemptedStorageAccounts",
+        "storageAccountTypes"
+      ],
       "severity": "High",
       "category": "Network Security"
     },
@@ -63,12 +99,24 @@
       "description": "Requires soft delete for blobs and containers for data protection and recovery",
       "checkovId": null,
       "compliance": {
-        "frameworks": ["Azure Security Benchmark", "Data Protection"]
+        "frameworks": [
+          "Azure Security Benchmark",
+          "Data Protection"
+        ]
       },
       "defaultEffect": "Deny",
-      "supportedEffects": ["Audit", "Deny", "Disabled"],
-      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
-      "parameters": ["effect", "minimumRetentionDays"],
+      "supportedEffects": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ],
+      "resourceTypes": [
+        "Microsoft.Storage/storageAccounts"
+      ],
+      "parameters": [
+        "effect",
+        "minimumRetentionDays"
+      ],
       "severity": "Medium",
       "category": "Data Protection"
     },
@@ -77,12 +125,25 @@
       "description": "Ensures blob versioning is enabled for data protection and compliance",
       "checkovId": null,
       "compliance": {
-        "frameworks": ["Azure Security Benchmark", "Data Protection"]
+        "frameworks": [
+          "Azure Security Benchmark",
+          "Data Protection"
+        ]
       },
       "defaultEffect": "Deny",
-      "supportedEffects": ["Audit", "Deny", "Disabled"],
-      "resourceTypes": ["Microsoft.Storage/storageAccounts"],
-      "parameters": ["effect", "exemptedStorageAccounts", "storageAccountTypes"],
+      "supportedEffects": [
+        "Audit",
+        "Deny",
+        "Disabled"
+      ],
+      "resourceTypes": [
+        "Microsoft.Storage/storageAccounts"
+      ],
+      "parameters": [
+        "effect",
+        "exemptedStorageAccounts",
+        "storageAccountTypes"
+      ],
       "severity": "Medium",
       "category": "Data Protection"
     }
@@ -102,6 +163,7 @@
     "terraform"
   ],
   "releaseNotes": {
-    "1.0.0": "Initial release with 5 comprehensive storage security policies"
+    "1.0.0": "Initial release with 5 comprehensive storage security policies",
+    "1.0.1": "Publishing to Terraform Cloud Registry - Creating storage-policy-bundle module in private registry"
   }
 }

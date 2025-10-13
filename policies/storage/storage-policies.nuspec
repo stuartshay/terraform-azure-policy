@@ -3,7 +3,7 @@
   <metadata>
     <!-- Package Identity -->
     <id>AzurePolicy.Storage.SecurityBundle</id>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <title>Azure Storage Security Policies Bundle</title>
     <authors>Azure Policy Testing Project</authors>
     <owners>Azure Policy Testing Project</owners>
