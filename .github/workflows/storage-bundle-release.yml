@@ -232,7 +232,7 @@ jobs:
           ref: ${{ needs.update-bundle.outputs.tag }}
 
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v1
+        uses: nuget/setup-nuget@v2
         with:
           nuget-version: 'latest'
 
@@ -267,7 +267,7 @@ jobs:
           path: packages
 
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v1
+        uses: nuget/setup-nuget@v2
         with:
           nuget-version: 'latest'
 
