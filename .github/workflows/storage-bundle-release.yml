@@ -261,7 +261,7 @@ jobs:
 
     steps:
       - name: Download package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: nuget-package
           path: packages
@@ -326,7 +326,7 @@ jobs:
 
       - name: Download NuGet package (if available)
         if: github.event.inputs.publish_to_myget == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: nuget-package
           path: packages
