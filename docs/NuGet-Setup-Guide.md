@@ -255,7 +255,7 @@ dotnet --list-sdks
 brew install dotnet
 
 # Linux (Ubuntu/Debian):
-sudo apt-get install -y dotnet-sdk-8.0
+sudo apt-get install -y dotnet-sdk-9.0
 ```
 
 ### Issue: Cannot push to MyGet - 401 Unauthorized
