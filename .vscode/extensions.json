@@ -5,7 +5,6 @@
         "hashicorp.terraform",
         "hashicorp.hcl",
         "ms-vscode.azure-account",
-        "ms-azuretools.vscode-azureresourcegroups",
         "ms-azuretools.vscode-azurefunctions",
         "redhat.vscode-yaml",
         "ms-vscode.vscode-json-languageservice",

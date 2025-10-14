@@ -10,7 +10,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/stuartshay/terraform-azure-policy</projectUrl>
-    <icon>images/icon.png</icon>
+    <!-- <icon>images/icon.png</icon> -->
     <readme>docs/README.md</readme>
 
     <!-- Package Description -->
