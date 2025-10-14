@@ -149,7 +149,7 @@ elif [ "$MACHINE" = "Linux" ]; then
                     rm -f microsoft.asc
                     exit 1
                 fi
-                gpg --dearmor < microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+                gpg --dearmor < microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null  # pragma: allowlist secret
                 rm microsoft.asc
                 wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
                 # (Optional) Verify checksum if Microsoft publishes it
