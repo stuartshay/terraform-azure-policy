@@ -92,7 +92,7 @@ Use the provided installation script to set up NuGet on your local machine.
 The script will:
 
 - Detect your operating system
-- Install .NET SDK 8.0
+- Install .NET SDK 9.0
 - Verify NuGet functionality
 - Provide usage examples
 
