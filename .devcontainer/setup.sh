@@ -119,10 +119,24 @@ print_success "Python packages installed (commitizen, detect-secrets, pre-commit
 # Install NuGet CLI
 print_status "Installing NuGet CLI..."
 if ! command -v nuget &> /dev/null; then
-    # Download latest NuGet.exe
+    # Download latest NuGet.exe and verify checksum
     NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-    sudo wget -q "$NUGET_URL" -O /usr/local/bin/nuget.exe
+    NUGET_SHA_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe.sha512"
+    TMP_NUGET_EXE="/tmp/nuget.exe"
+    TMP_NUGET_SHA="/tmp/nuget.exe.sha512"
 
+    wget -q "$NUGET_URL" -O "$TMP_NUGET_EXE"
+    wget -q "$NUGET_SHA_URL" -O "$TMP_NUGET_SHA"
+
+    # Verify checksum
+    if sha512sum --quiet -c <(echo "$(cat $TMP_NUGET_SHA)  $TMP_NUGET_EXE"); then
+        sudo mv "$TMP_NUGET_EXE" /usr/local/bin/nuget.exe
+    else
+        echo "ERROR: nuget.exe checksum verification failed!" >&2
+        rm -f "$TMP_NUGET_EXE"
+        exit 1
+    fi
+    rm -f "$TMP_NUGET_SHA"
     # Install mono-complete for running .exe files on Linux
     if ! command -v mono &> /dev/null; then
         print_status "Installing Mono runtime for NuGet.exe..."
