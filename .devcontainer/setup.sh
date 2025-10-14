@@ -116,6 +116,32 @@ pip3 install --upgrade pip --quiet
 pip3 install commitizen detect-secrets pre-commit --quiet
 print_success "Python packages installed (commitizen, detect-secrets, pre-commit)"
 
+# Install NuGet CLI
+print_status "Installing NuGet CLI..."
+if ! command -v nuget &> /dev/null; then
+    # Download latest NuGet.exe
+    NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+    sudo wget -q "$NUGET_URL" -O /usr/local/bin/nuget.exe
+
+    # Install mono-complete for running .exe files on Linux
+    if ! command -v mono &> /dev/null; then
+        print_status "Installing Mono runtime for NuGet.exe..."
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends mono-complete
+    fi
+
+    # Create wrapper script
+    echo '#!/bin/bash' | sudo tee /usr/local/bin/nuget > /dev/null
+    echo 'exec mono /usr/local/bin/nuget.exe "$@"' | sudo tee -a /usr/local/bin/nuget > /dev/null
+    sudo chmod +x /usr/local/bin/nuget
+    sudo chmod +x /usr/local/bin/nuget.exe
+
+    print_success "NuGet CLI installed (via Mono)"
+else
+    nuget help 2>&1 | head -n1
+    print_success "NuGet CLI already installed"
+fi
+
 # Install PowerShell modules using centralized script
 print_status "Installing PowerShell modules..."
 if [ -f "$WORKSPACE_ROOT/scripts/Install-Requirements.ps1" ]; then
