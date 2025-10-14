@@ -142,7 +142,7 @@ elif [ "$MACHINE" = "Linux" ]; then
                 # Import Microsoft GPG public key
                 wget https://packages.microsoft.com/keys/microsoft.asc -O microsoft.asc
                 # Verify Microsoft GPG key fingerprint
-                MS_FPR="BC528686B50D79E339D3721CEB3E94ADBE1229CF"  # pragma: allowlist secret
+                MS_FPR="BC528686B50D79E339D3721CEB3E94ADBE1229CF"  # Microsoft's official GPG key fingerprint for package verification (public, not a secret) - pragma: allowlist secret
                 GPG_FPR=$(gpg --show-keys --with-colons microsoft.asc | awk -F: '/^fpr:/ {print $10; exit}')
                 if [ "$GPG_FPR" != "$MS_FPR" ]; then
                     echo -e "${RED}[ERROR]${NC} Microsoft GPG key fingerprint does not match! Aborting."
