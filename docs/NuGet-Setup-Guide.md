@@ -47,13 +47,13 @@ GitHub Actions uses Windows runners which have NuGet pre-installed.
 
 **Status:** Configured via .NET SDK feature
 
-The DevContainer includes .NET SDK 8.0 which provides `dotnet nuget` commands.
+The DevContainer includes .NET SDK 9.0 (with 8.0 compatibility) which provides `dotnet nuget` commands.
 
 **Configuration in `.devcontainer/devcontainer.json`:**
 
 ```json
 "ghcr.io/devcontainers/features/dotnet:2": {
-    "version": "8.0",
+    "version": "9.0",
     "installUsingApt": true
 }
 ```
