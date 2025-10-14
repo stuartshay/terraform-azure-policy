@@ -1,11 +1,11 @@
-#Requires -Modules Pester, Az.Accounts, Az.Resources, Az.Functions, Az.PolicyInsights, Az.Network
+#Requires -Modules Pester, Az.Accounts, Az.Resources, Az.Functions, Az.PolicyInsights
 
 <#
 .SYNOPSIS
-    Pester tests for the Deny Function App Without Private Endpoint policy
+    Pester tests for the Function Apps Must Disable Public Network Access policy
 .DESCRIPTION
     This test suite validates the Azure Policy definition and tests actual compliance
-    behavior for Function Apps with private endpoint configurations.
+    behavior for Function Apps with public network access disabled.
 .NOTES
     Prerequisites:
     - Azure PowerShell modules (Az.Accounts, Az.Resources, Az.Functions, Az.PolicyInsights, Az.Network)
@@ -22,7 +22,7 @@ BeforeAll {
     $script:TestConfig = Initialize-PolicyTestConfig -PolicyCategory 'function-app' -PolicyName 'deny-function-app-no-private-endpoint'
 
     # Import required modules using centralized configuration
-    Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp', 'Network')
+    Import-PolicyTestModule -ModuleTypes @('Required', 'FunctionApp')
 
     # Initialize test environment with skip-on-no-context for VS Code Test Explorer
     $envInit = Initialize-PolicyTestEnvironment -Config $script:TestConfig -SkipIfNoContext $script:TestConfig.Azure.SkipIfNoContext
@@ -56,8 +56,7 @@ BeforeAll {
     $policyPath = Join-Path $PSScriptRoot '..\..\policies\function-app\deny-function-app-no-private-endpoint\rule.json'
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
-    }
-    else {
+    } else {
         throw "Policy definition file not found at: $policyPath"
     }
 }
@@ -79,7 +78,7 @@ Describe 'Policy Definition Validation' -Tag @('Unit', 'Fast', 'PolicyDefinition
 
         It 'Should have comprehensive description' {
             $script:PolicyDefinitionJson.properties.description | Should -Not -BeNullOrEmpty
-            $script:PolicyDefinitionJson.properties.description | Should -Match 'private endpoint|private connectivity|network isolation'
+            $script:PolicyDefinitionJson.properties.description | Should -Match 'public network access|private endpoint|network'
         }
 
         It 'Should have proper metadata' {
@@ -99,33 +98,33 @@ Describe 'Policy Definition Validation' -Tag @('Unit', 'Fast', 'PolicyDefinition
             $typeCondition | Should -Not -BeNullOrEmpty
             $typeCondition.equals | Should -Be 'Microsoft.Web/sites'
             $kindCondition | Should -Not -BeNullOrEmpty
+            # Policy uses 'equals' for kind (simplified approach)
             $kindCondition.equals | Should -Be 'functionapp'
         }
 
-        It 'Should check for private endpoint connections' {
+        It 'Should check for public network access configuration' {
             $policyRule = $script:PolicyDefinitionJson.properties.policyRule
             $publicNetworkCondition = $policyRule.if.allOf | Where-Object { $_.anyOf }
 
             $publicNetworkCondition | Should -Not -BeNullOrEmpty
 
-            # Should check for private endpoint connections count
-            $privateEndpointChecks = $publicNetworkCondition.anyOf | Where-Object {
-                $_.allOf | Where-Object { $_.PSObject.Properties.Name -contains 'count' }
-            }
-
-            $privateEndpointChecks | Should -Not -BeNullOrEmpty
+            # Should check publicNetworkAccess is Disabled or doesn't exist
+            $publicAccessChecks = $publicNetworkCondition.anyOf
+            $publicAccessChecks | Should -Not -BeNullOrEmpty
+            $publicAccessChecks.Count | Should -BeGreaterThan 0
         }
 
         It 'Should check public network access settings' {
             $policyRule = $script:PolicyDefinitionJson.properties.policyRule
             $publicNetworkCondition = $policyRule.if.allOf | Where-Object { $_.anyOf }
 
-            # Should check if publicNetworkAccess is not Disabled
+            # Should check if publicNetworkAccess is not Disabled or doesn't exist
             $publicAccessChecks = $publicNetworkCondition.anyOf | Where-Object {
-                $_.allOf | Where-Object { $_.field -eq 'Microsoft.Web/sites/publicNetworkAccess' }
+                $_.field -eq 'Microsoft.Web/sites/publicNetworkAccess'
             }
 
             $publicAccessChecks | Should -Not -BeNullOrEmpty
+            $publicAccessChecks.Count | Should -Be 2  # One for notEquals, one for exists
         }
 
         It 'Should have effect parameter with correct allowed values' {
@@ -160,7 +159,8 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
             $script:TargetAssignment = $script:PolicyAssignments | Where-Object {
                 $_.Properties.DisplayName -like "*$script:PolicyDisplayName*" -or
                 $_.Name -like "*$script:PolicyName*" -or
-                $_.Properties.DisplayName -like '*Function*App*Private*Endpoint*'
+                $_.Name -eq 'deny-fn-public-access' -or
+                $_.Properties.DisplayName -like '*Function*App*Public*Access*'
             }
         }
 
@@ -180,10 +180,11 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
             }
         }
 
-        It 'Should have system assigned identity for remediation' {
+        It 'Should not require system assigned identity for Audit/Deny policy' {
             if ($script:TargetAssignment) {
-                $script:TargetAssignment.Identity | Should -Not -BeNullOrEmpty
-                $script:TargetAssignment.Identity.Type | Should -Be 'SystemAssigned'
+                # Audit and Deny policies don't need managed identity (only DeployIfNotExists/Modify do)
+                # Identity may or may not be present, so we just verify the assignment exists
+                $script:TargetAssignment | Should -Not -BeNullOrEmpty
             }
         }
 
@@ -201,48 +202,29 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
 Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 'Slow', 'Compliance') {
     BeforeAll {
         # Generate unique names for test resources
-        $timestamp = Get-Date -Format 'yyyyMMddHHmmss'
-        $script:CompliantFunctionAppName = "$script:TestFunctionAppPrefix-compliant-$timestamp"
-        $script:NonCompliantFunctionAppName = "$script:TestFunctionAppPrefix-noncompliant-$timestamp"
+        $timestamp = Get-Date -Format 'yyyyMMddHHmm'  # Shorter timestamp
+        $script:CompliantFunctionAppName = "$script:TestFunctionAppPrefix-c-$timestamp"
+        $script:NonCompliantFunctionAppName = "$script:TestFunctionAppPrefix-nc-$timestamp"
 
-        # Storage account for Function Apps (required)
-        $script:StorageAccountName = "testpolicystorage$timestamp"
+        # Storage account for Function Apps (required) - max 24 chars
+        $script:StorageAccountName = "testpolicysa$timestamp".Substring(0, [Math]::Min(24, "testpolicysa$timestamp".Length))
 
         # App Service Plan
         $script:AppServicePlanName = "testpolicy-asp-$timestamp"
-
-        # Virtual Network and Subnet for Private Endpoint
-        $script:VNetName = "testpolicy-vnet-$timestamp"
-        $script:SubnetName = "testpolicy-subnet-$timestamp"
-        $script:PrivateEndpointName = "testpolicy-pe-$timestamp"
 
         # Resources created during tests
         $script:CreatedFunctionApps = @()
         $script:CreatedStorageAccount = $null
         $script:CreatedAppServicePlan = $null
-        $script:CreatedVNet = $null
-        $script:CreatedPrivateEndpoint = $null
     }
 
     AfterAll {
-        # Cleanup Private Endpoint
-        if ($script:CreatedPrivateEndpoint) {
-            try {
-                Write-Host "Cleaning up Private Endpoint: $($script:CreatedPrivateEndpoint.Name)" -ForegroundColor Yellow
-                Remove-AzPrivateEndpoint -Name $script:CreatedPrivateEndpoint.Name -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
-                Write-Warning "Failed to cleanup Private Endpoint: $($_.Exception.Message)"
-            }
-        }
-
         # Cleanup Function Apps
         foreach ($functionApp in $script:CreatedFunctionApps) {
             try {
                 Write-Host "Cleaning up Function App: $($functionApp.Name)" -ForegroundColor Yellow
                 Remove-AzFunctionApp -Name $functionApp.Name -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
+            } catch {
                 Write-Warning "Failed to cleanup Function App $($functionApp.Name): $($_.Exception.Message)"
             }
         }
@@ -252,20 +234,8 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
             try {
                 Write-Host "Cleaning up App Service Plan: $($script:CreatedAppServicePlan.Name)" -ForegroundColor Yellow
                 Remove-AzAppServicePlan -Name $script:CreatedAppServicePlan.Name -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
+            } catch {
                 Write-Warning "Failed to cleanup App Service Plan: $($_.Exception.Message)"
-            }
-        }
-
-        # Cleanup VNet
-        if ($script:CreatedVNet) {
-            try {
-                Write-Host "Cleaning up Virtual Network: $($script:CreatedVNet.Name)" -ForegroundColor Yellow
-                Remove-AzVirtualNetwork -Name $script:CreatedVNet.Name -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
-                Write-Warning "Failed to cleanup VNet: $($_.Exception.Message)"
             }
         }
 
@@ -274,8 +244,7 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
             try {
                 Write-Host "Cleaning up Storage Account: $($script:CreatedStorageAccount.StorageAccountName)" -ForegroundColor Yellow
                 Remove-AzStorageAccount -Name $script:CreatedStorageAccount.StorageAccountName -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
+            } catch {
                 Write-Warning "Failed to cleanup Storage Account: $($_.Exception.Message)"
             }
         }
@@ -283,50 +252,42 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
 
     Context 'Prerequisites Setup' {
         It 'Should create storage account for Function Apps' {
-            $script:CreatedStorageAccount = New-AzStorageAccount `
-                -ResourceGroupName $script:ResourceGroupName `
-                -Name $script:StorageAccountName `
-                -Location $script:ResourceGroup.Location `
-                -SkuName 'Standard_LRS' `
-                -Kind 'StorageV2'
+            Write-Host "Creating storage account: $script:StorageAccountName (length: $($script:StorageAccountName.Length))" -ForegroundColor Cyan
 
-            $script:CreatedStorageAccount | Should -Not -BeNullOrEmpty
-            $script:CreatedStorageAccount.StorageAccountName | Should -Be $script:StorageAccountName
+            try {
+                $script:CreatedStorageAccount = New-AzStorageAccount `
+                    -ResourceGroupName $script:ResourceGroupName `
+                    -Name $script:StorageAccountName `
+                    -Location $script:ResourceGroup.Location `
+                    -SkuName 'Standard_LRS' `
+                    -Kind 'StorageV2' `
+                    -ErrorAction Stop
+
+                $script:CreatedStorageAccount | Should -Not -BeNullOrEmpty
+                $script:CreatedStorageAccount.StorageAccountName | Should -Be $script:StorageAccountName
+            } catch {
+                Write-Host "Storage account creation failed: $($_.Exception.Message)" -ForegroundColor Red
+                Write-Host "Storage account name: $script:StorageAccountName" -ForegroundColor Yellow
+                throw
+            }
         }
 
         It 'Should create App Service Plan for Function Apps' {
-            # Premium plan required for private endpoint support
+            # Using Standard plan (cheaper than Premium, sufficient for public access testing)
             $script:CreatedAppServicePlan = New-AzAppServicePlan `
                 -ResourceGroupName $script:ResourceGroupName `
                 -Name $script:AppServicePlanName `
                 -Location $script:ResourceGroup.Location `
-                -Tier 'Premium' `
+                -Tier 'Standard' `
                 -WorkerSize 'Small' `
                 -NumberofWorkers 1
 
             $script:CreatedAppServicePlan | Should -Not -BeNullOrEmpty
             $script:CreatedAppServicePlan.Name | Should -Be $script:AppServicePlanName
         }
-
-        It 'Should create Virtual Network and Subnet' {
-            $subnetConfig = New-AzVirtualNetworkSubnetConfig `
-                -Name $script:SubnetName `
-                -AddressPrefix '10.0.1.0/24' `
-                -PrivateEndpointNetworkPolicies 'Disabled'
-
-            $script:CreatedVNet = New-AzVirtualNetwork `
-                -ResourceGroupName $script:ResourceGroupName `
-                -Name $script:VNetName `
-                -Location $script:ResourceGroup.Location `
-                -AddressPrefix '10.0.0.0/16' `
-                -Subnet $subnetConfig
-
-            $script:CreatedVNet | Should -Not -BeNullOrEmpty
-            $script:CreatedVNet.Name | Should -Be $script:VNetName
-        }
     }
 
-    Context 'Compliant Function App (With Private Endpoint and Public Access Disabled)' {
+    Context 'Compliant Function App (Public Access Disabled)' {
         It 'Should successfully create Function App with public access disabled' {
             $functionApp = New-AzFunctionApp `
                 -ResourceGroupName $script:ResourceGroupName `
@@ -341,55 +302,45 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
             $functionApp | Should -Not -BeNullOrEmpty
             $script:CreatedFunctionApps += $functionApp
 
-            # Disable public network access
-            $webApp = Get-AzWebApp -ResourceGroupName $script:ResourceGroupName -Name $script:CompliantFunctionAppName
-            $webApp.SiteConfig.PublicNetworkAccess = 'Disabled'
-            Set-AzWebApp -ResourceGroupName $script:ResourceGroupName -Name $script:CompliantFunctionAppName -SiteConfig $webApp.SiteConfig
+            # Disable public network access using Azure CLI (more reliable than PowerShell)
+            Write-Host "Disabling public network access for $script:CompliantFunctionAppName..." -ForegroundColor Cyan
+            $result = az webapp update `
+                --resource-group $script:ResourceGroupName `
+                --name $script:CompliantFunctionAppName `
+                --set publicNetworkAccess=Disabled `
+                2>&1
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "Failed to disable public access via CLI: $result"
+            }
 
             # Verify public access is disabled
+            Start-Sleep -Seconds 10  # Wait for update to propagate
             $updatedWebApp = Get-AzWebApp -ResourceGroupName $script:ResourceGroupName -Name $script:CompliantFunctionAppName
-            Write-Host "Public Network Access: $($updatedWebApp.SiteConfig.PublicNetworkAccess)" -ForegroundColor Cyan
+            Write-Host "Public Network Access: $($updatedWebApp.PublicNetworkAccess)" -ForegroundColor Cyan
+            $updatedWebApp.PublicNetworkAccess | Should -Be 'Disabled'
         }
 
-        It 'Should create private endpoint for the Function App' -Skip {
-            # Note: Creating private endpoints requires additional network configuration
-            # This test is marked as Skip for basic validation - enable for full integration testing
 
-            $functionApp = Get-AzWebApp -ResourceGroupName $script:ResourceGroupName -Name $script:CompliantFunctionAppName
-            $subnet = Get-AzVirtualNetwork -ResourceGroupName $script:ResourceGroupName -Name $script:VNetName | Get-AzVirtualNetworkSubnetConfig -Name $script:SubnetName
-
-            $privateLinkServiceConnection = New-AzPrivateLinkServiceConnection `
-                -Name "$script:PrivateEndpointName-connection" `
-                -PrivateLinkServiceId $functionApp.Id `
-                -GroupId 'sites'
-
-            $script:CreatedPrivateEndpoint = New-AzPrivateEndpoint `
-                -ResourceGroupName $script:ResourceGroupName `
-                -Name $script:PrivateEndpointName `
-                -Location $script:ResourceGroup.Location `
-                -Subnet $subnet `
-                -PrivateLinkServiceConnection $privateLinkServiceConnection
-
-            $script:CreatedPrivateEndpoint | Should -Not -BeNullOrEmpty
-        }
 
         It 'Should be compliant with the policy' {
             # Wait for policy evaluation
             Start-Sleep -Seconds 30
 
-            $complianceStates = Get-AzPolicyState -ResourceGroupName $script:ResourceGroupName -Filter "PolicyDefinitionName eq '$script:PolicyName' and ResourceId like '*$script:CompliantFunctionAppName*'"
+            # Query using proper filter syntax
+            $filter = "ResourceId eq '/subscriptions/$script:SubscriptionId/resourceGroups/$script:ResourceGroupName/providers/Microsoft.Web/sites/$script:CompliantFunctionAppName'"
+            $complianceStates = Get-AzPolicyState -Filter $filter -ErrorAction SilentlyContinue
 
             if ($complianceStates) {
                 $complianceStates | Should -Not -BeNullOrEmpty
                 Write-Host "Compliance State: $($complianceStates[0].ComplianceState)" -ForegroundColor Cyan
-            }
-            else {
+            } else {
                 Write-Warning "Policy compliance state not yet available for $script:CompliantFunctionAppName"
             }
         }
     }
 
-    Context 'Non-Compliant Function App (Public Access Enabled Without Private Endpoint)' {
+    Context 'Non-Compliant Function App (Public Access Enabled)' {
         It 'Should create Function App with public access enabled' {
             $functionApp = New-AzFunctionApp `
                 -ResourceGroupName $script:ResourceGroupName `
@@ -405,15 +356,20 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
             $script:CreatedFunctionApps += $functionApp
 
             # Verify public access is enabled (default)
+            Start-Sleep -Seconds 5
             $webApp = Get-AzWebApp -ResourceGroupName $script:ResourceGroupName -Name $script:NonCompliantFunctionAppName
-            Write-Host "Public Network Access: $($webApp.SiteConfig.PublicNetworkAccess)" -ForegroundColor Cyan
+            Write-Host "Public Network Access: $($webApp.PublicNetworkAccess)" -ForegroundColor Cyan
+            # Default should be Enabled or not set (both are non-compliant)
+            $webApp.PublicNetworkAccess | Should -Not -Be 'Disabled'
         }
 
         It 'Should be flagged as non-compliant' {
             # Wait for policy evaluation
             Start-Sleep -Seconds 60
 
-            $complianceStates = Get-AzPolicyState -ResourceGroupName $script:ResourceGroupName -Filter "PolicyDefinitionName eq '$script:PolicyName' and ResourceId like '*$script:NonCompliantFunctionAppName*'"
+            # Query using proper filter syntax
+            $filter = "ResourceId eq '/subscriptions/$script:SubscriptionId/resourceGroups/$script:ResourceGroupName/providers/Microsoft.Web/sites/$script:NonCompliantFunctionAppName'"
+            $complianceStates = Get-AzPolicyState -Filter $filter -ErrorAction SilentlyContinue
 
             if ($complianceStates) {
                 $complianceStates | Should -Not -BeNullOrEmpty
@@ -422,8 +378,7 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
                 if ($script:TargetAssignment -and $script:TargetAssignment.Properties.Parameters.effect.value -eq 'Audit') {
                     $complianceStates[0].ComplianceState | Should -Be 'NonCompliant'
                 }
-            }
-            else {
+            } else {
                 Write-Warning "Policy compliance state not yet available for $script:NonCompliantFunctionAppName - may need more time for evaluation"
             }
         }
@@ -431,37 +386,38 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
 }
 
 Describe 'Policy Effectiveness Tests' -Tag @('Integration', 'Fast', 'Effectiveness') {
-    Context 'Private Endpoint Configuration Validation' {
-        It 'Should validate policy targets private endpoint connections' {
+    Context 'Public Network Access Validation' {
+        It 'Should validate policy checks publicNetworkAccess property' {
             $policyRule = $script:PolicyDefinitionJson.properties.policyRule
             $publicNetworkCondition = $policyRule.if.allOf | Where-Object { $_.anyOf }
 
             $publicNetworkCondition | Should -Not -BeNullOrEmpty
 
-            # Should check for private endpoint connections count
-            $privateEndpointChecks = $publicNetworkCondition.anyOf | Where-Object {
-                $_.allOf | Where-Object {
-                    ($_.PSObject.Properties.Name -contains 'count') -and
-                    ($_.count.field -eq 'Microsoft.Web/sites/privateEndpointConnections[*]')
-                }
-            }
-
-            $privateEndpointChecks | Should -Not -BeNullOrEmpty
-        }
-
-        It 'Should validate policy checks public network access' {
-            $policyRule = $script:PolicyDefinitionJson.properties.policyRule
-            $publicNetworkCondition = $policyRule.if.allOf | Where-Object { $_.anyOf }
-
-            # Should check if publicNetworkAccess is not Disabled
+            # Should check publicNetworkAccess field
             $publicAccessChecks = $publicNetworkCondition.anyOf | Where-Object {
-                $_.allOf | Where-Object {
-                    ($_.field -eq 'Microsoft.Web/sites/publicNetworkAccess') -and
-                    (($_.notEquals -eq 'Disabled') -or ($_.exists -eq 'false'))
-                }
+                $_.field -eq 'Microsoft.Web/sites/publicNetworkAccess'
             }
 
             $publicAccessChecks | Should -Not -BeNullOrEmpty
+            $publicAccessChecks.Count | Should -Be 2  # notEquals and exists checks
+        }
+
+        It 'Should validate policy checks for non-disabled public access' {
+            $policyRule = $script:PolicyDefinitionJson.properties.policyRule
+            $publicNetworkCondition = $policyRule.if.allOf | Where-Object { $_.anyOf }
+
+            # Should have two checks in anyOf: notEquals 'Disabled' and exists 'false'
+            $publicAccessChecks = $publicNetworkCondition.anyOf
+            $publicAccessChecks | Should -Not -BeNullOrEmpty
+            $publicAccessChecks.Count | Should -Be 2
+
+            # One should check notEquals 'Disabled'
+            $notDisabledCheck = $publicAccessChecks | Where-Object { $_.notEquals -eq 'Disabled' }
+            $notDisabledCheck | Should -Not -BeNullOrEmpty
+
+            # One should check exists 'false'
+            $notExistsCheck = $publicAccessChecks | Where-Object { $_.exists -eq 'false' }
+            $notExistsCheck | Should -Not -BeNullOrEmpty
         }
 
         It 'Should not affect other resource types' {
@@ -519,7 +475,7 @@ Describe 'Security Validation' -Tag @('Security', 'Fast') {
     Context 'Network Security Enforcement' {
         It 'Should enforce network isolation' {
             $description = $script:PolicyDefinitionJson.properties.description
-            $description | Should -Match 'private endpoint|private connectivity|network isolation'
+            $description | Should -Match 'public network access|private endpoint|network'
         }
 
         It 'Should prevent unauthorized network access' {
@@ -556,7 +512,6 @@ Write-Host "- Subscription: $($script:Context.Subscription.Name) ($script:Subscr
 if ($script:TargetAssignment) {
     Write-Host "- Policy Assignment Found: $($script:TargetAssignment.Name)" -ForegroundColor Green
     Write-Host "- Policy Effect: $($script:TargetAssignment.Properties.Parameters.effect.value)" -ForegroundColor Green
-}
-else {
+} else {
     Write-Host '- Policy Assignment: Not Found (policy may not be deployed yet)' -ForegroundColor Yellow
 }

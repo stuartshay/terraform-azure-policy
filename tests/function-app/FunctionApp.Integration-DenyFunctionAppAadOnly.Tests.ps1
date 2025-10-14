@@ -45,20 +45,26 @@ BeforeAll {
     # Use context from environment initialization
     $script:Context = $envInit.Context
     $script:SubscriptionId = $envInit.SubscriptionId
-    Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
 
-    # Verify resource group exists
-    $script:ResourceGroup = Get-AzResourceGroup -Name $script:ResourceGroupName -ErrorAction SilentlyContinue
-    if (-not $script:ResourceGroup) {
-        throw "Resource group '$script:ResourceGroupName' not found. Please create it first."
+    # Only validate resource group if we have an Azure context
+    if ($script:Context) {
+        Write-Host "Running tests in subscription: $($script:Context.Subscription.Name) ($script:SubscriptionId)" -ForegroundColor Green
+
+        # Verify resource group exists
+        $script:ResourceGroup = Get-AzResourceGroup -Name $script:ResourceGroupName -ErrorAction SilentlyContinue
+        if (-not $script:ResourceGroup) {
+            throw "Resource group '$script:ResourceGroupName' not found. Please create it first."
+        }
+    } else {
+        Write-Host 'No Azure context - tests will be skipped' -ForegroundColor Yellow
+        $script:ResourceGroup = $null
     }
 
     # Load policy definition from file
     $policyPath = Join-Path $PSScriptRoot '..\..\policies\function-app\deny-function-app-aad-only\rule.json'
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
-    }
-    else {
+    } else {
         throw "Policy definition file not found at: $policyPath"
     }
 
@@ -166,34 +172,48 @@ Describe 'Policy Definition Validation' -Tag @('Integration', 'Fast', 'PolicyDef
 Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAssignment') {
     Context 'Policy Assignment Exists' {
         It 'Should have policy definition in Azure' {
-            $policyDef = Get-AzPolicyDefinition | Where-Object { $_.Name -eq $script:PolicyName }
-            if (-not $policyDef) {
-                Set-ItResult -Skipped -Because "Policy '$script:PolicyName' not deployed to Azure yet"
+            if (-not $script:Context) {
+                Set-ItResult -Skipped -Because 'No Azure context available'
+                return
             }
-            $policyDef | Should -Not -BeNullOrEmpty
+
+            $policyDef = Get-AzPolicyDefinition -Name $script:PolicyName -ErrorAction SilentlyContinue
+            $policyDef | Should -Not -BeNullOrEmpty -Because "Policy '$script:PolicyName' should be deployed to Azure"
         }
 
-        It 'Should have policy assigned to resource group' -Skip:$(-not (Get-AzPolicyDefinition | Where-Object { $_.Name -eq $script:PolicyName })) {
+        It 'Should have policy assigned to resource group' {
+            if (-not $script:Context) {
+                Set-ItResult -Skipped -Because 'No Azure context available'
+                return
+            }
+
+            $policyDef = Get-AzPolicyDefinition -Name $script:PolicyName -ErrorAction SilentlyContinue
+            $policyDef | Should -Not -BeNullOrEmpty -Because 'Policy must be deployed before it can be assigned'
+
             $assignments = Get-AzPolicyAssignment -Scope $script:ResourceGroup.ResourceId -ErrorAction SilentlyContinue
             $policyAssignment = $assignments | Where-Object {
                 $_.Properties.PolicyDefinitionId -like "*$script:PolicyName*"
             }
 
-            if (-not $policyAssignment) {
-                Set-ItResult -Skipped -Because "Policy not assigned to resource group '$script:ResourceGroupName'"
-            }
-            $policyAssignment | Should -Not -BeNullOrEmpty
+            $policyAssignment | Should -Not -BeNullOrEmpty -Because "Policy '$script:PolicyName' should be assigned to resource group '$script:ResourceGroupName'"
         }
 
-        It 'Should be assigned at resource group scope' -Skip:$(-not (Get-AzPolicyDefinition | Where-Object { $_.Name -eq $script:PolicyName })) {
+        It 'Should be assigned at resource group scope' {
+            if (-not $script:Context) {
+                Set-ItResult -Skipped -Because 'No Azure context available'
+                return
+            }
+
+            $policyDef = Get-AzPolicyDefinition -Name $script:PolicyName -ErrorAction SilentlyContinue
+            $policyDef | Should -Not -BeNullOrEmpty -Because 'Policy must be deployed first'
+
             $assignments = Get-AzPolicyAssignment -Scope $script:ResourceGroup.ResourceId -ErrorAction SilentlyContinue
             $policyAssignment = $assignments | Where-Object {
                 $_.Properties.PolicyDefinitionId -like "*$script:PolicyName*"
             }
+            $policyAssignment | Should -Not -BeNullOrEmpty -Because 'Policy must be assigned first'
 
-            if ($policyAssignment) {
-                $policyAssignment.Properties.Scope | Should -Match $script:ResourceGroupName
-            }
+            $policyAssignment.Properties.Scope | Should -Match $script:ResourceGroupName -Because "Assignment should be scoped to resource group '$script:ResourceGroupName'"
         }
     }
 }
@@ -201,10 +221,16 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
 Describe 'Policy Compliance Testing - Authentication Configuration' -Tag @('Integration', 'Slow', 'Compliance', 'RequiresCleanup') {
     Context 'Azure AD Authentication Compliance' {
         BeforeAll {
+            # Skip all compliance tests if no Azure context
+            if (-not $script:Context) {
+                Write-Warning 'No Azure context - skipping compliance tests'
+                return
+            }
+
             # Check if policy is deployed and assigned
-            $policyDef = Get-AzPolicyDefinition | Where-Object { $_.Name -eq $script:PolicyName }
+            $policyDef = Get-AzPolicyDefinition -Name $script:PolicyName -ErrorAction SilentlyContinue
             if (-not $policyDef) {
-                Write-Warning "Policy not deployed - skipping compliance tests"
+                Write-Warning 'Policy not deployed - skipping compliance tests'
                 return
             }
 
@@ -213,12 +239,12 @@ Describe 'Policy Compliance Testing - Authentication Configuration' -Tag @('Inte
                 $_.Properties.PolicyDefinitionId -like "*$script:PolicyName*"
             }
             if (-not $policyAssignment) {
-                Write-Warning "Policy not assigned - skipping compliance tests"
+                Write-Warning 'Policy not assigned - skipping compliance tests'
                 return
             }
 
             Write-Host "`n⚠️  Note: This policy validates config resources (authsettingsV2, web, basicPublishingCredentialsPolicies)" -ForegroundColor Yellow
-            Write-Host "    Compliance is evaluated when these configurations are created or updated." -ForegroundColor Yellow
+            Write-Host '    Compliance is evaluated when these configurations are created or updated.' -ForegroundColor Yellow
             Write-Host "    Testing requires creating Function Apps and then updating their auth/FTP/publishing settings.`n" -ForegroundColor Yellow
         }
 
@@ -255,26 +281,26 @@ Describe 'Policy Evaluation Details' -Tag @('Integration', 'Informational') {
         It 'Should display policy evaluation information' {
             Write-Host "`n═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
             Write-Host "  Policy: $script:PolicyDisplayName" -ForegroundColor Cyan
-            Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Host '═══════════════════════════════════════════════════════════' -ForegroundColor Cyan
 
             Write-Host "`nPolicy Enforcement:" -ForegroundColor Yellow
-            Write-Host "  • Azure AD authentication (Easy Auth v2) must be enabled" -ForegroundColor White
-            Write-Host "  • requireAuthentication must be true" -ForegroundColor White
-            Write-Host "  • Unauthenticated action must be RedirectToLoginPage or Return401" -ForegroundColor White
-            Write-Host "  • FTP/FTPS must be disabled (ftpsState = Disabled)" -ForegroundColor White
-            Write-Host "  • Basic publishing credentials must be disabled (FTP & SCM)" -ForegroundColor White
+            Write-Host '  • Azure AD authentication (Easy Auth v2) must be enabled' -ForegroundColor White
+            Write-Host '  • requireAuthentication must be true' -ForegroundColor White
+            Write-Host '  • Unauthenticated action must be RedirectToLoginPage or Return401' -ForegroundColor White
+            Write-Host '  • FTP/FTPS must be disabled (ftpsState = Disabled)' -ForegroundColor White
+            Write-Host '  • Basic publishing credentials must be disabled (FTP & SCM)' -ForegroundColor White
 
             Write-Host "`nTarget Resources:" -ForegroundColor Yellow
-            Write-Host "  • Microsoft.Web/sites/config (authsettingsV2)" -ForegroundColor White
-            Write-Host "  • Microsoft.Web/sites/config (web) - FTP settings" -ForegroundColor White
-            Write-Host "  • Microsoft.Web/sites/slots/config (web) - FTP settings for slots" -ForegroundColor White
-            Write-Host "  • Microsoft.Web/sites/basicPublishingCredentialsPolicies (ftp)" -ForegroundColor White
-            Write-Host "  • Microsoft.Web/sites/basicPublishingCredentialsPolicies (scm)" -ForegroundColor White
+            Write-Host '  • Microsoft.Web/sites/config (authsettingsV2)' -ForegroundColor White
+            Write-Host '  • Microsoft.Web/sites/config (web) - FTP settings' -ForegroundColor White
+            Write-Host '  • Microsoft.Web/sites/slots/config (web) - FTP settings for slots' -ForegroundColor White
+            Write-Host '  • Microsoft.Web/sites/basicPublishingCredentialsPolicies (ftp)' -ForegroundColor White
+            Write-Host '  • Microsoft.Web/sites/basicPublishingCredentialsPolicies (scm)' -ForegroundColor White
 
             Write-Host "`nNote:" -ForegroundColor Yellow
-            Write-Host "  This policy evaluates configuration resources, not the Function App itself." -ForegroundColor Gray
-            Write-Host "  Compliance is assessed when auth settings, web config, or publishing" -ForegroundColor Gray
-            Write-Host "  credential policies are created or updated." -ForegroundColor Gray
+            Write-Host '  This policy evaluates configuration resources, not the Function App itself.' -ForegroundColor Gray
+            Write-Host '  Compliance is assessed when auth settings, web config, or publishing' -ForegroundColor Gray
+            Write-Host '  credential policies are created or updated.' -ForegroundColor Gray
 
             Write-Host "`n═══════════════════════════════════════════════════════════`n" -ForegroundColor Cyan
 
@@ -283,14 +309,25 @@ Describe 'Policy Evaluation Details' -Tag @('Integration', 'Informational') {
     }
 
     Context 'Policy Compliance State' {
-        It 'Should query current compliance state' -Skip:$(-not (Get-AzPolicyDefinition | Where-Object { $_.Name -eq $script:PolicyName })) {
+        It 'Should query current compliance state' -Skip:$(-not $script:Context) {
+            if (-not $script:Context) {
+                Set-ItResult -Skipped -Because 'No Azure context available'
+                return
+            }
+
+            $policyDef = Get-AzPolicyDefinition -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq $script:PolicyName }
+            if (-not $policyDef) {
+                Set-ItResult -Skipped -Because 'Policy not deployed to Azure yet'
+                return
+            }
+
             $assignments = Get-AzPolicyAssignment -Scope $script:ResourceGroup.ResourceId -ErrorAction SilentlyContinue
             $policyAssignment = $assignments | Where-Object {
                 $_.Properties.PolicyDefinitionId -like "*$script:PolicyName*"
             }
 
             if (-not $policyAssignment) {
-                Set-ItResult -Skipped -Because "Policy not assigned"
+                Set-ItResult -Skipped -Because 'Policy not assigned'
                 return
             }
 
@@ -311,12 +348,11 @@ Describe 'Policy Evaluation Details' -Tag @('Integration', 'Informational') {
                     Write-Host "`nNon-Compliant Resources:" -ForegroundColor Red
                     $complianceStates | Where-Object { $_.ComplianceState -eq 'NonCompliant' } |
                         Select-Object -First 5 | ForEach-Object {
-                        Write-Host "  • $($_.ResourceId.Split('/')[-1]) - $($_.ResourceType)" -ForegroundColor Gray
-                    }
+                            Write-Host "  • $($_.ResourceId.Split('/')[-1]) - $($_.ResourceType)" -ForegroundColor Gray
+                        }
                 }
-            }
-            else {
-                Write-Host "  ℹ️  No compliance data available yet" -ForegroundColor Yellow
+            } else {
+                Write-Host '  ℹ️  No compliance data available yet' -ForegroundColor Yellow
                 Write-Host "  Run: Start-AzPolicyComplianceScan -ResourceGroupName '$script:ResourceGroupName'" -ForegroundColor Gray
             }
 
@@ -329,35 +365,35 @@ Describe 'Test Documentation and Guidance' -Tag @('Integration', 'Documentation'
     Context 'Testing Approach' {
         It 'Should provide testing guidance for this policy' {
             Write-Host "`n╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║  Testing Guidance for AAD-Only Policy                     ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host '║  Testing Guidance for AAD-Only Policy                     ║' -ForegroundColor Cyan
+            Write-Host '╚════════════════════════════════════════════════════════════╝' -ForegroundColor Cyan
 
             Write-Host "`n📋 Policy Behavior:" -ForegroundColor Yellow
-            Write-Host "  This policy evaluates CONFIGURATION resources, not Function Apps directly." -ForegroundColor White
-            Write-Host "  It triggers when you:" -ForegroundColor White
-            Write-Host "    1. Update authentication settings (authsettingsV2 config)" -ForegroundColor Gray
-            Write-Host "    2. Update web config (FTP/FTPS settings)" -ForegroundColor Gray
-            Write-Host "    3. Update publishing credential policies" -ForegroundColor Gray
+            Write-Host '  This policy evaluates CONFIGURATION resources, not Function Apps directly.' -ForegroundColor White
+            Write-Host '  It triggers when you:' -ForegroundColor White
+            Write-Host '    1. Update authentication settings (authsettingsV2 config)' -ForegroundColor Gray
+            Write-Host '    2. Update web config (FTP/FTPS settings)' -ForegroundColor Gray
+            Write-Host '    3. Update publishing credential policies' -ForegroundColor Gray
 
             Write-Host "`n🧪 Manual Testing Steps:" -ForegroundColor Yellow
-            Write-Host "  1. Create a Function App in the resource group" -ForegroundColor White
-            Write-Host "  2. Try to configure it with non-compliant settings:" -ForegroundColor White
-            Write-Host "     • Disable Azure AD authentication" -ForegroundColor Gray
-            Write-Host "     • Enable FTP/FTPS" -ForegroundColor Gray
-            Write-Host "     • Enable basic publishing credentials" -ForegroundColor Gray
-            Write-Host "  3. Policy should deny (or audit) these configuration changes" -ForegroundColor White
+            Write-Host '  1. Create a Function App in the resource group' -ForegroundColor White
+            Write-Host '  2. Try to configure it with non-compliant settings:' -ForegroundColor White
+            Write-Host '     • Disable Azure AD authentication' -ForegroundColor Gray
+            Write-Host '     • Enable FTP/FTPS' -ForegroundColor Gray
+            Write-Host '     • Enable basic publishing credentials' -ForegroundColor Gray
+            Write-Host '  3. Policy should deny (or audit) these configuration changes' -ForegroundColor White
 
             Write-Host "`n🔍 Verification:" -ForegroundColor Yellow
-            Write-Host "  • Check Azure Portal → Policy → Compliance" -ForegroundColor White
-            Write-Host "  • Look for config resource compliance states" -ForegroundColor White
-            Write-Host "  • Run: Start-AzPolicyComplianceScan for immediate evaluation" -ForegroundColor White
+            Write-Host '  • Check Azure Portal → Policy → Compliance' -ForegroundColor White
+            Write-Host '  • Look for config resource compliance states' -ForegroundColor White
+            Write-Host '  • Run: Start-AzPolicyComplianceScan for immediate evaluation' -ForegroundColor White
 
             Write-Host "`n⚠️  Important Notes:" -ForegroundColor Yellow
-            Write-Host "  • Policy applies to ALL App Services (not just Function Apps)" -ForegroundColor Gray
+            Write-Host '  • Policy applies to ALL App Services (not just Function Apps)' -ForegroundColor Gray
             Write-Host "  • Cannot filter by 'kind' field (not a valid Azure Policy alias)" -ForegroundColor Gray
-            Write-Host "  • Authentication settings apply to main app only (not slots)" -ForegroundColor Gray
-            Write-Host "  • FTP settings apply to both main app and deployment slots" -ForegroundColor Gray
-            Write-Host "  • Publishing credentials apply at app level" -ForegroundColor Gray
+            Write-Host '  • Authentication settings apply to main app only (not slots)' -ForegroundColor Gray
+            Write-Host '  • FTP settings apply to both main app and deployment slots' -ForegroundColor Gray
+            Write-Host '  • Publishing credentials apply at app level' -ForegroundColor Gray
 
             Write-Host "`n═══════════════════════════════════════════════════════════`n" -ForegroundColor Cyan
 
@@ -406,7 +442,7 @@ az functionapp config show --name <function-app-name> --resource-group <rg-name>
 az functionapp deployment list-publishing-credentials --name <function-app-name> --resource-group <rg-name>
 '@ -ForegroundColor Gray
 
-            Write-Host ""
+            Write-Host ''
             $true | Should -Be $true
         }
     }
@@ -422,8 +458,7 @@ AfterAll {
             try {
                 Write-Host "  Removing Function App: $appName" -ForegroundColor Gray
                 Remove-AzFunctionApp -Name $appName -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
+            } catch {
                 Write-Warning "Failed to remove Function App '$appName': $($_.Exception.Message)"
             }
         }
@@ -433,8 +468,7 @@ AfterAll {
             try {
                 Write-Host "  Removing Storage Account: $storageAccountName" -ForegroundColor Gray
                 Remove-AzStorageAccount -Name $storageAccountName -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
-            }
-            catch {
+            } catch {
                 Write-Warning "Failed to remove Storage Account '$storageAccountName': $($_.Exception.Message)"
             }
         }

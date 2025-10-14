@@ -71,7 +71,7 @@
         "function-app": {
             "deny-function-app-anonymous": {
                 "name": "deny-function-app-anonymous",
-                "displayName": "Deny Function App Anonymous Access",
+                "displayName": "Audit Function App Anonymous Access",
                 "category": "Function App",
                 "policyPath": "policies/function-app/deny-function-app-anonymous/rule.json",
                 "resourcePrefix": "testpolicyfn",

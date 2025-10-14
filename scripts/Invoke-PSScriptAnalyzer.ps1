@@ -21,15 +21,12 @@ try {
         if ($results) {
             $results | Format-Table -AutoSize
             exit 1
-        }
-        else {
+        } else {
             Write-Host 'PSScriptAnalyzer passed (critical issues only)' -ForegroundColor Green
         }
-    }
-    else {
+    } else {
         Write-Host 'PSScriptAnalyzer not installed, skipping...' -ForegroundColor Yellow
     }
-}
-catch {
+} catch {
     Write-Host "PSScriptAnalyzer error: $_" -ForegroundColor Red
 }

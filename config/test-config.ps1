@@ -171,8 +171,7 @@ function Initialize-PolicyTestEnvironment {
                         Write-Host "Using saved Azure context: $($result.Context.Name)" -ForegroundColor Cyan
                     }
                 }
-            }
-            catch {
+            } catch {
                 Write-Verbose "Could not load saved Azure context: $($_.Exception.Message)"
             }
         }
@@ -184,8 +183,7 @@ function Initialize-PolicyTestEnvironment {
                 $result.ShouldSkip = $true
                 $result.Errors += 'No Azure context found. Tests will be skipped. Run Connect-AzAccount to enable integration tests.'
                 Write-Host 'ℹ️  No Azure context - tests will be skipped. Run Connect-AzAccount to enable.' -ForegroundColor Yellow
-            }
-            else {
+            } else {
                 $result.Success = $false
                 $result.Errors += 'No Azure context found. Please run Connect-AzAccount first.'
             }
@@ -206,8 +204,7 @@ function Initialize-PolicyTestEnvironment {
         }
 
         return $result
-    }
-    catch {
+    } catch {
         $result.Success = $false
         $result.Errors += "Failed to initialize test environment: $($_.Exception.Message)"
         return $result
@@ -244,19 +241,16 @@ function Import-PolicyTestModule {
             $WarningPreference = 'SilentlyContinue'
             if ($Config.Modules.ForceReload) {
                 Import-Module $module -Force -ErrorAction SilentlyContinue
-            }
-            else {
+            } else {
                 Import-Module $module -ErrorAction SilentlyContinue
             }
             Write-Verbose "Imported module: $module"
-        }
-        catch {
+        } catch {
             # Only warn if it's not an Azure session issue
             if ($_.Exception.Message -notmatch 'Azure PowerShell session') {
                 Write-Warning "Failed to import module $module`: $($_.Exception.Message)"
             }
-        }
-        finally {
+        } finally {
             $WarningPreference = 'Continue'
         }
     }
@@ -302,8 +296,7 @@ function New-UniqueResourceName {
         $minTimestampChars = 8
         if ($timestamp.Length -gt $minTimestampChars) {
             $keepTimestamp = $minTimestampChars
-        }
-        else {
+        } else {
             $keepTimestamp = $timestamp.Length
         }
 
@@ -312,8 +305,7 @@ function New-UniqueResourceName {
             $trimmedBase = $BaseName.Substring(0, [Math]::Min($BaseName.Length, $availableForBase))
             $trimmedTimestamp = $timestamp.Substring($timestamp.Length - $keepTimestamp, $keepTimestamp)
             $baseAndTime = "$trimmedBase$trimmedTimestamp"
-        }
-        else {
+        } else {
             $baseAndTime = $timestamp.Substring($timestamp.Length - $availableForBaseAndTime, $availableForBaseAndTime)
         }
     }

@@ -229,10 +229,10 @@ Invoke-Pester -Path tests/function-app/FunctionApp.Integration-DenyFunctionAppAa
 
 ## Summary
 
-✅ **Created comprehensive integration test** with 20 test cases  
-✅ **Validates policy definition, assignment, and compliance**  
-✅ **Includes extensive documentation and guidance**  
-✅ **Provides alternative validation methods**  
-✅ **Passes all pre-commit validation checks**  
+✅ **Created comprehensive integration test** with 20 test cases
+✅ **Validates policy definition, assignment, and compliance**
+✅ **Includes extensive documentation and guidance**
+✅ **Provides alternative validation methods**
+✅ **Passes all pre-commit validation checks**
 
 The integration test provides thorough validation of the AAD-only authentication policy while acknowledging its unique characteristics as a configuration resource policy.

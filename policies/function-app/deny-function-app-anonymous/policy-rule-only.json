@@ -1,0 +1,41 @@
+{
+  "if": {
+    "allOf": [
+      {
+        "equals": "Microsoft.Web/sites",
+        "field": "type"
+      },
+      {
+        "contains": "functionapp",
+        "field": "kind"
+      },
+      {
+        "field": "kind",
+        "notContains": "workflowapp"
+      },
+      {
+        "not": {
+          "field": "name",
+          "in": "[parameters('exemptedFunctionApps')]"
+        }
+      },
+      {
+        "not": {
+          "field": "Microsoft.Web/sites/resourceGroup",
+          "in": "[parameters('exemptedResourceGroups')]"
+        }
+      }
+    ]
+  },
+  "then": {
+    "details": {
+      "existenceCondition": {
+        "equals": "true",
+        "field": "Microsoft.Web/sites/config/siteAuthEnabled"
+      },
+      "name": "web",
+      "type": "Microsoft.Web/sites/config"
+    },
+    "effect": "[parameters('effect')]"
+  }
+}

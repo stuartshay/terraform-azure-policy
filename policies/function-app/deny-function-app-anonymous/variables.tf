@@ -57,13 +57,13 @@ variable "policy_assignment_description" {
 
 # Policy Configuration
 variable "policy_effect" {
-  description = "The effect of the policy (Audit, Deny, or Disabled)"
+  description = "The effect of the policy (AuditIfNotExists or Disabled)"
   type        = string
-  default     = "Audit"
+  default     = "AuditIfNotExists"
 
   validation {
-    condition     = contains(["Audit", "Deny", "Disabled"], var.policy_effect)
-    error_message = "The policy_effect must be one of: Audit, Deny, or Disabled."
+    condition     = contains(["AuditIfNotExists", "Disabled"], var.policy_effect)
+    error_message = "The policy_effect must be one of: AuditIfNotExists or Disabled."
   }
 }
 

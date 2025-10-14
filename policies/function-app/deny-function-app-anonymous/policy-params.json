@@ -1,0 +1,30 @@
+{
+  "effect": {
+    "allowedValues": [
+      "AuditIfNotExists",
+      "Disabled"
+    ],
+    "defaultValue": "AuditIfNotExists",
+    "metadata": {
+      "description": "Enable or disable the execution of the policy",
+      "displayName": "Effect"
+    },
+    "type": "String"
+  },
+  "exemptedFunctionApps": {
+    "defaultValue": [],
+    "metadata": {
+      "description": "List of Function App names that are exempt from this policy",
+      "displayName": "Exempted Function Apps"
+    },
+    "type": "Array"
+  },
+  "exemptedResourceGroups": {
+    "defaultValue": [],
+    "metadata": {
+      "description": "List of resource group names that are exempt from this policy",
+      "displayName": "Exempted Resource Groups"
+    },
+    "type": "Array"
+  }
+}

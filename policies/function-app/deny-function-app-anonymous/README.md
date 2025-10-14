@@ -1,90 +1,114 @@
-# Deny Function App Anonymous Access Policy
+# Audit Function App Anonymous Access Policy
 
 ## Overview
 
-This Azure Policy denies the creation of Azure Function Apps that allow anonymous access. Function Apps should require authentication to ensure security and protect sensitive code, data, and business logic from unauthorized access. This policy helps maintain a secure-by-default approach for serverless applications.
+This Azure Policy audits Azure Function Apps that do not have authentication enabled. Function Apps should require authentication to ensure security and protect sensitive code, data, and business logic from unauthorized access. This policy helps maintain a secure-by-default approach for serverless applications by identifying non-compliant resources.
 
 ## Policy Details
 
 ### What it does
 
-- **Denies** creation of Function Apps without authentication enabled
-- **Denies** Function Apps with authentication enabled but set to allow anonymous access
+- **Audits** Function Apps without authentication enabled via `AuditIfNotExists` effect
+- **Checks** the `siteAuthEnabled` property on the Function App's configuration resource
 - **Allows** exemptions for specific Function Apps or resource groups that require anonymous access
-- **Evaluates** resources at creation and update time
+- **Evaluates** resources continuously for compliance reporting
 
 ### Resources Targeted
 
 - `Microsoft.Web/sites` with `kind` = `functionapp`
+- `Microsoft.Web/sites/config` - Configuration resource for authentication settings
 
 ### Key Features
 
-- **Authentication Enforcement**: Ensures Function Apps have authentication enabled
-- **Anonymous Access Prevention**: Blocks Function Apps configured to allow anonymous access
+- **Authentication Verification**: Checks if Function Apps have authentication enabled via configuration
+- **Compliance Reporting**: Provides visibility into authentication status across Function Apps
 - **Flexible Exemptions**: Exclude specific Function Apps or entire resource groups
 - **Security Focused**: Helps meet security compliance and governance requirements
+- **Non-Blocking**: Uses AuditIfNotExists effect to report compliance without blocking deployments
 
 ## Policy Logic
 
-The policy evaluates Function Apps with the following conditions:
+### Version 2.0.0 - AuditIfNotExists Pattern
+
+The policy uses Azure's **AuditIfNotExists** effect to check for authentication configuration:
+
+1. **Condition (IF)**: Resource is a Function App
+   - `type` = `Microsoft.Web/sites`
+   - `kind` contains `functionapp`
+   - `kind` does not contain `workflowapp` (excludes Logic Apps)
+
+2. **Evaluation (THEN)**: Check authentication configuration
+   - **Effect**: `AuditIfNotExists`
+   - **Details**:
+     - Checks related resource: `Microsoft.Web/sites/config` (name: `web`)
+     - **Existence Condition**: `siteAuthEnabled` equals `true`
+
+3. **Result**:
+   - **Compliant**: Function App has `siteAuthEnabled = true` in its configuration
+   - **Non-Compliant**: Function App has `siteAuthEnabled = false` or property not set
+   - **Exempted**: Function App or resource group is explicitly exempted
+
+### Why siteAuthEnabled?
+
+The policy checks `Microsoft.Web/sites/config/siteAuthEnabled` instead of app settings because:
+
+- **System-Managed Property**: `WEBSITE_AUTH_ENABLED` is a read-only app setting that reflects authentication state
+- **Cannot Be Set Manually**: Azure prohibits setting `WEBSITE_AUTH_ENABLED` directly in app settings
+- **Correct Approach**: Use the authentication configuration API to enable auth, which sets `siteAuthEnabled = true`
+- **Azure Pattern**: Follows the same pattern as Azure's built-in authentication policies
+
+### Policy Structure
 
 ```json
 {
-  "allOf": [
-    {
-      "equals": "Microsoft.Web/sites",
-      "field": "type"
-    },
-    {
-      "equals": "functionapp",
-      "field": "kind"
-    },
-    {
-      "not": {
-        "field": "name",
-        "in": "[parameters('exemptedFunctionApps')]"
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.Web/sites"
+      },
+      {
+        "field": "kind",
+        "contains": "functionapp"
+      },
+      {
+        "field": "kind",
+        "notContains": "workflowapp"
       }
-    },
-    {
-      "not": {
-        "field": "Microsoft.Web/sites/resourceGroup",
-        "in": "[parameters('exemptedResourceGroups')]"
+    ]
+  },
+  "then": {
+    "effect": "[parameters('policyEffect')]",
+    "details": {
+      "type": "Microsoft.Web/sites/config",
+      "name": "web",
+      "existenceCondition": {
+        "field": "Microsoft.Web/sites/config/siteAuthEnabled",
+        "equals": "true"
       }
-    },
-    {
-      "anyOf": [
-        {
-          "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
-          "exists": "false"
-        },
-        {
-          "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
-          "equals": "false"
-        },
-        {
-          "allOf": [
-            {
-              "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
-              "equals": "true"
-            },
-            {
-              "field": "Microsoft.Web/sites/siteConfig.authSettings.unauthenticatedClientAction",
-              "equals": "AllowAnonymous"
-            }
-          ]
-        }
-      ]
     }
-  ]
+  }
 }
 ```
 
-The policy triggers when:
+### Policy Parameters
 
-1. A Function App is being created or updated
-2. The Function App is not in the exempted Function Apps list
-3. The Function App's resource group is not in the exempted resource groups list
-4. Authentication is not enabled OR authentication is enabled but allows anonymous access
+- **policyEffect**: Controls the policy behavior
+  - `AuditIfNotExists` (default): Reports non-compliant resources
+  - `Disabled`: Disables the policy
+
+### Exemptions
+
+Exemptions can be created at:
+
+- **Resource Group Level**: Exempt all Function Apps in a resource group
+- **Individual Function App**: Exempt specific Function Apps by resource ID
+
+Example exemption scenarios:
+
+- Development/testing environments
+- Public-facing APIs requiring anonymous access
+- Managed API backends with alternative authentication
 
 ## Usage
 
@@ -110,7 +134,7 @@ module "deny_function_app_anonymous" {
 
   create_assignment = true
   assignment_scope_id = "/subscriptions/your-subscription-id/resourceGroups/rg-production"
-  policy_effect = "Deny"
+  policy_effect = "AuditIfNotExists"
 
   exempted_function_apps = [
     "public-api-function",
@@ -130,7 +154,7 @@ module "deny_function_app_anonymous" {
   source = "./policies/function-app/deny-function-app-anonymous"
 
   environment = "sandbox"
-  policy_effect = "Audit"
+  policy_effect = "AuditIfNotExists"
 
   create_assignment = true
   assignment_scope_id = "/subscriptions/your-subscription-id"
@@ -164,7 +188,7 @@ module "deny_function_app_anonymous" {
 | `policy_assignment_name` | `string` | Auto-generated | Name of the policy assignment |
 | `policy_assignment_display_name` | `string` | Auto-generated | Display name for the assignment |
 | `policy_assignment_description` | `string` | Auto-generated | Description of the assignment |
-| `policy_effect` | `string` | `"Audit"` | Policy effect (Audit, Deny, Disabled) |
+| `policy_effect` | `string` | `"AuditIfNotExists"` | Policy effect (AuditIfNotExists, Disabled) |
 | `exempted_function_apps` | `list(string)` | `[]` | Function Apps exempt from policy |
 | `exempted_resource_groups` | `list(string)` | `[]` | Resource groups exempt from policy |
 
@@ -172,9 +196,9 @@ module "deny_function_app_anonymous" {
 
 ### Access Control
 
-- **Authentication Required**: Ensures all Function Apps implement authentication
-- **Zero Trust Approach**: Blocks anonymous access by default
-- **Identity Integration**: Enforces integration with Azure AD or other identity providers
+- **Authentication Required**: Identifies Function Apps without authentication
+- **Compliance Reporting**: Provides visibility into authentication configurations
+- **Identity Integration**: Encourages integration with Azure AD or other identity providers
 
 ### Compliance & Governance
 
@@ -184,56 +208,93 @@ module "deny_function_app_anonymous" {
 
 ### Threat Mitigation
 
-- **Unauthorized Access Prevention**: Blocks unauthenticated requests
-- **Data Protection**: Protects sensitive data processed by Function Apps
-- **Code Security**: Prevents exposure of application logic and secrets
+- **Unauthorized Access Detection**: Identifies unauthenticated Function Apps
+- **Data Protection**: Highlights Function Apps that may expose sensitive data
+- **Code Security**: Reports Function Apps with potential security gaps
 
-## Authentication Options
+## Authentication Configuration
 
-Function Apps can use various authentication providers:
+Function Apps can be configured with authentication to become compliant:
 
-### Azure AD
+### Azure CLI - Enable Authentication
 
-```json
-{
-  "authSettings": {
-    "enabled": true,
-    "defaultProvider": "AzureActiveDirectory",
-    "unauthenticatedClientAction": "RedirectToLoginPage"
+The simplest way to enable authentication and make a Function App compliant:
+
+```bash
+# Enable authentication (sets siteAuthEnabled = true)
+az webapp auth update \
+  --resource-group <resource-group-name> \
+  --name <function-app-name> \
+  --enabled true
+```
+
+**Important**: The `--enabled true` parameter sets `siteAuthEnabled = true` in the Function App's configuration resource. This is what the policy checks for compliance.
+
+### Azure CLI - With Azure AD Provider
+
+```bash
+# Enable authentication with Azure AD
+az webapp auth update \
+  --resource-group <resource-group-name> \
+  --name <function-app-name> \
+  --enabled true \
+  --aad-client-id <your-aad-client-id>
+```
+
+### Terraform - Using auth_settings Block
+
+```hcl
+resource "azurerm_linux_function_app" "example" {
+  name                = "example-function-app"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+
+  storage_account_name       = azurerm_storage_account.example.name
+  storage_account_access_key = azurerm_storage_account.example.primary_access_key
+  service_plan_id            = azurerm_service_plan.example.id
+
+  # Authentication configuration (sets siteAuthEnabled = true)
+  auth_settings {
+    enabled = true  # This is what makes the Function App compliant
+
+    # Optional: Configure authentication provider
+    active_directory {
+      client_id = var.aad_client_id
+    }
+  }
+
+  site_config {
+    # Other site configuration
   }
 }
 ```
 
-### Third-Party Providers
+### Why Not WEBSITE_AUTH_ENABLED?
 
-- Microsoft Account
-- Facebook
-- Google
-- Twitter
-- Custom OIDC providers
+**Important Note**: Do NOT try to set `WEBSITE_AUTH_ENABLED` as an app setting:
 
-### API Key Authentication
+- ❌ `WEBSITE_AUTH_ENABLED` is a **system-managed** app setting
+- ❌ Azure **prohibits** manually setting this value
+- ❌ Attempts to set it will result in: `"AppSetting with name 'WEBSITE_AUTH_ENABLED' is not allowed"`
+- ✅ Use `az webapp auth update --enabled true` instead
+- ✅ In Terraform, use the `auth_settings { enabled = true }` block
 
-For API scenarios where user authentication isn't appropriate:
-
-- Function-level keys
-- Host-level keys
-- System keys
+The `WEBSITE_AUTH_ENABLED` app setting is automatically set by Azure when you configure authentication via the proper APIs. It reflects the state of `siteAuthEnabled` in the Function App's configuration resource.
 
 ## Common Use Cases
 
 ### 1. Internal Business Functions
 
 ```hcl
-# Enforce authentication for internal business logic
-policy_effect = "Deny"
+# Report on authentication status for internal business logic
+policy_effect = "AuditIfNotExists"
 exempted_function_apps = []  # No exemptions
 ```
 
 ### 2. Mixed Environment
 
 ```hcl
-# Allow some public APIs while securing others
+# Monitor all Function Apps, exempt known public APIs
 exempted_function_apps = [
   "public-webhook-handler",
   "health-check-function"
@@ -246,8 +307,8 @@ exempted_resource_groups = [
 ### 3. Development Environment
 
 ```hcl
-# Audit mode for development, enforcement for production
-policy_effect = "Audit"  # Or "Deny" for production
+# Same monitoring approach for all environments
+policy_effect = "AuditIfNotExists"
 ```
 
 ## Implementation Best Practices
@@ -256,11 +317,13 @@ policy_effect = "Audit"  # Or "Deny" for production
 
 ```hcl
 # Phase 1: Audit mode to assess impact
-policy_effect = "Audit"
+policy_effect = "AuditIfNotExists"
 
-# Phase 2: Enable for new Function Apps
-policy_effect = "Deny"
+# Phase 2: Continue monitoring
+policy_effect = "AuditIfNotExists"
 ```
+
+**Note**: This policy uses `AuditIfNotExists` effect, which reports compliance but does not block deployments. Use remediation or manual fixes to address non-compliant resources.
 
 ### 2. Strategic Exemptions
 
@@ -321,42 +384,71 @@ cd tests/function-app
 
 ### Common Issues
 
-1. **Policy blocks legitimate public APIs**
-   - Solution: Add the Function App to `exempted_function_apps`
-   - Alternative: Move to a dedicated resource group and exempt the group
+1. **Non-compliant Function Apps reported**
+   - **Solution**: Enable authentication using `az webapp auth update --enabled true`
+   - **Check**: Verify `siteAuthEnabled = true` in the Function App's configuration
 
-2. **Legacy Function Apps fail deployment**
-   - Check current authentication configuration
-   - Plan migration to authenticated access
-   - Use temporary exemptions during transition
+2. **Authentication enabled but still non-compliant**
+   - **Cause**: Azure Policy evaluation may take up to 30 minutes
+   - **Solution**: Wait for policy evaluation cycle or trigger manual scan
+   - **Check**: Run `az policy state trigger-scan` to force evaluation
 
-3. **Policy doesn't apply to existing Function Apps**
-   - This policy evaluates at creation/update time
-   - Use remediation tasks for existing resources
-   - Manual updates may be required
+3. **Cannot set WEBSITE_AUTH_ENABLED app setting**
+   - **Cause**: This is a system-managed setting that cannot be set manually
+   - **Solution**: Use `az webapp auth update --enabled true` instead
+   - **Terraform**: Use `auth_settings { enabled = true }` block, not app_settings
 
-4. **Authentication setup complexity**
-   - Review Azure AD integration documentation
-   - Consider using managed identities
-   - Test authentication flows thoroughly
+4. **Policy doesn't apply to existing Function Apps**
+   - **Behavior**: AuditIfNotExists policies evaluate all resources continuously
+   - **Check**: Review Azure Policy compliance dashboard
+   - **Solution**: Fix non-compliant resources using remediation or manual updates
+
+5. **Exemption not working**
+   - **Check**: Verify exemption scope matches the Function App's resource group
+   - **Solution**: Add Function App name to `exempted_function_apps` parameter
+   - **Alternative**: Add resource group to `exempted_resource_groups`
 
 ### Debugging Steps
 
 1. **Check Policy Compliance**
 
    ```bash
-   # Azure CLI
-   az policy state list --policy-definition-name "deny-function-app-anonymous"
+   # Azure CLI - View compliance state
+   az policy state list \
+     --policy-definition-name "deny-function-app-anonymous" \
+     --resource-group <resource-group-name>
    ```
 
 2. **Review Function App Configuration**
 
    ```bash
-   # Check authentication settings
-   az functionapp auth show --name <function-app-name> --resource-group <rg-name>
+   # Check if siteAuthEnabled is true
+   az webapp config show \
+     --name <function-app-name> \
+     --resource-group <rg-name> \
+     --query "siteAuthEnabled"
+
+   # View full authentication configuration
+   az webapp auth show \
+     --name <function-app-name> \
+     --resource-group <rg-name>
    ```
 
-3. **Validate Configuration**
+3. **Enable Authentication on Non-Compliant Function App**
+
+   ```bash
+   # Fix non-compliance by enabling authentication
+   az webapp auth update \
+     --resource-group <rg-name> \
+     --name <function-app-name> \
+     --enabled true
+
+   # Wait for policy evaluation (up to 30 minutes)
+   # Or trigger manual evaluation scan
+   az policy state trigger-scan --no-wait
+   ```
+
+4. **Validate Configuration**
 
    ```bash
    # Terraform validation
@@ -384,11 +476,16 @@ stages:
 
 ```hcl
 # Function App with Azure AD authentication
-resource "azurerm_function_app" "example" {
+resource "azurerm_linux_function_app" "example" {
   name                = "secure-function-app"
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name
+  service_plan_id     = azurerm_service_plan.example.id
 
+  storage_account_name       = azurerm_storage_account.example.name
+  storage_account_access_key = azurerm_storage_account.example.primary_access_key
+
+  # Enable authentication (sets siteAuthEnabled = true)
   auth_settings {
     enabled = true
     default_provider = "AzureActiveDirectory"
@@ -431,11 +528,20 @@ resource "azurerm_monitor_activity_log_alert" "function_app_violation" {
 
 ## Version History
 
-- **v1.0**: Initial policy creation with authentication enforcement
+- **v2.0.0** (2025-01-14): Policy redesigned with AuditIfNotExists pattern
+  - **Breaking Change**: Effect changed from Audit/Deny to AuditIfNotExists
+  - **Improved**: Now checks `siteAuthEnabled` on config resource instead of app settings
+  - **Reason**: `WEBSITE_AUTH_ENABLED` is system-managed and cannot be set manually
+  - **Pattern**: Based on Azure built-in policy c75248c1-ea1d-4a9c-8fc9-29a6aabd5da8
+  - **Benefit**: Policy now checks the correct authentication configuration
+  - **Migration**: Existing assignments should be updated to use `AuditIfNotExists` effect
+
+- **v1.0.0**: Initial policy creation with authentication enforcement
   - Support for Function App authentication settings
   - Exemption mechanism for Function Apps and resource groups
   - Comprehensive parameter validation
   - Full Terraform module integration
+  - **Deprecated**: App settings approach (WEBSITE_AUTH_ENABLED cannot be set)
 
 ## Compliance Frameworks
 
@@ -481,7 +587,7 @@ No resources.
 | <a name="input_policy_assignment_description"></a> [policy\_assignment\_description](#input\_policy\_assignment\_description) | Description for the policy assignment | `string` | `"This assignment enforces the policy to deny Function Apps that allow anonymous access."` | no |
 | <a name="input_policy_assignment_display_name"></a> [policy\_assignment\_display\_name](#input\_policy\_assignment\_display\_name) | Display name for the policy assignment | `string` | `"Deny Function App Anonymous Access Assignment"` | no |
 | <a name="input_policy_assignment_name"></a> [policy\_assignment\_name](#input\_policy\_assignment\_name) | Name for the policy assignment | `string` | `"deny-function-app-anonymous-assignment"` | no |
-| <a name="input_policy_effect"></a> [policy\_effect](#input\_policy\_effect) | The effect of the policy (Audit, Deny, or Disabled) | `string` | `"Audit"` | no |
+| <a name="input_policy_effect"></a> [policy\_effect](#input\_policy\_effect) | The effect of the policy (AuditIfNotExists or Disabled) | `string` | `"AuditIfNotExists"` | no |
 
 ## Outputs
 
