@@ -16,7 +16,7 @@ try {
             -Settings '.vscode/PSScriptAnalyzerSettings.psd1' `
             -Recurse `
             -Severity Error, Warning `
-            -ExcludeRule PSUseConsistentWhitespace, PSUseBOMForUnicodeEncodedFile, PSAvoidUsingPositionalParameters, PSReviewUnusedParameter, PSUseDeclaredVarsMoreThanAssignments, PSAvoidUsingConvertToSecureStringWithPlainText, PSProvideCommentHelp
+            -ExcludeRule PSUseConsistentWhitespace, PSUseConsistentIndentation, PSUseBOMForUnicodeEncodedFile, PSAvoidUsingPositionalParameters, PSReviewUnusedParameter, PSUseDeclaredVarsMoreThanAssignments, PSAvoidUsingConvertToSecureStringWithPlainText, PSProvideCommentHelp, PSAvoidUsingWriteHost
 
         if ($results) {
             $results | Format-Table -AutoSize

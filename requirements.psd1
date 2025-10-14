@@ -26,6 +26,16 @@
             Description   = 'Azure storage account management (required for integration tests)'
         },
         @{
+            ModuleName    = 'Az.Functions'
+            ModuleVersion = '4.0.7'
+            Description   = 'Azure Functions management (required for Function App policy tests)'
+        },
+        @{
+            ModuleName    = 'Az.Websites'
+            ModuleVersion = '3.1.1'
+            Description   = 'Azure App Service and Function App web configuration management'
+        },
+        @{
             ModuleName    = 'PSScriptAnalyzer'
             ModuleVersion = '1.21.0'
             Description   = 'PowerShell code analysis and linting'

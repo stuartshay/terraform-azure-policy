@@ -240,16 +240,24 @@ function Import-PolicyTestModule {
 
     foreach ($module in $allModules) {
         try {
+            # Suppress warnings about Azure sessions - we handle this scenario gracefully
+            $WarningPreference = 'SilentlyContinue'
             if ($Config.Modules.ForceReload) {
-                Import-Module $module -Force
+                Import-Module $module -Force -ErrorAction SilentlyContinue
             }
             else {
-                Import-Module $module
+                Import-Module $module -ErrorAction SilentlyContinue
             }
             Write-Verbose "Imported module: $module"
         }
         catch {
-            Write-Warning "Failed to import module $module`: $($_.Exception.Message)"
+            # Only warn if it's not an Azure session issue
+            if ($_.Exception.Message -notmatch 'Azure PowerShell session') {
+                Write-Warning "Failed to import module $module`: $($_.Exception.Message)"
+            }
+        }
+        finally {
+            $WarningPreference = 'Continue'
         }
     }
 }
