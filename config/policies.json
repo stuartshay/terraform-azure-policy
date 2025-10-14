@@ -120,6 +120,19 @@
                     "exemptedSuffix": "exemp",
                     "runtime": "PowerShell"
                 }
+            },
+            "deny-function-app-no-private-endpoint": {
+                "name": "deny-function-app-no-private-endpoint",
+                "displayName": "Function Apps Must Disable Public Network Access",
+                "category": "Function App",
+                "policyPath": "policies/function-app/deny-function-app-no-private-endpoint/rule.json",
+                "resourcePrefix": "testpolicyfnpe",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "runtime": "PowerShell"
+                }
             }
         },
         "network": {
