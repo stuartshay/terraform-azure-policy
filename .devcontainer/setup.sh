@@ -126,8 +126,7 @@ if ! command -v nuget &> /dev/null; then
     # Install mono-complete for running .exe files on Linux
     if ! command -v mono &> /dev/null; then
         print_status "Installing Mono runtime for NuGet.exe..."
-        sudo apt-get update -qq
-        sudo apt-get install -y --no-install-recommends mono-complete
+        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends mono-complete
     fi
 
     # Create wrapper script
