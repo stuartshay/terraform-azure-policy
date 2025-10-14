@@ -105,6 +105,10 @@ elif [ "$MACHINE" = "Linux" ]; then
         case $DISTRO in
             ubuntu|debian)
                 print_status "Installing via Microsoft package repository..."
+                # Import Microsoft GPG public key
+                wget https://packages.microsoft.com/keys/microsoft.asc -O microsoft.asc
+                gpg --dearmor < microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+                rm microsoft.asc
                 wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
                 sudo dpkg -i packages-microsoft-prod.deb
                 rm packages-microsoft-prod.deb
