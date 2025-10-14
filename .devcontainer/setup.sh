@@ -116,43 +116,55 @@ pip3 install --upgrade pip --quiet
 pip3 install commitizen detect-secrets pre-commit --quiet
 print_success "Python packages installed (commitizen, detect-secrets, pre-commit)"
 
-# Install NuGet CLI
-print_status "Installing NuGet CLI..."
-if ! command -v nuget &> /dev/null; then
-    # Download latest NuGet.exe and verify checksum
-    NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-    NUGET_SHA_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe.sha512"
-    TMP_NUGET_EXE="/tmp/nuget.exe"
-    TMP_NUGET_SHA="/tmp/nuget.exe.sha512"
+# Install NuGet CLI (skip in CI mode to avoid slow mono installation)
+if [ "$CI_MODE" != "true" ]; then
+    print_status "Installing NuGet CLI..."
+    if ! command -v nuget &> /dev/null; then
+        # Download latest NuGet.exe and verify checksum
+        NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+        NUGET_SHA_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe.sha512"
+        TMP_NUGET_EXE="/tmp/nuget.exe"
+        TMP_NUGET_SHA="/tmp/nuget.exe.sha512"
 
-    wget -q "$NUGET_URL" -O "$TMP_NUGET_EXE"
-    wget -q "$NUGET_SHA_URL" -O "$TMP_NUGET_SHA"
-
-    # Verify checksum
-    if sha512sum --quiet -c <(echo "$(cat $TMP_NUGET_SHA)  $TMP_NUGET_EXE"); then
-        sudo mv "$TMP_NUGET_EXE" /usr/local/bin/nuget.exe
+        if wget -q "$NUGET_URL" -O "$TMP_NUGET_EXE" && wget -q "$NUGET_SHA_URL" -O "$TMP_NUGET_SHA"; then
+            # Verify checksum
+            if sha512sum --quiet -c <(echo "$(cat $TMP_NUGET_SHA)  $TMP_NUGET_EXE") 2>/dev/null; then
+                sudo mv "$TMP_NUGET_EXE" /usr/local/bin/nuget.exe
+                # Install mono-complete for running .exe files on Linux
+                if ! command -v mono &> /dev/null; then
+                    print_status "Installing Mono runtime for NuGet.exe..."
+                    if sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends mono-complete 2>/dev/null; then
+                        # Create wrapper script
+                        echo '#!/bin/bash' | sudo tee /usr/local/bin/nuget > /dev/null
+                        echo 'exec mono /usr/local/bin/nuget.exe "$@"' | sudo tee -a /usr/local/bin/nuget > /dev/null
+                        sudo chmod +x /usr/local/bin/nuget
+                        sudo chmod +x /usr/local/bin/nuget.exe
+                        print_success "NuGet CLI installed (via Mono)"
+                    else
+                        print_warning "Failed to install Mono - NuGet CLI not available"
+                    fi
+                else
+                    # Create wrapper script
+                    echo '#!/bin/bash' | sudo tee /usr/local/bin/nuget > /dev/null
+                    echo 'exec mono /usr/local/bin/nuget.exe "$@"' | sudo tee -a /usr/local/bin/nuget > /dev/null
+                    sudo chmod +x /usr/local/bin/nuget
+                    sudo chmod +x /usr/local/bin/nuget.exe
+                    print_success "NuGet CLI installed (via Mono)"
+                fi
+            else
+                print_warning "NuGet checksum verification failed - skipping installation"
+                rm -f "$TMP_NUGET_EXE"
+            fi
+            rm -f "$TMP_NUGET_SHA"
+        else
+            print_warning "Failed to download NuGet - skipping installation"
+        fi
     else
-        echo "ERROR: nuget.exe checksum verification failed!" >&2
-        rm -f "$TMP_NUGET_EXE"
-        exit 1
+        nuget help 2>&1 | head -n1
+        print_success "NuGet CLI already installed"
     fi
-    rm -f "$TMP_NUGET_SHA"
-    # Install mono-complete for running .exe files on Linux
-    if ! command -v mono &> /dev/null; then
-        print_status "Installing Mono runtime for NuGet.exe..."
-        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends mono-complete
-    fi
-
-    # Create wrapper script
-    echo '#!/bin/bash' | sudo tee /usr/local/bin/nuget > /dev/null
-    echo 'exec mono /usr/local/bin/nuget.exe "$@"' | sudo tee -a /usr/local/bin/nuget > /dev/null
-    sudo chmod +x /usr/local/bin/nuget
-    sudo chmod +x /usr/local/bin/nuget.exe
-
-    print_success "NuGet CLI installed (via Mono)"
 else
-    nuget help 2>&1 | head -n1
-    print_success "NuGet CLI already installed"
+    print_status "Skipping NuGet CLI installation in CI mode"
 fi
 
 # Install PowerShell modules using centralized script
