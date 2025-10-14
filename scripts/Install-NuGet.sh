@@ -161,7 +161,25 @@ elif [ "$MACHINE" = "Linux" ]; then
             *)
                 print_warning "Unsupported distribution: $DISTRO"
                 print_status "Installing via Microsoft script..."
-                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0
+                TMP_SCRIPT=$(mktemp)
+                curl -sSL https://dot.net/v1/dotnet-install.sh -o "$TMP_SCRIPT"
+                SCRIPT_SHA256=$(sha256sum "$TMP_SCRIPT" | awk '{print $1}')
+                print_status "Downloaded script SHA256: $SCRIPT_SHA256"
+                if [ -z "$DOTNET_INSTALL_SHASUM" ]; then
+                    print_error "No expected checksum provided. Please set DOTNET_INSTALL_SHASUM to the expected SHA256 value."
+                    print_status "You can find the expected checksum at https://dot.net/v1/dotnet-install.sh.sha256 or by downloading it manually."
+                    print_status "Aborting installation for security reasons."
+                    rm -f "$TMP_SCRIPT"
+                    exit 1
+                fi
+                if [ "$SCRIPT_SHA256" != "$DOTNET_INSTALL_SHASUM" ]; then
+                    print_error "Checksum verification failed! Expected: $DOTNET_INSTALL_SHASUM, Got: $SCRIPT_SHA256"
+                    rm -f "$TMP_SCRIPT"
+                    exit 1
+                fi
+                print_success "Checksum verification passed."
+                bash "$TMP_SCRIPT" --channel 9.0
+                rm -f "$TMP_SCRIPT"
 
                 export DOTNET_ROOT=$HOME/.dotnet
                 export PATH=$PATH:$DOTNET_ROOT
