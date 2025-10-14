@@ -215,6 +215,8 @@ echo "Markdownlint: $(markdownlint --version 2>/dev/null || echo 'Not installed'
 echo "Shellcheck: $(shellcheck --version 2>/dev/null | head -n2 | tail -n1 || echo 'Not installed')"
 echo "Yamllint: $(yamllint --version 2>/dev/null || echo 'Not installed')"
 echo "Docker: $(docker --version 2>/dev/null || echo 'Not installed')"
+echo ".NET SDK: $(dotnet --version 2>/dev/null || echo 'Not installed')"
+echo "NuGet: $(dotnet nuget --version 2>/dev/null || nuget 2>&1 | head -n1 || echo 'Not installed')"
 echo ""
 echo "PowerShell Modules:"
 if command -v pwsh &> /dev/null; then
