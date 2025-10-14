@@ -73,8 +73,42 @@ if [ "$MACHINE" = "Mac" ]; then
         print_success ".NET SDK installed via Homebrew"
     else
         print_warning "Homebrew not found. Installing via Microsoft script..."
-        curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0
+        # Download the installer script to a temporary file
+        DOTNET_INSTALL_URL="https://dot.net/v1/dotnet-install.sh"
+        DOTNET_INSTALL_SCRIPT="$(mktemp)"
+        curl -sSL "$DOTNET_INSTALL_URL" -o "$DOTNET_INSTALL_SCRIPT"
 
+        # Optional: Set the expected checksum here (update as needed)
+        # You should obtain the expected checksum from https://dot.net/v1/dotnet-install.sh.sha512 or a trusted source
+        # Example: EXPECTED_CHECKSUM="abc123..."
+        EXPECTED_CHECKSUM=""
+
+        if [ -n "$EXPECTED_CHECKSUM" ]; then
+            # Compute the checksum of the downloaded script
+            if command -v sha512sum &> /dev/null; then
+                COMPUTED_CHECKSUM=$(sha512sum "$DOTNET_INSTALL_SCRIPT" | awk '{print $1}')
+            elif command -v shasum &> /dev/null; then
+                COMPUTED_CHECKSUM=$(shasum -a 512 "$DOTNET_INSTALL_SCRIPT" | awk '{print $1}')
+            else
+                print_error "No SHA512 checksum tool found. Please install sha512sum or shasum."
+                rm -f "$DOTNET_INSTALL_SCRIPT"
+                exit 1
+            fi
+
+            if [ "$COMPUTED_CHECKSUM" != "$EXPECTED_CHECKSUM" ]; then
+                print_error "Checksum verification failed! Aborting installation."
+                rm -f "$DOTNET_INSTALL_SCRIPT"
+                exit 1
+            else
+                print_success "Checksum verification passed."
+            fi
+        else
+            print_warning "No checksum provided. Proceeding without verification. (Not recommended for production use.)"
+        fi
+
+        # Execute the installer script
+        bash "$DOTNET_INSTALL_SCRIPT" --channel 9.0
+        rm -f "$DOTNET_INSTALL_SCRIPT"
         # Add to PATH
         export DOTNET_ROOT=$HOME/.dotnet
         export PATH=$PATH:$DOTNET_ROOT
