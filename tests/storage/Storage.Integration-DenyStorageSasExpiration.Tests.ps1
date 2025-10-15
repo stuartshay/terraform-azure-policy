@@ -52,8 +52,7 @@ BeforeAll {
     $policyPath = Get-PolicyDefinitionPath -PolicyCategory 'storage' -PolicyName 'deny-storage-sas-expiration' -TestScriptPath $PSScriptRoot
     if (Test-Path $policyPath) {
         $script:PolicyDefinitionJson = Get-Content $policyPath -Raw | ConvertFrom-Json
-    }
-    else {
+    } else {
         throw "Policy definition file not found at: $policyPath"
     }
 }
@@ -122,8 +121,10 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
             $script:PolicyAssignments = Get-AzPolicyAssignment -Scope $script:ResourceGroup.ResourceId -ErrorAction SilentlyContinue
             $script:TargetAssignment = $script:PolicyAssignments | Where-Object {
                 $_.DisplayName -like "*$script:PolicyDisplayName*" -or
+                $_.Properties.DisplayName -like "*$script:PolicyDisplayName*" -or
                 $_.Name -like "*$script:PolicyName*" -or
-                $_.PolicyDefinitionId -like "*$script:PolicyName*"
+                $_.PolicyDefinitionId -like "*$script:PolicyName*" -or
+                $_.Properties.PolicyDefinitionId -like "*$script:PolicyName*"
             }
         }
 
@@ -131,19 +132,28 @@ Describe 'Policy Assignment Validation' -Tag @('Integration', 'Fast', 'PolicyAss
             if ($script:TargetAssignment) {
                 $script:TargetAssignment | Should -Not -BeNullOrEmpty
                 Write-Host "Policy assignment found: $($script:TargetAssignment.Name)" -ForegroundColor Green
-            }
-            else {
-                Write-Host "Policy not yet assigned - skipping assignment tests" -ForegroundColor Yellow
-                Set-ItResult -Skipped -Because "Policy not yet deployed/assigned"
+            } else {
+                Write-Host 'Policy not yet assigned - skipping assignment tests' -ForegroundColor Yellow
+                Set-ItResult -Skipped -Because 'Policy not yet deployed/assigned'
             }
         }
 
-        It 'Should be assigned at resource group scope' -Skip:($null -eq $script:TargetAssignment) {
-            $script:TargetAssignment.Scope | Should -Be $script:ResourceGroup.ResourceId
+        It 'Should be assigned at resource group scope' {
+            if (-not $script:TargetAssignment) {
+                Set-ItResult -Skipped -Because 'Policy assignment not found'
+                return
+            }
+            $scope = if ($script:TargetAssignment.Properties.Scope) { $script:TargetAssignment.Properties.Scope } else { $script:TargetAssignment.Scope }
+            $scope | Should -Be $script:ResourceGroup.ResourceId
         }
 
-        It 'Should have policy definition associated' -Skip:($null -eq $script:TargetAssignment) {
-            $script:TargetAssignment.PolicyDefinitionId | Should -Not -BeNullOrEmpty
+        It 'Should have policy definition associated' {
+            if (-not $script:TargetAssignment) {
+                Set-ItResult -Skipped -Because 'Policy assignment not found'
+                return
+            }
+            $policyDefId = if ($script:TargetAssignment.Properties.PolicyDefinitionId) { $script:TargetAssignment.Properties.PolicyDefinitionId } else { $script:TargetAssignment.PolicyDefinitionId }
+            $policyDefId | Should -Not -BeNullOrEmpty
         }
     }
 }
@@ -174,8 +184,7 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                     -ErrorAction Stop
 
                 $script:TestResources += $script:CompliantStorageName
-            }
-            catch {
+            } catch {
                 Write-Host "Error creating compliant storage account: $($_.Exception.Message)" -ForegroundColor Red
                 throw
             }
@@ -198,14 +207,12 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                     -ErrorAction Stop
 
                 $script:TestResources += $script:NonCompliantStorageName
-                Write-Host "Non-compliant storage account created (policy in Audit mode or not assigned)" -ForegroundColor Yellow
-            }
-            catch {
+                Write-Host 'Non-compliant storage account created (policy in Audit mode or not assigned)' -ForegroundColor Yellow
+            } catch {
                 if ($_.Exception.Message -match 'policy|denied|disallowed') {
-                    Write-Host "Storage account creation blocked by policy (expected with Deny effect)" -ForegroundColor Green
-                    Set-ItResult -Skipped -Because "Policy correctly denied non-compliant resource"
-                }
-                else {
+                    Write-Host 'Storage account creation blocked by policy (expected with Deny effect)' -ForegroundColor Green
+                    Set-ItResult -Skipped -Because 'Policy correctly denied non-compliant resource'
+                } else {
                     Write-Host "Error creating non-compliant storage account: $($_.Exception.Message)" -ForegroundColor Red
                     throw
                 }
@@ -228,14 +235,12 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                     -ErrorAction Stop
 
                 $script:TestResources += $script:NoSasPolicyStorageName
-                Write-Host "Storage account without SAS policy created (policy in Audit mode or not assigned)" -ForegroundColor Yellow
-            }
-            catch {
+                Write-Host 'Storage account without SAS policy created (policy in Audit mode or not assigned)' -ForegroundColor Yellow
+            } catch {
                 if ($_.Exception.Message -match 'policy|denied|disallowed') {
-                    Write-Host "Storage account creation blocked by policy (expected with Deny effect)" -ForegroundColor Green
-                    Set-ItResult -Skipped -Because "Policy correctly denied resource without SAS policy"
-                }
-                else {
+                    Write-Host 'Storage account creation blocked by policy (expected with Deny effect)' -ForegroundColor Green
+                    Set-ItResult -Skipped -Because 'Policy correctly denied resource without SAS policy'
+                } else {
                     Write-Host "Error creating storage account: $($_.Exception.Message)" -ForegroundColor Red
                     throw
                 }
@@ -249,7 +254,7 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
 
         It 'Should wait for policy evaluation to complete' {
             # Azure Policy evaluation can take several minutes
-            Write-Host "Waiting 90 seconds for policy evaluation..." -ForegroundColor Yellow
+            Write-Host 'Waiting 90 seconds for policy evaluation...' -ForegroundColor Yellow
             Start-Sleep -Seconds 90
             $true | Should -Be $true
         }
@@ -259,27 +264,25 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
         BeforeAll {
             # Trigger policy compliance scan
             try {
-                Write-Host "Triggering policy compliance scan..." -ForegroundColor Yellow
+                Write-Host 'Triggering policy compliance scan...' -ForegroundColor Yellow
                 Start-AzPolicyComplianceScan -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue
                 Start-Sleep -Seconds 30
-            }
-            catch {
+            } catch {
                 Write-Host "Could not trigger compliance scan: $($_.Exception.Message)" -ForegroundColor Yellow
             }
 
             # Get compliance states
             $script:PolicyStates = Get-AzPolicyState -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue |
-            Where-Object { $_.PolicyDefinitionName -like "*$script:PolicyName*" }
+                Where-Object { $_.PolicyDefinitionName -like "*$script:PolicyName*" }
         }
 
         It 'Should have policy states available' {
             if ($script:PolicyStates) {
                 $script:PolicyStates.Count | Should -BeGreaterThan 0
                 Write-Host "Found $($script:PolicyStates.Count) policy state(s)" -ForegroundColor Green
-            }
-            else {
-                Write-Host "No policy states found yet - evaluation may still be in progress" -ForegroundColor Yellow
-                Set-ItResult -Skipped -Because "Policy evaluation not yet complete"
+            } else {
+                Write-Host 'No policy states found yet - evaluation may still be in progress' -ForegroundColor Yellow
+                Set-ItResult -Skipped -Because 'Policy evaluation not yet complete'
             }
         }
 
@@ -291,10 +294,9 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
             if ($compliantState) {
                 $compliantState.ComplianceState | Should -Be 'Compliant'
                 Write-Host "Compliant storage account correctly evaluated: $($compliantState.ComplianceState)" -ForegroundColor Green
-            }
-            else {
-                Write-Host "Compliant storage account state not found in evaluation results" -ForegroundColor Yellow
-                Set-ItResult -Skipped -Because "Policy state not yet available for compliant resource"
+            } else {
+                Write-Host 'Compliant storage account state not found in evaluation results' -ForegroundColor Yellow
+                Set-ItResult -Skipped -Because 'Policy state not yet available for compliant resource'
             }
         }
 
@@ -309,10 +311,9 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                     Write-Host "Storage account: $($_.ResourceId) - State: $($_.ComplianceState)" -ForegroundColor Yellow
                 }
                 $nonCompliantStates | Where-Object { $_.ComplianceState -eq 'NonCompliant' } | Should -Not -BeNullOrEmpty
-            }
-            else {
-                Write-Host "Non-compliant storage account states not found in evaluation results" -ForegroundColor Yellow
-                Set-ItResult -Skipped -Because "Policy states not yet available for non-compliant resources"
+            } else {
+                Write-Host 'Non-compliant storage account states not found in evaluation results' -ForegroundColor Yellow
+                Set-ItResult -Skipped -Because 'Policy states not yet available for non-compliant resources'
             }
         }
     }
@@ -326,7 +327,7 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                     Write-Host "  Compliance: $($_.ComplianceState)" -ForegroundColor $(if ($_.ComplianceState -eq 'Compliant') { 'Green' } else { 'Red' })
                     Write-Host "  Policy: $($_.PolicyDefinitionName)" -ForegroundColor Gray
                     Write-Host "  Timestamp: $($_.Timestamp)" -ForegroundColor Gray
-                    Write-Host ""
+                    Write-Host ''
                 }
             }
             $true | Should -Be $true
@@ -346,8 +347,7 @@ AfterAll {
                     -Force `
                     -ErrorAction SilentlyContinue
                 Write-Host "  Removed: $storageName" -ForegroundColor Green
-            }
-            catch {
+            } catch {
                 Write-Host "  Could not remove $storageName : $($_.Exception.Message)" -ForegroundColor Yellow
             }
         }
