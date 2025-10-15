@@ -182,10 +182,6 @@ module "deny_function_app_anonymous" {
   # Policy Configuration
   policy_effect = var.function_app_policy_effect
 
-  # Exempted Function Apps and Resource Groups
-  exempted_function_apps   = var.function_app_exempted_apps
-  exempted_resource_groups = var.function_app_exempted_resource_groups
-
   # Environment
   environment = var.environment
   owner       = var.owner

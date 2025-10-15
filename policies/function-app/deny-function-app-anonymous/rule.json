@@ -12,31 +12,15 @@
     "parameters": {
       "effect": {
         "allowedValues": [
-          "AuditIfNotExists",
+          "Deny",
           "Disabled"
         ],
-        "defaultValue": "AuditIfNotExists",
+        "defaultValue": "Deny",
         "metadata": {
           "description": "Enable or disable the execution of the policy",
           "displayName": "Effect"
         },
         "type": "String"
-      },
-      "exemptedFunctionApps": {
-        "defaultValue": [],
-        "metadata": {
-          "description": "List of Function App names that are exempt from this policy",
-          "displayName": "Exempted Function Apps"
-        },
-        "type": "Array"
-      },
-      "exemptedResourceGroups": {
-        "defaultValue": [],
-        "metadata": {
-          "description": "List of resource group names that are exempt from this policy",
-          "displayName": "Exempted Resource Groups"
-        },
-        "type": "Array"
       }
     },
     "policyRule": {
@@ -55,28 +39,12 @@
             "notContains": "workflowapp"
           },
           {
-            "not": {
-              "field": "name",
-              "in": "[parameters('exemptedFunctionApps')]"
-            }
-          },
-          {
-            "not": {
-              "field": "Microsoft.Web/sites/resourceGroup",
-              "in": "[parameters('exemptedResourceGroups')]"
-            }
+            "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
+            "notEquals": "true"
           }
         ]
       },
       "then": {
-        "details": {
-          "existenceCondition": {
-            "equals": "true",
-            "field": "Microsoft.Web/sites/config/siteAuthEnabled"
-          },
-          "name": "web",
-          "type": "Microsoft.Web/sites/config"
-        },
         "effect": "[parameters('effect')]"
       }
     },

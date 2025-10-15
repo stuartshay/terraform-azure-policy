@@ -1,30 +1,45 @@
 {
-  "effect": {
-    "allowedValues": [
-      "AuditIfNotExists",
-      "Disabled"
-    ],
-    "defaultValue": "AuditIfNotExists",
-    "metadata": {
-      "description": "Enable or disable the execution of the policy",
-      "displayName": "Effect"
+  "properties": {
+    "description": "This policy denies creation of Azure Function Apps that do not have authentication enabled.",
+    "displayName": "Deny Function App Anonymous Access",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Enable or disable the execution of the policy",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      }
     },
-    "type": "String"
-  },
-  "exemptedFunctionApps": {
-    "defaultValue": [],
-    "metadata": {
-      "description": "List of Function App names that are exempt from this policy",
-      "displayName": "Exempted Function Apps"
-    },
-    "type": "Array"
-  },
-  "exemptedResourceGroups": {
-    "defaultValue": [],
-    "metadata": {
-      "description": "List of resource group names that are exempt from this policy",
-      "displayName": "Exempted Resource Groups"
-    },
-    "type": "Array"
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Web/sites",
+            "field": "type"
+          },
+          {
+            "contains": "functionapp",
+            "field": "kind"
+          },
+          {
+            "field": "kind",
+            "notContains": "workflowapp"
+          },
+          {
+            "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
+            "notEquals": "true"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
   }
 }

@@ -57,24 +57,12 @@ variable "policy_assignment_description" {
 
 # Policy Configuration
 variable "policy_effect" {
-  description = "The effect of the policy (AuditIfNotExists or Disabled)"
+  description = "The effect of the policy (Deny or Disabled)"
   type        = string
-  default     = "AuditIfNotExists"
+  default     = "Deny"
 
   validation {
-    condition     = contains(["AuditIfNotExists", "Disabled"], var.policy_effect)
-    error_message = "The policy_effect must be one of: AuditIfNotExists or Disabled."
+    condition     = contains(["Deny", "Disabled"], var.policy_effect)
+    error_message = "The policy_effect must be one of: Deny or Disabled."
   }
-}
-
-variable "exempted_function_apps" {
-  description = "List of Function App names that are exempt from this policy"
-  type        = list(string)
-  default     = []
-}
-
-variable "exempted_resource_groups" {
-  description = "List of resource group names that are exempt from this policy"
-  type        = list(string)
-  default     = []
 }

@@ -14,28 +14,12 @@
         "notContains": "workflowapp"
       },
       {
-        "not": {
-          "field": "name",
-          "in": "[parameters('exemptedFunctionApps')]"
-        }
-      },
-      {
-        "not": {
-          "field": "Microsoft.Web/sites/resourceGroup",
-          "in": "[parameters('exemptedResourceGroups')]"
-        }
+        "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
+        "notEquals": "true"
       }
     ]
   },
   "then": {
-    "details": {
-      "existenceCondition": {
-        "equals": "true",
-        "field": "Microsoft.Web/sites/config/siteAuthEnabled"
-      },
-      "name": "web",
-      "type": "Microsoft.Web/sites/config"
-    },
     "effect": "[parameters('effect')]"
   }
 }

@@ -25,12 +25,6 @@ module "policy" {
     effect = {
       value = var.policy_effect
     }
-    exemptedFunctionApps = {
-      value = var.exempted_function_apps
-    }
-    exemptedResourceGroups = {
-      value = var.exempted_resource_groups
-    }
   }
 
   # Environment
