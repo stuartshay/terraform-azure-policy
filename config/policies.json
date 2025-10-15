@@ -66,6 +66,20 @@
                     "storageAccountSku": "Standard_LRS",
                     "minimumRetentionDays": 7
                 }
+            },
+            "deny-storage-sas-expiration": {
+                "name": "deny-storage-sas-expiration",
+                "displayName": "Deny Storage Account SAS Token Expiration Greater Than Maximum",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-sas-expiration/rule.json",
+                "resourcePrefix": "testpolicysas",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS",
+                    "maxSasExpirationDays": 90
+                }
             }
         },
         "function-app": {

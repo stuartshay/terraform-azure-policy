@@ -1,0 +1,77 @@
+{
+  "properties": {
+    "description": "This policy denies the creation or modification of Azure Storage accounts that have a SAS token expiration period exceeding the specified maximum (default: 90 days).",
+    "displayName": "Deny Storage Account SAS Token Expiration Greater Than Maximum",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Enable or disable the execution of the policy",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "maxSasExpirationDays": {
+        "allowedValues": [
+          7,
+          14,
+          30,
+          60,
+          90,
+          180,
+          365
+        ],
+        "defaultValue": 90,
+        "metadata": {
+          "description": "Maximum allowed SAS token expiration period in days",
+          "displayName": "Maximum SAS Expiration Days"
+        },
+        "type": "Integer"
+      },
+      "exemptedStorageAccounts": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of storage account names that are exempt from this policy",
+          "displayName": "Exempted Storage Accounts"
+        },
+        "type": "Array"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Storage/storageAccounts",
+            "field": "type"
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedStorageAccounts')]"
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod",
+                "exists": "false"
+              },
+              {
+                "value": "[if(contains(field('Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod'), '.'), int(split(field('Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod'), '.')[0]), 0)]",
+                "greater": "[parameters('maxSasExpirationDays')]"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}

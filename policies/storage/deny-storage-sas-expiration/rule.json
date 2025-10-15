@@ -1,0 +1,85 @@
+{
+  "name": "deny-storage-sas-expiration",
+  "properties": {
+    "description": "This policy denies the creation or modification of Azure Storage accounts that have a SAS token expiration period exceeding the specified maximum (default: 90 days). Shared Access Signatures (SAS) should have limited validity periods to minimize security risks if tokens are compromised. This policy enforces the sasExpirationPeriod property on storage accounts.",
+    "displayName": "Deny Storage Account SAS Token Expiration Greater Than Maximum",
+    "metadata": {
+      "category": "Storage",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Enable or disable the execution of the policy",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "exemptedStorageAccounts": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of storage account names that are exempt from this policy",
+          "displayName": "Exempted Storage Accounts"
+        },
+        "type": "Array"
+      },
+      "maxSasExpirationDays": {
+        "allowedValues": [
+          7,
+          14,
+          30,
+          60,
+          90,
+          180,
+          365
+        ],
+        "defaultValue": 90,
+        "metadata": {
+          "description": "Maximum allowed SAS token expiration period in days",
+          "displayName": "Maximum SAS Expiration Days"
+        },
+        "type": "Integer"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Storage/storageAccounts",
+            "field": "type"
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedStorageAccounts')]"
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "exists": "false",
+                "field": "Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod"
+              },
+              {
+                "greater": "[parameters('maxSasExpirationDays')]",
+                "value": "[if(contains(field('Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod'), '.'), int(split(field('Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod'), '.')[0]), 0)]"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}
