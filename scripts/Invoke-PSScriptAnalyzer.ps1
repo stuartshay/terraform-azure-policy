@@ -11,12 +11,14 @@
 
 try {
     if (Get-Module -ListAvailable -Name PSScriptAnalyzer) {
+        # Note: Excludes formatting rules (handled by pre-commit), test-related rules, and documentation rules
+        # PSAvoidUsingPositionalParameters is excluded for utility scripts where named parameters add verbosity
         $results = Invoke-ScriptAnalyzer `
             -Path . `
             -Settings '.vscode/PSScriptAnalyzerSettings.psd1' `
             -Recurse `
             -Severity Error, Warning `
-            -ExcludeRule PSUseConsistentWhitespace, PSUseConsistentIndentation, PSUseBOMForUnicodeEncodedFile, PSAvoidUsingPositionalParameters, PSReviewUnusedParameter, PSUseDeclaredVarsMoreThanAssignments, PSAvoidUsingConvertToSecureStringWithPlainText, PSProvideCommentHelp, PSAvoidUsingWriteHost
+            -ExcludeRule PSUseConsistentWhitespace, PSUseConsistentIndentation, PSUseBOMForUnicodeEncodedFile, PSAvoidUsingPositionalParameters, PSReviewUnusedParameter, PSUseDeclaredVarsMoreThanAssignments, PSProvideCommentHelp
 
         if ($results) {
             $results | Format-Table -AutoSize
