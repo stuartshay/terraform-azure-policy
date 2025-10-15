@@ -1,0 +1,86 @@
+{
+  "name": "deny-function-app-no-private-endpoint",
+  "properties": {
+    "description": "This policy enforces that Azure Function Apps must have public network access disabled. This is a prerequisite for using private endpoints and ensures Function Apps are not directly exposed to the public internet. Note: Azure Policy cannot verify actual private endpoint connections due to platform limitations - use Azure Resource Graph queries for that validation.",
+    "displayName": "Function Apps Must Disable Public Network Access",
+    "metadata": {
+      "category": "Function App",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "exemptedFunctionApps": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of Function App names that are exempt from this policy",
+          "displayName": "Exempted Function Apps"
+        },
+        "type": "Array"
+      },
+      "exemptedResourceGroups": {
+        "defaultValue": [],
+        "metadata": {
+          "description": "List of resource group names that are exempt from this policy",
+          "displayName": "Exempted Resource Groups"
+        },
+        "type": "Array"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Web/sites",
+            "field": "type"
+          },
+          {
+            "equals": "functionapp",
+            "field": "kind"
+          },
+          {
+            "not": {
+              "field": "name",
+              "in": "[parameters('exemptedFunctionApps')]"
+            }
+          },
+          {
+            "not": {
+              "field": "Microsoft.Web/sites/resourceGroup",
+              "in": "[parameters('exemptedResourceGroups')]"
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Web/sites/publicNetworkAccess",
+                "notEquals": "Disabled"
+              },
+              {
+                "exists": "false",
+                "field": "Microsoft.Web/sites/publicNetworkAccess"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

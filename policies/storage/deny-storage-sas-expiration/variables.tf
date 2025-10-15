@@ -1,4 +1,4 @@
-# Variables for the Function App Anonymous Access Policy Module
+# Variables for the Storage SAS Expiration Policy Module
 
 variable "environment" {
   description = "Environment name (e.g., dev, test, prod)"
@@ -40,29 +40,46 @@ variable "assignment_location" {
 variable "policy_assignment_name" {
   description = "Name for the policy assignment"
   type        = string
-  default     = "deny-function-app-anonymous-assignment"
+  default     = "deny-storage-sas-expiration-assignment"
 }
 
 variable "policy_assignment_display_name" {
   description = "Display name for the policy assignment"
   type        = string
-  default     = "Deny Function App Anonymous Access Assignment"
+  default     = "Deny Storage Account SAS Token Expiration Greater Than Maximum Assignment"
 }
 
 variable "policy_assignment_description" {
   description = "Description for the policy assignment"
   type        = string
-  default     = "This assignment enforces the policy to deny Function Apps that allow anonymous access."
+  default     = "This assignment enforces the policy to deny storage accounts with SAS token expiration periods exceeding the maximum allowed."
 }
 
 # Policy Configuration
 variable "policy_effect" {
-  description = "The effect of the policy (Deny or Disabled)"
+  description = "The effect of the policy (Audit, Deny, or Disabled)"
   type        = string
   default     = "Deny"
 
   validation {
-    condition     = contains(["Deny", "Disabled"], var.policy_effect)
-    error_message = "The policy_effect must be one of: Deny or Disabled."
+    condition     = contains(["Audit", "Deny", "Disabled"], var.policy_effect)
+    error_message = "The policy_effect must be one of: Audit, Deny, or Disabled."
   }
+}
+
+variable "max_sas_expiration_days" {
+  description = "Maximum allowed SAS token expiration period in days"
+  type        = number
+  default     = 90
+
+  validation {
+    condition     = contains([7, 14, 30, 60, 90, 180, 365], var.max_sas_expiration_days)
+    error_message = "The max_sas_expiration_days must be one of: 7, 14, 30, 60, 90, 180, or 365."
+  }
+}
+
+variable "exempted_storage_accounts" {
+  description = "List of storage account names that are exempt from this policy"
+  type        = list(string)
+  default     = []
 }

@@ -168,18 +168,6 @@ variable "function_app_policy_effect" {
   }
 }
 
-variable "function_app_exempted_apps" {
-  description = "List of Function App names that are exempt from the anonymous policy"
-  type        = list(string)
-  default     = []
-}
-
-variable "function_app_exempted_resource_groups" {
-  description = "List of resource group names that are exempt from the Function App anonymous policy"
-  type        = list(string)
-  default     = []
-}
-
 variable "function_app_https_policy_effect" {
   description = "The effect for Function App HTTPS-only policy (Audit, Deny, or Disabled)"
   type        = string

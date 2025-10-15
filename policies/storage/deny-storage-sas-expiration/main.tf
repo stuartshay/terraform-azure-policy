@@ -1,4 +1,4 @@
-# Azure Policy Definition and Assignment for Function App Anonymous Access
+# Azure Policy Definition and Assignment for Deny Storage SAS Expiration
 # This Terraform configuration creates a custom Azure Policy definition and assignment
 
 module "policy" {
@@ -6,7 +6,7 @@ module "policy" {
 
   # Policy Configuration
   policy_rule_file = "${path.module}/rule.json"
-  policy_category  = "Function App"
+  policy_category  = "Storage"
 
   # Management Group (optional)
   management_group_id = var.management_group_id
@@ -24,6 +24,12 @@ module "policy" {
   policy_parameters = {
     effect = {
       value = var.policy_effect
+    }
+    maxSasExpirationDays = {
+      value = var.max_sas_expiration_days
+    }
+    exemptedStorageAccounts = {
+      value = var.exempted_storage_accounts
     }
   }
 

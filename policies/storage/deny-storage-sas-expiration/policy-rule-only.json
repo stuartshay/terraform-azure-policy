@@ -1,0 +1,31 @@
+{
+   "if": {
+      "allOf": [
+         {
+            "equals": "Microsoft.Storage/storageAccounts",
+            "field": "type"
+         },
+         {
+            "not": {
+               "field": "name",
+               "in": "[parameters('exemptedStorageAccounts')]"
+            }
+         },
+         {
+            "anyOf": [
+               {
+                  "field": "Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod",
+                  "exists": "false"
+               },
+               {
+                  "value": "[if(contains(field('Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod'), '.'), int(split(field('Microsoft.Storage/storageAccounts/sasPolicy.sasExpirationPeriod'), '.')[0]), 0)]",
+                  "greater": "[parameters('maxSasExpirationDays')]"
+               }
+            ]
+         }
+      ]
+   },
+   "then": {
+      "effect": "[parameters('effect')]"
+   }
+}

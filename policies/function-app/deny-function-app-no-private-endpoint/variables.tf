@@ -1,4 +1,4 @@
-# Variables for the Function App Anonymous Access Policy Module
+# Variables for the Function App Private Endpoint Policy Module
 
 variable "environment" {
   description = "Environment name (e.g., dev, test, prod)"
@@ -40,29 +40,41 @@ variable "assignment_location" {
 variable "policy_assignment_name" {
   description = "Name for the policy assignment"
   type        = string
-  default     = "deny-function-app-anonymous-assignment"
+  default     = "deny-function-app-no-private-endpoint-assignment"
 }
 
 variable "policy_assignment_display_name" {
   description = "Display name for the policy assignment"
   type        = string
-  default     = "Deny Function App Anonymous Access Assignment"
+  default     = "Deny Function App Without Private Endpoint Assignment"
 }
 
 variable "policy_assignment_description" {
   description = "Description for the policy assignment"
   type        = string
-  default     = "This assignment enforces the policy to deny Function Apps that allow anonymous access."
+  default     = "This assignment enforces the policy to deny Function Apps that do not have private endpoints configured."
 }
 
 # Policy Configuration
 variable "policy_effect" {
-  description = "The effect of the policy (Deny or Disabled)"
+  description = "The effect of the policy (Audit, Deny, or Disabled)"
   type        = string
-  default     = "Deny"
+  default     = "Audit"
 
   validation {
-    condition     = contains(["Deny", "Disabled"], var.policy_effect)
-    error_message = "The policy_effect must be one of: Deny or Disabled."
+    condition     = contains(["Audit", "Deny", "Disabled"], var.policy_effect)
+    error_message = "The policy_effect must be one of: Audit, Deny, or Disabled."
   }
+}
+
+variable "exempted_function_apps" {
+  description = "List of Function App names that are exempt from this policy"
+  type        = list(string)
+  default     = []
+}
+
+variable "exempted_resource_groups" {
+  description = "List of resource group names that are exempt from this policy"
+  type        = list(string)
+  default     = []
 }

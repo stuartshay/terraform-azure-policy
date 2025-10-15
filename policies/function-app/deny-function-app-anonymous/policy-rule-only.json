@@ -1,0 +1,25 @@
+{
+  "if": {
+    "allOf": [
+      {
+        "equals": "Microsoft.Web/sites",
+        "field": "type"
+      },
+      {
+        "contains": "functionapp",
+        "field": "kind"
+      },
+      {
+        "field": "kind",
+        "notContains": "workflowapp"
+      },
+      {
+        "field": "Microsoft.Web/sites/siteConfig.authSettings.enabled",
+        "notEquals": "true"
+      }
+    ]
+  },
+  "then": {
+    "effect": "[parameters('effect')]"
+  }
+}

@@ -1,4 +1,4 @@
-# Azure Policy Definition and Assignment for Function App Anonymous Access
+# Azure Policy Definition and Assignment for Deny Function App No Private Endpoint
 # This Terraform configuration creates a custom Azure Policy definition and assignment
 
 module "policy" {
@@ -24,6 +24,12 @@ module "policy" {
   policy_parameters = {
     effect = {
       value = var.policy_effect
+    }
+    exemptedFunctionApps = {
+      value = var.exempted_function_apps
+    }
+    exemptedResourceGroups = {
+      value = var.exempted_resource_groups
     }
   }
 

@@ -66,12 +66,26 @@
                     "storageAccountSku": "Standard_LRS",
                     "minimumRetentionDays": 7
                 }
+            },
+            "deny-storage-sas-expiration": {
+                "name": "deny-storage-sas-expiration",
+                "displayName": "Deny Storage Account SAS Token Expiration Greater Than Maximum",
+                "category": "Storage",
+                "policyPath": "policies/storage/deny-storage-sas-expiration/rule.json",
+                "resourcePrefix": "testpolicysas",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "storageAccountSku": "Standard_LRS",
+                    "maxSasExpirationDays": 90
+                }
             }
         },
         "function-app": {
             "deny-function-app-anonymous": {
                 "name": "deny-function-app-anonymous",
-                "displayName": "Deny Function App Anonymous Access",
+                "displayName": "Audit Function App Anonymous Access",
                 "category": "Function App",
                 "policyPath": "policies/function-app/deny-function-app-anonymous/rule.json",
                 "resourcePrefix": "testpolicyfn",
@@ -114,6 +128,19 @@
                 "category": "Function App",
                 "policyPath": "policies/function-app/deny-function-app-aad-only/rule.json",
                 "resourcePrefix": "testpolicyfnaad",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp",
+                    "runtime": "PowerShell"
+                }
+            },
+            "deny-function-app-no-private-endpoint": {
+                "name": "deny-function-app-no-private-endpoint",
+                "displayName": "Function Apps Must Disable Public Network Access",
+                "category": "Function App",
+                "policyPath": "policies/function-app/deny-function-app-no-private-endpoint/rule.json",
+                "resourcePrefix": "testpolicyfnpe",
                 "testConfig": {
                     "compliantSuffix": "comp",
                     "nonCompliantSuffix": "nonc",

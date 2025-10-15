@@ -1,14 +1,7 @@
 {
-  "name": "deny-function-app-anonymous",
   "properties": {
-    "description": "This policy denies by default (or audits, if configured) Azure Function Apps that do not have authentication enabled. Function Apps should require authentication to ensure security and protect sensitive code and data. This policy checks the authentication configuration (siteAuthEnabled) on the Function App's config resource. The effect can be set to 'Deny' or 'Disabled' via the policy parameter.",
-    "displayName": "Deny or Audit Function App Anonymous Access",
-    "metadata": {
-      "category": "Function App",
-      "source": "Azure Policy Testing Project",
-      "version": "2.0.0"
-    },
-    "mode": "Indexed",
+    "description": "This policy denies creation of Azure Function Apps that do not have authentication enabled.",
+    "displayName": "Deny Function App Anonymous Access",
     "parameters": {
       "effect": {
         "allowedValues": [
@@ -47,7 +40,6 @@
       "then": {
         "effect": "[parameters('effect')]"
       }
-    },
-    "policyType": "Custom"
+    }
   }
 }
