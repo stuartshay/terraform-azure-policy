@@ -204,10 +204,23 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
 
             # Verify soft delete configuration
             Write-Host "Verifying soft delete configuration for compliant storage account..." -ForegroundColor Yellow
-            Start-Sleep -Seconds 5  # Wait for configuration to propagate
 
-            $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
-                -StorageAccountName $script:CompliantStorageName
+            # Poll for up to 60 seconds for the expected soft delete configuration
+            $maxAttempts = 12
+            $attempt = 0
+            do {
+                $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
+                    -StorageAccountName $script:CompliantStorageName
+                $blobDeleteEnabled = $blobService.DeleteRetentionPolicy.Enabled -eq $true
+                $blobDeleteDaysOk = $blobService.DeleteRetentionPolicy.Days -ge 7
+                $containerDeleteEnabled = $blobService.ContainerDeleteRetentionPolicy.Enabled -eq $true
+                $containerDeleteDaysOk = $blobService.ContainerDeleteRetentionPolicy.Days -ge 7
+                if ($blobDeleteEnabled -and $blobDeleteDaysOk -and $containerDeleteEnabled -and $containerDeleteDaysOk) {
+                    break
+                }
+                Start-Sleep -Seconds 5
+                $attempt++
+            } while ($attempt -lt $maxAttempts)
 
             $blobService.DeleteRetentionPolicy.Enabled | Should -Be $true
             $blobService.DeleteRetentionPolicy.Days | Should -BeGreaterOrEqual 7
