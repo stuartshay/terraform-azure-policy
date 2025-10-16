@@ -219,35 +219,79 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
     }
 
     AfterAll {
+        Write-Host "`n=== Cleaning Up Test Resources ===" -ForegroundColor Cyan
+
+        # Cleanup Application Insights components (to prevent managed resource group accumulation)
+        Write-Host 'Searching for Application Insights components to clean up...' -ForegroundColor Yellow
+        $appInsightsPattern = "*testpolicyfn*"
+
+        try {
+            $appInsightsComponents = Get-AzResource -ResourceGroupName $script:ResourceGroupName `
+                -ResourceType 'Microsoft.Insights/components' `
+                -ErrorAction SilentlyContinue | Where-Object { $_.Name -like $appInsightsPattern }
+
+            foreach ($appInsight in $appInsightsComponents) {
+                try {
+                    Write-Host "  Removing Application Insights: $($appInsight.Name)" -ForegroundColor Yellow
+                    Remove-AzResource -ResourceId $appInsight.ResourceId -Force -ErrorAction SilentlyContinue
+                    Write-Host "    ✓ Removed: $($appInsight.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Warning "    Failed to remove Application Insights $($appInsight.Name): $($_.Exception.Message)"
+                }
+            }
+
+            # Also cleanup any alert rules
+            $alertRules = Get-AzResource -ResourceGroupName $script:ResourceGroupName `
+                -ResourceType 'microsoft.alertsmanagement/smartDetectorAlertRules' `
+                -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*testpolicyfn*" }
+
+            foreach ($alert in $alertRules) {
+                try {
+                    Write-Host "  Removing Alert Rule: $($alert.Name)" -ForegroundColor Yellow
+                    Remove-AzResource -ResourceId $alert.ResourceId -Force -ErrorAction SilentlyContinue
+                    Write-Host "    ✓ Removed: $($alert.Name)" -ForegroundColor Green
+                } catch {
+                    Write-Warning "    Failed to remove Alert Rule $($alert.Name): $($_.Exception.Message)"
+                }
+            }
+        } catch {
+            Write-Warning "Error during Application Insights cleanup: $($_.Exception.Message)"
+        }
+
         # Cleanup Function Apps
         foreach ($functionApp in $script:CreatedFunctionApps) {
             try {
-                Write-Host "Cleaning up Function App: $($functionApp.Name)" -ForegroundColor Yellow
+                Write-Host "  Removing Function App: $($functionApp.Name)" -ForegroundColor Yellow
                 Remove-AzFunctionApp -Name $functionApp.Name -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
+                Write-Host "    ✓ Removed: $($functionApp.Name)" -ForegroundColor Green
             } catch {
-                Write-Warning "Failed to cleanup Function App $($functionApp.Name): $($_.Exception.Message)"
+                Write-Warning "    Failed to cleanup Function App $($functionApp.Name): $($_.Exception.Message)"
             }
         }
 
         # Cleanup App Service Plan
         if ($script:CreatedAppServicePlan) {
             try {
-                Write-Host "Cleaning up App Service Plan: $($script:CreatedAppServicePlan.Name)" -ForegroundColor Yellow
+                Write-Host "  Removing App Service Plan: $($script:CreatedAppServicePlan.Name)" -ForegroundColor Yellow
                 Remove-AzAppServicePlan -Name $script:CreatedAppServicePlan.Name -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
+                Write-Host "    ✓ Removed: $($script:CreatedAppServicePlan.Name)" -ForegroundColor Green
             } catch {
-                Write-Warning "Failed to cleanup App Service Plan: $($_.Exception.Message)"
+                Write-Warning "    Failed to cleanup App Service Plan: $($_.Exception.Message)"
             }
         }
 
         # Cleanup Storage Account
         if ($script:CreatedStorageAccount) {
             try {
-                Write-Host "Cleaning up Storage Account: $($script:CreatedStorageAccount.StorageAccountName)" -ForegroundColor Yellow
+                Write-Host "  Removing Storage Account: $($script:CreatedStorageAccount.StorageAccountName)" -ForegroundColor Yellow
                 Remove-AzStorageAccount -Name $script:CreatedStorageAccount.StorageAccountName -ResourceGroupName $script:ResourceGroupName -Force -ErrorAction SilentlyContinue
+                Write-Host "    ✓ Removed: $($script:CreatedStorageAccount.StorageAccountName)" -ForegroundColor Green
             } catch {
-                Write-Warning "Failed to cleanup Storage Account: $($_.Exception.Message)"
+                Write-Warning "    Failed to cleanup Storage Account: $($_.Exception.Message)"
             }
         }
+
+        Write-Host '=== Cleanup Complete ===' -ForegroundColor Cyan
     }
 
     Context 'Prerequisites Setup' {

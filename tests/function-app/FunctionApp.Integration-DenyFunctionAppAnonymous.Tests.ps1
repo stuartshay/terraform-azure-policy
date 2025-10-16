@@ -589,7 +589,45 @@ Describe 'Policy Performance and Scale Testing' -Tag @('Performance', 'Scale', '
 
 AfterAll {
     # Cleanup test resources
-    Write-Host 'Cleaning up test Function Apps and storage accounts...' -ForegroundColor Yellow
+    Write-Host '\n=== Cleaning Up Test Resources ===' -ForegroundColor Cyan
+
+    # Cleanup Application Insights components (to prevent managed resource group accumulation)
+    Write-Host 'Searching for Application Insights components to clean up...' -ForegroundColor Yellow
+    $timestamp = Get-Date -Format 'yyyyMMddHHmmss'
+    $appInsightsPattern = "*$script:TestFunctionAppPrefix*"
+
+    try {
+        $appInsightsComponents = Get-AzResource -ResourceGroupName $script:ResourceGroupName `
+            -ResourceType 'Microsoft.Insights/components' `
+            -ErrorAction SilentlyContinue | Where-Object { $_.Name -like $appInsightsPattern }
+
+        foreach ($appInsight in $appInsightsComponents) {
+            try {
+                Write-Host "  Removing Application Insights: $($appInsight.Name)" -ForegroundColor Yellow
+                Remove-AzResource -ResourceId $appInsight.ResourceId -Force -ErrorAction SilentlyContinue
+                Write-Host "    ✓ Removed: $($appInsight.Name)" -ForegroundColor Green
+            } catch {
+                Write-Warning "    Failed to remove Application Insights $($appInsight.Name): $($_.Exception.Message)"
+            }
+        }
+
+        # Also cleanup any alert rules
+        $alertRules = Get-AzResource -ResourceGroupName $script:ResourceGroupName `
+            -ResourceType 'microsoft.alertsmanagement/smartDetectorAlertRules' `
+            -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*$script:TestFunctionAppPrefix*" }
+
+        foreach ($alert in $alertRules) {
+            try {
+                Write-Host "  Removing Alert Rule: $($alert.Name)" -ForegroundColor Yellow
+                Remove-AzResource -ResourceId $alert.ResourceId -Force -ErrorAction SilentlyContinue
+                Write-Host "    ✓ Removed: $($alert.Name)" -ForegroundColor Green
+            } catch {
+                Write-Warning "    Failed to remove Alert Rule $($alert.Name): $($_.Exception.Message)"
+            }
+        }
+    } catch {
+        Write-Warning "Error during Application Insights cleanup: $($_.Exception.Message)"
+    }
 
     $cleanupResources = @()
     if ($script:CompliantFunctionApp) {
@@ -611,13 +649,13 @@ AfterAll {
                 $functionApp = Get-AzFunctionApp -ResourceGroupName $script:ResourceGroupName -Name $resource.Name -ErrorAction SilentlyContinue
                 if ($functionApp) {
                     Remove-AzFunctionApp -ResourceGroupName $script:ResourceGroupName -Name $resource.Name -Force -ErrorAction SilentlyContinue
-                    Write-Host "Removed test Function App: $($resource.Name)" -ForegroundColor Green
+                    Write-Host "  ✓ Removed Function App: $($resource.Name)" -ForegroundColor Green
                 }
             } elseif ($resource.Type -eq 'StorageAccount') {
                 $storageAccount = Get-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -Name $resource.Name -ErrorAction SilentlyContinue
                 if ($storageAccount) {
                     Remove-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -Name $resource.Name -Force -ErrorAction SilentlyContinue
-                    Write-Host "Removed test storage account: $($resource.Name)" -ForegroundColor Green
+                    Write-Host "  ✓ Removed Storage Account: $($resource.Name)" -ForegroundColor Green
                 }
             }
         } catch {
@@ -625,7 +663,7 @@ AfterAll {
         }
     }
 
-    Write-Host 'Test cleanup completed.' -ForegroundColor Green
+    Write-Host '=== Cleanup Complete ===' -ForegroundColor Cyan
     Write-Host "`nTest Summary:" -ForegroundColor Cyan
     Write-Host '=============' -ForegroundColor Cyan
     Write-Host "Policy Name: $script:PolicyName" -ForegroundColor White
