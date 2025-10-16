@@ -223,8 +223,7 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
 
         # Cleanup Application Insights components (to prevent managed resource group accumulation)
         Write-Host 'Searching for Application Insights components to clean up...' -ForegroundColor Yellow
-        $timestamp = Get-Date -Format 'yyyyMMddHHmm'
-        $appInsightsPattern = "*testpolicyfn*$timestamp*"
+        $appInsightsPattern = "*testpolicyfn*"
 
         try {
             $appInsightsComponents = Get-AzResource -ResourceGroupName $script:ResourceGroupName `
