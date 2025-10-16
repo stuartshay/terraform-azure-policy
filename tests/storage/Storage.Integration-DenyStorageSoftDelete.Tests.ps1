@@ -259,10 +259,18 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                 ($null -ne $script:NonCompliantBlobStorage) | Should -BeTrue
                 $script:NonCompliantBlobStorage.StorageAccountName | Should -Be $script:NonCompliantBlobStorageName
 
-                # Verify soft delete is disabled
-                Start-Sleep -Seconds 5
-                $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
-                    -StorageAccountName $script:NonCompliantBlobStorageName
+                # Verify soft delete is disabled using polling loop
+                $maxAttempts = 12 # 12 * 5s = 60s timeout
+                $attempt = 0
+                do {
+                    $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
+                        -StorageAccountName $script:NonCompliantBlobStorageName
+                    if ($blobService.DeleteRetentionPolicy.Enabled -eq $false) {
+                        break
+                    }
+                    Start-Sleep -Seconds 5
+                    $attempt++
+                } while ($attempt -lt $maxAttempts)
                 $blobService.DeleteRetentionPolicy.Enabled | Should -Be $false
             }
         }
