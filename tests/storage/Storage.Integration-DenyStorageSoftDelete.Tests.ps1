@@ -159,10 +159,11 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
         BeforeAll {
             # Generate unique storage account names (max 24 chars for storage accounts)
             $timestamp = Get-Date -Format 'HHmmss'
-            $script:CompliantStorageName = "sdcmpl$timestamp"  # 12 chars
-            $script:NonCompliantBlobStorageName = "sdncblob$timestamp"  # 14 chars
-            $script:NonCompliantContainerStorageName = "sdnccntr$timestamp"  # 14 chars
-            $script:LowRetentionStorageName = "sdlowret$timestamp"  # 14 chars
+            $randSuffix = "{0:D4}" -f (Get-Random -Minimum 0 -Maximum 10000)
+            $script:CompliantStorageName = "sdcmpl$timestamp$randSuffix"  # 16 chars
+            $script:NonCompliantBlobStorageName = "sdncblob$timestamp$randSuffix"  # 18 chars
+            $script:NonCompliantContainerStorageName = "sdnccntr$timestamp$randSuffix"  # 18 chars
+            $script:LowRetentionStorageName = "sdlowret$timestamp$randSuffix"  # 18 chars
 
             Write-Host "Test storage accounts: $script:CompliantStorageName, $script:NonCompliantBlobStorageName, $script:NonCompliantContainerStorageName, $script:LowRetentionStorageName" -ForegroundColor Yellow
 
