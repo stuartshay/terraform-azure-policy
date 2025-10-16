@@ -244,7 +244,7 @@ Describe 'Function App Private Endpoint Compliance Tests' -Tag @('Integration', 
             # Also cleanup any alert rules
             $alertRules = Get-AzResource -ResourceGroupName $script:ResourceGroupName `
                 -ResourceType 'microsoft.alertsmanagement/smartDetectorAlertRules' `
-                -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*testpolicyfn*$timestamp*" }
+                -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*testpolicyfn*" }
 
             foreach ($alert in $alertRules) {
                 try {
