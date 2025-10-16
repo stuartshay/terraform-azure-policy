@@ -329,11 +329,19 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                 ($null -ne $script:LowRetentionStorage) | Should -BeTrue
                 $script:LowRetentionStorage.StorageAccountName | Should -Be $script:LowRetentionStorageName
 
-                # Verify low retention days
-                Start-Sleep -Seconds 5
-                $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
-                    -StorageAccountName $script:LowRetentionStorageName
-                $blobService.DeleteRetentionPolicy.Days | Should -BeLessThan 7
+                # Verify low retention days using polling loop (retry every 5s up to 60s)
+                $maxAttempts = 12
+                $attempt = 0
+                $retentionDays = $null
+                do {
+                    $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
+                        -StorageAccountName $script:LowRetentionStorageName
+                    $retentionDays = $blobService.DeleteRetentionPolicy.Days
+                    if ($retentionDays -lt 7) { break }
+                    Start-Sleep -Seconds 5
+                    $attempt++
+                } while ($attempt -lt $maxAttempts)
+                $retentionDays | Should -BeLessThan 7
             }
         }
 
