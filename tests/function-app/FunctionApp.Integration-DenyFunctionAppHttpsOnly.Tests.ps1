@@ -233,7 +233,7 @@ Describe 'Function App HTTPS-Only Compliance Tests' -Tag @('Integration', 'Slow'
     }
 
     AfterAll {
-        Write-Host "\n=== Cleaning Up Test Resources ===" -ForegroundColor Cyan
+        Write-Host "`n=== Cleaning Up Test Resources ===" -ForegroundColor Cyan
 
         # Cleanup Application Insights components (to prevent managed resource group accumulation)
         Write-Host "Searching for Application Insights components to clean up..." -ForegroundColor Yellow
