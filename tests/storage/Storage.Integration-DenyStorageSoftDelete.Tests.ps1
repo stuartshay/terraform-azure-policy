@@ -308,10 +308,17 @@ Describe 'Policy Compliance Testing' -Tag @('Integration', 'Slow', 'Compliance',
                 $script:NonCompliantContainerStorage.StorageAccountName | Should -Be $script:NonCompliantContainerStorageName
 
                 # Verify container soft delete is disabled (null or false both indicate disabled)
-                Start-Sleep -Seconds 5
-                $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
-                    -StorageAccountName $script:NonCompliantContainerStorageName
-                $blobService.ContainerDeleteRetentionPolicy.Enabled | Should -Not -Be $true
+                $maxAttempts = 12 # 12 * 5s = 60s max wait
+                $attempt = 0
+                do {
+                    $blobService = Get-AzStorageBlobServiceProperty -ResourceGroupName $script:ResourceGroupName `
+                        -StorageAccountName $script:NonCompliantContainerStorageName
+                    $isDisabled = -not ($blobService.ContainerDeleteRetentionPolicy.Enabled -eq $true)
+                    if ($isDisabled) { break }
+                    Start-Sleep -Seconds 5
+                    $attempt++
+                } while ($attempt -lt $maxAttempts)
+                $isDisabled | Should -BeTrue
             }
         }
 
