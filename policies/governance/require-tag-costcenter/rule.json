@@ -1,0 +1,62 @@
+{
+  "name": "require-tag-costcenter",
+  "properties": {
+    "description": "This policy requires that all resources have a 'CostCenter' tag with a valid format. This helps track costs and allocate expenses to appropriate cost centers or departments.",
+    "displayName": "Require CostCenter Tag on Resources",
+    "metadata": {
+      "category": "Governance",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "tagName": {
+        "defaultValue": "CostCenter",
+        "metadata": {
+          "description": "Name of the tag to require",
+          "displayName": "Tag Name"
+        },
+        "type": "String"
+      },
+      "tagPattern": {
+        "defaultValue": "^CC-[0-9]{4,6}$",
+        "metadata": {
+          "description": "Regular expression pattern that the CostCenter tag value must match (e.g., CC-1234, CC-123456)",
+          "displayName": "Tag Pattern"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "exists": "false",
+            "field": "[concat('tags[', parameters('tagName'), ']')]"
+          },
+          {
+            "field": "[concat('tags[', parameters('tagName'), ']')]",
+            "notMatch": "[parameters('tagPattern')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

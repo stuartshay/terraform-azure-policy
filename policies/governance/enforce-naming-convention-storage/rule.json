@@ -1,0 +1,54 @@
+{
+  "name": "enforce-naming-convention-storage",
+  "properties": {
+    "description": "This policy enforces naming conventions for Azure Storage Accounts. Storage account names must follow organizational standards for consistency and identification. The default pattern expects lowercase alphanumeric names following the format: st{env}{app}{instance} (e.g., stdevweb001).",
+    "displayName": "Enforce Naming Convention for Storage Accounts",
+    "metadata": {
+      "category": "Governance",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "namePattern": {
+        "defaultValue": "^st(dev|test|staging|prod)[a-z0-9]{3,15}$",
+        "metadata": {
+          "description": "Regular expression pattern that storage account names must match. Default: st{env}{app}{instance} (e.g., stdevweb001, stproddata002)",
+          "displayName": "Name Pattern"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Storage/storageAccounts",
+            "field": "type"
+          },
+          {
+            "field": "name",
+            "notMatch": "[parameters('namePattern')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

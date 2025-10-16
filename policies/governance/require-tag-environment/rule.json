@@ -1,0 +1,67 @@
+{
+  "name": "require-tag-environment",
+  "properties": {
+    "description": "This policy requires that all resources have an 'Environment' tag with an allowed value (dev, test, staging, prod). This helps categorize resources by their deployment environment for better organization and cost tracking.",
+    "displayName": "Require Environment Tag on Resources",
+    "metadata": {
+      "category": "Governance",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "allowedValues": {
+        "defaultValue": [
+          "dev",
+          "test",
+          "staging",
+          "prod"
+        ],
+        "metadata": {
+          "description": "Allowed values for the Environment tag",
+          "displayName": "Allowed Environment Values"
+        },
+        "type": "Array"
+      },
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "tagName": {
+        "defaultValue": "Environment",
+        "metadata": {
+          "description": "Name of the tag to require",
+          "displayName": "Tag Name"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "exists": "false",
+            "field": "[concat('tags[', parameters('tagName'), ']')]"
+          },
+          {
+            "field": "[concat('tags[', parameters('tagName'), ']')]",
+            "notIn": "[parameters('allowedValues')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

@@ -1,0 +1,37 @@
+# Example Terraform Variables for enforce-allowed-locations policy
+# Copy this file to terraform.tfvars and update with your values
+
+# Management Group ID (optional)
+# management_group_id = "my-management-group"
+
+# Whether to create a policy assignment
+create_assignment = true
+
+# Assignment scope (Resource Group ID)
+# assignment_scope_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
+
+# Policy assignment configuration
+policy_assignment_name         = "enforce-allowed-locations-assignment"
+policy_assignment_display_name = "Enforce Allowed Locations Assignment"
+policy_assignment_description  = "This assignment restricts resource deployment to approved Azure regions."
+
+# Assignment location (required for system-assigned identity)
+assignment_location = "East US"
+
+# Policy effect (Audit, Deny, or Disabled)
+policy_effect = "Deny"
+
+# Allowed locations configuration
+# List of Azure regions where resources can be deployed
+allowed_locations = [
+  "eastus",
+  "eastus2",
+  "westus2",
+  "centralus",
+  "northeurope",
+  "westeurope"
+]
+
+# Environment metadata
+environment = "sandbox"
+owner       = "Policy-Team"
