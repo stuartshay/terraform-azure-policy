@@ -18,7 +18,7 @@ BeforeAll {
             Write-Host 'Skipping all tests - no Azure context available' -ForegroundColor Yellow
             return
         }
-        throw "Environment initialization failed"
+        throw 'Environment initialization failed'
     }
 
     $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName
@@ -66,7 +66,7 @@ Describe 'Naming Convention Compliance' -Tag @('Integration', 'Slow', 'Complianc
             }
 
             if (-not $script:CompliantStorage) {
-                Set-ItResult -Skipped -Because "Unable to create storage account - name may be taken, quota exceeded, or region limitation"
+                Set-ItResult -Skipped -Because 'Unable to create storage account - name may be taken, quota exceeded, or region limitation'
                 return
             }
 
@@ -102,7 +102,7 @@ Describe 'Naming Convention Compliance' -Tag @('Integration', 'Slow', 'Complianc
             }
 
             if (-not $script:NonCompliantStorage) {
-                Set-ItResult -Skipped -Because "Unable to create storage account - name may be taken, quota exceeded, blocked by policy, or region limitation"
+                Set-ItResult -Skipped -Because 'Unable to create storage account - name may be taken, quota exceeded, blocked by policy, or region limitation'
                 return
             }
 

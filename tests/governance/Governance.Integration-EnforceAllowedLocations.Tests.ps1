@@ -18,7 +18,7 @@ BeforeAll {
             Write-Host 'Skipping all tests - no Azure context available' -ForegroundColor Yellow
             return
         }
-        throw "Environment initialization failed"
+        throw 'Environment initialization failed'
     }
 
     $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName
@@ -32,7 +32,7 @@ Describe 'Location Restriction Compliance' -Tag @('Integration', 'Slow', 'Compli
 
             $script:AllowedRG = New-AzResourceGroup -Name $name `
                 -Location $script:ResourceGroup.Location `
-                -Tag @{TestResource = 'true'; Environment = 'test'} `
+                -Tag @{TestResource = 'true'; Environment = 'test' } `
                 -Force
 
             $script:AllowedRG | Should -Not -BeNullOrEmpty
@@ -47,14 +47,13 @@ Describe 'Location Restriction Compliance' -Tag @('Integration', 'Slow', 'Compli
             # westus is typically not in the allowed locations list
             $script:NonAllowedRG = New-AzResourceGroup -Name $name `
                 -Location 'westus' `
-                -Tag @{TestResource = 'true'; Environment = 'test'} `
+                -Tag @{TestResource = 'true'; Environment = 'test' } `
                 -Force `
                 -ErrorAction SilentlyContinue
 
             if (-not $script:NonAllowedRG) {
                 Set-ItResult -Skipped -Because 'Unable to create resource group in westus region'
-            }
-            else {
+            } else {
                 $script:NonAllowedRG | Should -Not -BeNullOrEmpty
                 $script:NonAllowedRG.Location | Should -Be 'westus'
             }

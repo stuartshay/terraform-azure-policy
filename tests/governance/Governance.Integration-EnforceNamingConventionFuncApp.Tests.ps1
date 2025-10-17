@@ -18,7 +18,7 @@ BeforeAll {
             Write-Host 'Skipping all tests - no Azure context available' -ForegroundColor Yellow
             return
         }
-        throw "Environment initialization failed"
+        throw 'Environment initialization failed'
     }
 
     $script:ResourceGroupName = $script:TestConfig.Azure.ResourceGroupName

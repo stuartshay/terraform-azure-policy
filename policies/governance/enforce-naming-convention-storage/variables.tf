@@ -67,7 +67,7 @@ variable "policy_effect" {
 variable "name_pattern" {
   description = "Regular expression pattern that storage account names must match"
   type        = string
-  default     = "^st(dev|test|staging|prod)[a-z0-9]{3,15}$"
+  default     = "^st[a-z0-9]{4,22}$"
   validation {
     condition     = can(regex(var.name_pattern, "stdevweb001"))
     error_message = "The name_pattern must be a valid regular expression."
