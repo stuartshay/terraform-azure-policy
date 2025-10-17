@@ -1,0 +1,53 @@
+{
+  "name": "inherit-tag-from-resource-group",
+  "properties": {
+    "description": "This policy automatically inherits specified tags from the parent resource group to child resources. This ensures consistent tagging across resources within a resource group and simplifies tag management. The policy uses the Modify effect to add or update tags on resources.",
+    "displayName": "Inherit Tags from Resource Group",
+    "metadata": {
+      "category": "Governance",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "tagName": {
+        "defaultValue": "Environment",
+        "metadata": {
+          "description": "Name of the tag to inherit from resource group",
+          "displayName": "Tag Name"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "exists": "false",
+            "field": "[concat('tags[', parameters('tagName'), ']')]"
+          },
+          {
+            "notEquals": "",
+            "value": "[resourceGroup().tags[parameters('tagName')]]"
+          }
+        ]
+      },
+      "then": {
+        "details": {
+          "operations": [
+            {
+              "field": "[concat('tags[', parameters('tagName'), ']')]",
+              "operation": "add",
+              "value": "[resourceGroup().tags[parameters('tagName')]]"
+            }
+          ],
+          "roleDefinitionIds": [
+            "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+          ]
+        },
+        "effect": "modify"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

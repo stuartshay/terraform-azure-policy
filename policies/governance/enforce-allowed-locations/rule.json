@@ -1,0 +1,56 @@
+{
+  "name": "enforce-allowed-locations",
+  "properties": {
+    "description": "This policy restricts resource deployment to approved Azure regions. This ensures resources are only deployed in compliant geographic locations for data residency, compliance, and cost optimization purposes.",
+    "displayName": "Enforce Allowed Locations for Resources",
+    "metadata": {
+      "category": "Governance",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "allowedLocations": {
+        "defaultValue": [
+          "eastus",
+          "eastus2",
+          "westus2",
+          "centralus",
+          "northeurope",
+          "westeurope"
+        ],
+        "metadata": {
+          "description": "The list of allowed Azure regions for resource deployment",
+          "displayName": "Allowed Locations",
+          "strongType": "location"
+        },
+        "type": "Array"
+      },
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "not": {
+          "field": "location",
+          "in": "[parameters('allowedLocations')]"
+        }
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

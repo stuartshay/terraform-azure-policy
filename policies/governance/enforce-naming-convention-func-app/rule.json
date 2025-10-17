@@ -1,0 +1,58 @@
+{
+  "name": "enforce-naming-convention-func-app",
+  "properties": {
+    "description": "This policy enforces naming conventions for Azure Function Apps. Function App names must follow organizational standards for consistency and identification. The default pattern expects names following the format: func-{env}-{app}-{instance} (e.g., func-dev-api-001). Function App names must be globally unique as they are used in the default azurewebsites.net domain.",
+    "displayName": "Enforce Naming Convention for Function Apps",
+    "metadata": {
+      "category": "Governance",
+      "source": "Azure Policy Testing Project",
+      "version": "1.0.0"
+    },
+    "mode": "Indexed",
+    "parameters": {
+      "effect": {
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit",
+        "metadata": {
+          "description": "The effect determines what happens when the policy rule is evaluated to match",
+          "displayName": "Effect"
+        },
+        "type": "String"
+      },
+      "namePattern": {
+        "defaultValue": "^func-(dev|test|staging|prod)-[a-z0-9-]{3,40}$",
+        "metadata": {
+          "description": "Regular expression pattern that Function App names must match. Default: func-{env}-{app}-{instance} (e.g., func-dev-api-001, func-prod-payment-002)",
+          "displayName": "Name Pattern"
+        },
+        "type": "String"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "equals": "Microsoft.Web/sites",
+            "field": "type"
+          },
+          {
+            "contains": "functionapp",
+            "field": "kind"
+          },
+          {
+            "field": "name",
+            "notMatch": "[parameters('namePattern')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "policyType": "Custom"
+  }
+}

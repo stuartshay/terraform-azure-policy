@@ -1,0 +1,30 @@
+# Example Terraform Variables for require-tag-environment policy
+# Copy this file to terraform.tfvars and update with your values
+
+# Management Group ID (optional)
+# management_group_id = "my-management-group"
+
+# Whether to create a policy assignment
+create_assignment = true
+
+# Assignment scope (Resource Group ID)
+# assignment_scope_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
+
+# Policy assignment configuration
+policy_assignment_name         = "require-tag-env-assignment"
+policy_assignment_display_name = "Require Environment Tag Assignment"
+policy_assignment_description  = "This assignment enforces the policy to require an Environment tag on all resources."
+
+# Assignment location (required for system-assigned identity)
+assignment_location = "East US"
+
+# Policy effect (Audit, Deny, or Disabled)
+policy_effect = "Audit"
+
+# Tag configuration
+tag_name = "Environment"
+allowed_values = ["dev", "test", "staging", "prod"]
+
+# Environment metadata
+environment = "sandbox"
+owner       = "Policy-Team"

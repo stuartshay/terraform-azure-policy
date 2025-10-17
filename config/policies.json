@@ -209,6 +209,80 @@
                     "zoneRedundant": true
                 }
             }
+        },
+        "governance": {
+            "require-tag-environment": {
+                "name": "require-tag-environment",
+                "displayName": "Require Environment Tag on Resources",
+                "category": "Governance",
+                "policyPath": "policies/governance/require-tag-environment/rule.json",
+                "resourcePrefix": "testpolicytag",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            },
+            "require-tag-costcenter": {
+                "name": "require-tag-costcenter",
+                "displayName": "Require CostCenter Tag on Resources",
+                "category": "Governance",
+                "policyPath": "policies/governance/require-tag-costcenter/rule.json",
+                "resourcePrefix": "testpolicycc",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            },
+            "enforce-naming-convention-storage": {
+                "name": "enforce-naming-convention-storage",
+                "displayName": "Enforce Naming Convention for Storage Accounts",
+                "category": "Governance",
+                "policyPath": "policies/governance/enforce-naming-convention-storage/rule.json",
+                "resourcePrefix": "testpolicyname",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            },
+            "enforce-naming-convention-func-app": {
+                "name": "enforce-naming-convention-func-app",
+                "displayName": "Enforce Naming Convention for Function Apps",
+                "category": "Governance",
+                "policyPath": "policies/governance/enforce-naming-convention-func-app/rule.json",
+                "resourcePrefix": "testpolicyfunc",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            },
+            "inherit-tag-from-resource-group": {
+                "name": "inherit-tag-from-resource-group",
+                "displayName": "Inherit Tags from Resource Group",
+                "category": "Governance",
+                "policyPath": "policies/governance/inherit-tag-from-resource-group/rule.json",
+                "resourcePrefix": "testpolicyinherit",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            },
+            "enforce-allowed-locations": {
+                "name": "enforce-allowed-locations",
+                "displayName": "Enforce Allowed Locations for Resources",
+                "category": "Governance",
+                "policyPath": "policies/governance/enforce-allowed-locations/rule.json",
+                "resourcePrefix": "testpolicyloc",
+                "testConfig": {
+                    "compliantSuffix": "comp",
+                    "nonCompliantSuffix": "nonc",
+                    "exemptedSuffix": "exemp"
+                }
+            }
         }
     },
     "environments": {
