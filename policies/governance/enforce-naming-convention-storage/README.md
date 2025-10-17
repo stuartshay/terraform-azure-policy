@@ -21,7 +21,7 @@ The policy checks that storage account names match the specified naming pattern.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | effect | String | Audit | The effect of the policy (Audit, Deny, or Disabled) |
-| namePattern | String | ^st[dev\|test\|staging\|prod](a-z0-9){3,15}$ | Regular expression pattern that storage account names must match |
+| namePattern | String | `^st(dev\|test\|staging\|prod)[a-z0-9]{3,15}$` | Regular expression pattern that storage account names must match |
 
 ## Azure Storage Account Naming Rules
 
@@ -222,7 +222,7 @@ No resources.
 | <a name="input_create_assignment"></a> [create\_assignment](#input\_create\_assignment) | Whether to create a policy assignment | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, test, prod) | `string` | `"sandbox"` | no |
 | <a name="input_management_group_id"></a> [management\_group\_id](#input\_management\_group\_id) | The Azure management group ID where the policy definition will be created | `string` | `null` | no |
-| <a name="input_name_pattern"></a> [name\_pattern](#input\_name\_pattern) | Regular expression pattern that storage account names must match | `string` | `"^st[a-z0-9]{4,22}$"` | no |
+| <a name="input_name_pattern"></a> [name\_pattern](#input\_name\_pattern) | Regular expression pattern that storage account names must match | `string` | `"^st[dev|test|staging|prod](a-z0-9){3,15}$"` | no |
 | <a name="input_owner"></a> [owner](#input\_owner) | Owner of the policy | `string` | `"Policy-Team"` | no |
 | <a name="input_policy_assignment_description"></a> [policy\_assignment\_description](#input\_policy\_assignment\_description) | Description for the policy assignment | `string` | `"This assignment enforces naming conventions for Azure Storage Accounts."` | no |
 | <a name="input_policy_assignment_display_name"></a> [policy\_assignment\_display\_name](#input\_policy\_assignment\_display\_name) | Display name for the policy assignment | `string` | `"Enforce Storage Account Naming Convention Assignment"` | no |

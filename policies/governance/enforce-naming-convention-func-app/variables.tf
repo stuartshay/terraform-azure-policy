@@ -67,7 +67,7 @@ variable "policy_effect" {
 variable "name_pattern" {
   description = "Regular expression pattern that Function App names must match"
   type        = string
-  default     = "^func-[a-z0-9-]{7,55}$"
+  default     = "^func-(dev|test|staging|prod)-[a-z0-9-]{3,40}$"
   validation {
     condition     = can(regex(var.name_pattern, "func-dev-api-001"))
     error_message = "The name_pattern must be a valid regular expression."

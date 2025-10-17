@@ -28,7 +28,7 @@ BeforeAll {
 Describe 'Naming Convention Compliance' -Tag @('Integration', 'Slow', 'Compliance', 'RequiresCleanup') {
     Context 'Storage Account Naming' {
         It 'Should create compliant storage account name' {
-            # Pattern expects: ^st(dev|test|staging|prod)[a-z0-9]{3,15}$
+            # Pattern expects: ^st(dev|test|staging|prod)[a-z0-9]{3,15}$ (enforced pattern comes from module input)
             $timestamp = Get-Date -Format 'HHmmss'
             $compliantName = "stdevtest$timestamp"
 

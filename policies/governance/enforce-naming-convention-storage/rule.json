@@ -26,7 +26,7 @@
       "namePattern": {
         "defaultValue": "^st(dev|test|staging|prod)[a-z0-9]{3,15}$",
         "metadata": {
-          "description": "Regular expression pattern that storage account names must match. Default: st{env}{app}{instance} (e.g., stdevweb001, stproddata002)",
+          "description": "Regular expression pattern that storage account names must match. Default: ^st(dev|test|staging|prod)[a-z0-9]{3,15}$ (e.g., stdevweb001, stproddata002)",
           "displayName": "Name Pattern"
         },
         "type": "String"

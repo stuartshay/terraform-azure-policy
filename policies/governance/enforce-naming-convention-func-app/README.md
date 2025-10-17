@@ -243,7 +243,7 @@ No resources.
 | <a name="input_create_assignment"></a> [create\_assignment](#input\_create\_assignment) | Whether to create a policy assignment | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, test, prod) | `string` | `"sandbox"` | no |
 | <a name="input_management_group_id"></a> [management\_group\_id](#input\_management\_group\_id) | The Azure management group ID where the policy definition will be created | `string` | `null` | no |
-| <a name="input_name_pattern"></a> [name\_pattern](#input\_name\_pattern) | Regular expression pattern that Function App names must match | `string` | `"^func-[a-z0-9-]{7,55}$"` | no |
+| <a name="input_name_pattern"></a> [name\_pattern](#input\_name\_pattern) | Regular expression pattern that Function App names must match | `string` | `"^func-(dev|test|staging|prod)-[a-z0-9-]{3,40}$"` | no |
 | <a name="input_owner"></a> [owner](#input\_owner) | Owner of the policy | `string` | `"Policy-Team"` | no |
 | <a name="input_policy_assignment_description"></a> [policy\_assignment\_description](#input\_policy\_assignment\_description) | Description for the policy assignment | `string` | `"This assignment enforces naming conventions for Azure Function Apps."` | no |
 | <a name="input_policy_assignment_display_name"></a> [policy\_assignment\_display\_name](#input\_policy\_assignment\_display\_name) | Display name for the policy assignment | `string` | `"Enforce Function App Naming Convention Assignment"` | no |

@@ -71,7 +71,7 @@ Restricts resource deployment to approved Azure regions.
 ### Prerequisites
 
 - Azure subscription
-- Terraform >= 1.5.0
+- Terraform >= 1.9.0
 - Azure CLI or service principal for authentication
 - Appropriate permissions to create policies and assignments
 
