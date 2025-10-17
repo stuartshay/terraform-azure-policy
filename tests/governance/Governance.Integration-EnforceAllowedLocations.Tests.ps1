@@ -39,9 +39,9 @@ Describe 'Location Restriction Compliance' -Tag @('Integration', 'Slow', 'Compli
             $script:AllowedRG.Location | Should -Be $script:ResourceGroup.Location
         }
 
-        It 'Should create resource in non-allowed location (Audit mode)' {
-            # Note: This test expects the policy to be in Audit mode (default)
-            # In Audit mode, resources are created but flagged as non-compliant
+        It 'Should create resource in non-allowed location (Deny mode)' {
+            # Note: The policy's default effect is Deny (see variables.tf and rule.json)
+            # In Deny mode, resource creation in a non-allowed location should be blocked
             $name = New-PolicyTestResourceName -PolicyCategory 'governance' -PolicyName 'enforce-allowed-locations' -ResourceType 'nonCompliant'
 
             # westus is typically not in the allowed locations list
